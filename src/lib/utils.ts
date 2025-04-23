@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -40,7 +41,8 @@ export function formatCurrency(amount: number) {
   };
 
   const currency = currencyMap[country] || 'USD';
-  const decimals = country === 'US' ? 2 : 0;
+  // Always use 0 decimal places regardless of country
+  const decimals = 0;
 
   return new Intl.NumberFormat(`${language}-${country}`, {
     style: 'currency',
