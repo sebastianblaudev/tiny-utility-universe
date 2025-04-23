@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -6,14 +5,39 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+const getLocaleSettings = () => {
+  try {
+    const savedSettings = localStorage.getItem("localeSettings");
+    if (savedSettings) {
+      const { country, language } = JSON.parse(savedSettings);
+      return { country, language };
+    }
+  } catch (error) {
+    console.error("Error loading locale settings:", error);
+  }
+  return { country: 'AR', language: 'es' };
+};
+
 export function formatDate(date: string | Date) {
-  return new Date(date).toLocaleDateString('es-AR', {
+  const { language } = getLocaleSettings();
+  return new Date(date).toLocaleDateString(`${language}-AR`, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   });
+}
+
+export function formatCurrency(amount: number) {
+  const { country, language } = getLocaleSettings();
+  return new Intl.NumberFormat(`${language}-${country}`, {
+    style: 'currency',
+    currency: country === 'AR' ? 'ARS' : 
+             country === 'US' ? 'USD' : 
+             country === 'ES' ? 'EUR' : 
+             country === 'MX' ? 'MXN' : 'ARS'
+  }).format(amount);
 }
 
 export function printElement(content: HTMLElement) {
