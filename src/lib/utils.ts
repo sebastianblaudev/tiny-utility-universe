@@ -19,8 +19,8 @@ const getLocaleSettings = () => {
 };
 
 export function formatDate(date: string | Date) {
-  const { language } = getLocaleSettings();
-  return new Date(date).toLocaleDateString(`${language}-AR`, {
+  const { language, country } = getLocaleSettings();
+  return new Date(date).toLocaleDateString(`${language}-${country}`, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -31,12 +31,22 @@ export function formatDate(date: string | Date) {
 
 export function formatCurrency(amount: number) {
   const { country, language } = getLocaleSettings();
+  const currencyMap: { [key: string]: string } = {
+    'AR': 'ARS',
+    'CL': 'CLP',
+    'MX': 'MXN',
+    'US': 'USD',
+    'CR': 'CRC'
+  };
+
+  const currency = currencyMap[country] || 'USD';
+  const decimals = ['CLP'].includes(currency) ? 0 : 2;
+
   return new Intl.NumberFormat(`${language}-${country}`, {
     style: 'currency',
-    currency: country === 'AR' ? 'ARS' : 
-             country === 'US' ? 'USD' : 
-             country === 'ES' ? 'EUR' : 
-             country === 'MX' ? 'MXN' : 'ARS'
+    currency,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   }).format(amount);
 }
 

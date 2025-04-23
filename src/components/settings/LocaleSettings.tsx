@@ -19,9 +19,10 @@ type LocaleSettings = {
 
 const countries = [
   { code: 'AR', name: 'Argentina', decimal: ',', thousands: '.' },
-  { code: 'US', name: 'United States', decimal: '.', thousands: ',' },
-  { code: 'ES', name: 'España', decimal: ',', thousands: '.' },
+  { code: 'CL', name: 'Chile', decimal: ',', thousands: '.' },
   { code: 'MX', name: 'México', decimal: '.', thousands: ',' },
+  { code: 'US', name: 'Estados Unidos', decimal: '.', thousands: ',' },
+  { code: 'CR', name: 'Costa Rica', decimal: '.', thousands: ',' },
 ];
 
 const languages = [
