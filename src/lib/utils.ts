@@ -40,7 +40,7 @@ export function formatCurrency(amount: number) {
   };
 
   const currency = currencyMap[country] || 'USD';
-  const decimals = ['CLP'].includes(currency) ? 0 : 2;
+  const decimals = country === 'US' ? 2 : 0;
 
   return new Intl.NumberFormat(`${language}-${country}`, {
     style: 'currency',
