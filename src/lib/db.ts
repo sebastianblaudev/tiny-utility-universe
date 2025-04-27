@@ -1,4 +1,3 @@
-
 import { openDB, DBSchema } from 'idb';
 
 interface Category {
@@ -174,7 +173,7 @@ export const initDB = async () => {
             const categoryStore = db.createObjectStore('categories', { keyPath: 'id' });
             categoryStore.createIndex('by-name', 'name');
             
-            // Add some default categories
+            // Add default categories including extras
             categoryStore.put({
               id: 'cat_pizza',
               name: 'Pizzas',
@@ -191,6 +190,12 @@ export const initDB = async () => {
               id: 'cat_postres',
               name: 'Postres',
               color: '#F1C40F'
+            });
+
+            categoryStore.put({
+              id: 'cat_extras',
+              name: 'Ingredientes Extra',
+              color: '#2ECC71'
             });
           }
         },
