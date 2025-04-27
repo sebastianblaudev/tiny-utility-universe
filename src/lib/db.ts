@@ -1,3 +1,4 @@
+
 import { openDB, DBSchema } from 'idb';
 
 interface Category {
@@ -194,7 +195,7 @@ export const initDB = async () => {
 
             categoryStore.put({
               id: 'cat_extras',
-              name: 'Ingredientes Extra',
+              name: 'Extras',
               color: '#2ECC71'
             });
           }
