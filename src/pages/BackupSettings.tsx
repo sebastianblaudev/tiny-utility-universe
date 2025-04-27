@@ -13,11 +13,13 @@ import {
   isAutoBackupEnabled,
   getBackupInterval,
   getLastBackupDate,
-  selectBackupDirectory
+  selectBackupDirectory,
+  setFTPConfig
 } from "@/utils/autoBackup";
 import { Auth } from "@/lib/auth";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, Save, FolderOpen, AlertTriangle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 const BackupSettings = () => {
   const [backupInterval, setBackupInterval] = useState(String(getBackupInterval()));
@@ -29,6 +31,13 @@ const BackupSettings = () => {
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isInIframe, setIsInIframe] = useState(false);
+  const [ftpConfig, setFtpConfig] = useState({
+    ftpEnabled: false,
+    ftpHost: '',
+    ftpUser: '',
+    ftpPassword: '',
+    ftpPath: '/backups'
+  });
   const { toast } = useToast();
   const auth = Auth.getInstance();
   
@@ -185,7 +194,16 @@ const BackupSettings = () => {
       setIsSelectingFolder(false);
     }
   };
-  
+
+  const handleFTPConfigChange = (field: string, value: string | boolean) => {
+    const newConfig = {
+      ...ftpConfig,
+      [field]: value
+    };
+    setFtpConfig(newConfig);
+    setFTPConfig(newConfig);
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <AuthScreen isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
@@ -330,6 +348,69 @@ const BackupSettings = () => {
                 Esta función solo está disponible en Chrome, Edge y otros navegadores basados en Chromium.
               </AlertDescription>
             </Alert>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuración FTP</CardTitle>
+            <CardDescription>
+              Configura los datos de tu hosting compartido para el respaldo automático
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ftp-enabled"
+                checked={ftpConfig.ftpEnabled}
+                onCheckedChange={(checked) => handleFTPConfigChange('ftpEnabled', checked)}
+              />
+              <Label htmlFor="ftp-enabled">Habilitar respaldo FTP</Label>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="ftp-host">Host FTP</Label>
+                <Input
+                  id="ftp-host"
+                  type="text"
+                  value={ftpConfig.ftpHost}
+                  onChange={(e) => handleFTPConfigChange('ftpHost', e.target.value)}
+                  placeholder="ftp.tudominio.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="ftp-user">Usuario FTP</Label>
+                <Input
+                  id="ftp-user"
+                  type="text"
+                  value={ftpConfig.ftpUser}
+                  onChange={(e) => handleFTPConfigChange('ftpUser', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="ftp-password">Contraseña FTP</Label>
+                <Input
+                  id="ftp-password"
+                  type="password"
+                  value={ftpConfig.ftpPassword}
+                  onChange={(e) => handleFTPConfigChange('ftpPassword', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="ftp-path">Ruta en el servidor</Label>
+                <Input
+                  id="ftp-path"
+                  type="text"
+                  value={ftpConfig.ftpPath}
+                  onChange={(e) => handleFTPConfigChange('ftpPath', e.target.value)}
+                  placeholder="/backups"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

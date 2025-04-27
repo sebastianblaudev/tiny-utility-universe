@@ -1,7 +1,7 @@
-
 import { openDB } from 'idb';
 import { Product, Customer, Order, Table } from '@/lib/db';
 import { Auth } from '@/lib/auth';
+import { uploadBackupToFTP } from './ftpBackup';
 
 interface FileSystemDirectoryHandle extends FileSystemHandle {
   getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FileSystemDirectoryHandle>;
@@ -45,14 +45,27 @@ interface BackupConfig {
   lastBackupDate: string | null;
 }
 
-const getDefaultConfig = (): BackupConfig => ({
+interface FTPBackupConfig extends BackupConfig {
+  ftpEnabled: boolean;
+  ftpHost: string;
+  ftpUser: string;
+  ftpPassword: string;
+  ftpPath: string;
+}
+
+const getDefaultConfig = (): FTPBackupConfig => ({
   autoBackupEnabled: false,
-  backupInterval: 10, // 10 minutos por defecto
-  backupPath: '', // Se establecerá según el entorno
-  lastBackupDate: null
+  backupInterval: 5, // 5 minutos por defecto
+  backupPath: '',
+  lastBackupDate: null,
+  ftpEnabled: false,
+  ftpHost: '',
+  ftpUser: '',
+  ftpPassword: '',
+  ftpPath: '/backups'
 });
 
-const loadConfig = (): BackupConfig => {
+const loadConfig = (): FTPBackupConfig => {
   const savedConfig = localStorage.getItem('backup_config');
   if (savedConfig) {
     try {
@@ -65,7 +78,7 @@ const loadConfig = (): BackupConfig => {
   return getDefaultConfig();
 };
 
-const saveConfig = (config: BackupConfig): void => {
+const saveConfig = (config: FTPBackupConfig): void => {
   localStorage.setItem('backup_config', JSON.stringify(config));
 };
 
@@ -168,8 +181,29 @@ export async function createBackup(): Promise<string | null> {
     };
 
     const filename = `pizzapos_backup_${tenantId}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    const jsonData = JSON.stringify(backupData, null, 2);
 
-    // Intentar guardar usando File System Access API si está disponible
+    // Si FTP está habilitado, intentar subir el backup
+    if (currentConfig.ftpEnabled) {
+      try {
+        const ftpSuccess = await uploadBackupToFTP(jsonData, filename, {
+          host: currentConfig.ftpHost,
+          user: currentConfig.ftpUser,
+          password: currentConfig.ftpPassword,
+          path: currentConfig.ftpPath
+        });
+        
+        if (ftpSuccess) {
+          console.log('Backup subido exitosamente al servidor FTP');
+        } else {
+          console.error('Error al subir backup al servidor FTP');
+        }
+      } catch (ftpError) {
+        console.error('Error en FTP:', ftpError);
+      }
+    }
+
+    // Continuar con el backup local como fallback
     const handle = await getDirectoryHandle();
     if (handle) {
       try {
@@ -202,9 +236,17 @@ export async function createBackup(): Promise<string | null> {
     console.log('Backup local creado:', filename);
     return filename;
   } catch (error) {
-    console.error('Error creando backup local:', error);
+    console.error('Error creando backup:', error);
     return null;
   }
+}
+
+export function setFTPConfig(config: Partial<FTPBackupConfig>): void {
+  currentConfig = {
+    ...currentConfig,
+    ...config
+  };
+  saveConfig(currentConfig);
 }
 
 export async function restoreFromLocalBackup(backupFile: File): Promise<boolean> {
