@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { openDB } from "idb";
+import { initDB } from "@/lib/db";
 
 type Ingredient = {
   id: string;
@@ -26,27 +26,41 @@ export const AddExtraIngredientModal: React.FC<AddExtraIngredientModalProps> = (
   useEffect(() => {
     async function fetchExtras() {
       if (!open) return;
-      const db = await openDB("pizzaPos", 3);
-      if (!db) return;
+      
+      try {
+        const db = await initDB();
+        if (!db) return;
 
-      const categories = await db.getAll("categories");
-      // Buscar la categoría de "extras" (acepta cat_extras o nombre extras)
-      const extrasCat = categories.find(
-        cat => cat.id === "cat_extras" || cat.name?.toLowerCase() === "extras"
-      );
-      if (!extrasCat) {
+        // Buscar la categoría de "extras" por id o nombre
+        const categories = await db.getAll("categories");
+        const extrasCat = categories.find(
+          cat => cat.id === "cat_extras" || cat.name === "Extras"
+        );
+        
+        if (!extrasCat) {
+          console.log("No se encontró la categoría de extras");
+          setExtras([]);
+          return;
+        }
+        
+        console.log("Categoría de extras encontrada:", extrasCat);
+
+        // Obtener todos los productos
+        const allProducts = await db.getAll("products");
+        
+        // Filtrar los productos que pertenecen a la categoría de extras
+        const filteredExtras = allProducts.filter(
+          (prod: any) => 
+            prod.category === extrasCat.id || 
+            prod.categoryId === extrasCat.id
+        );
+        
+        console.log("Productos extras filtrados:", filteredExtras);
+        setExtras(filteredExtras);
+      } catch (error) {
+        console.error("Error al cargar ingredientes extras:", error);
         setExtras([]);
-        return;
       }
-
-      const allProducts = await db.getAll("products");
-      // Filtrar sólo productos de la categoría de extras
-      const filteredExtras = allProducts.filter(
-        (prod: any) =>
-          prod.category === extrasCat.id ||
-          prod.categoryId === extrasCat.id
-      );
-      setExtras(filteredExtras);
     }
 
     fetchExtras();
@@ -111,4 +125,3 @@ export const AddExtraIngredientModal: React.FC<AddExtraIngredientModalProps> = (
     </Dialog>
   );
 }
-
