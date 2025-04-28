@@ -1,0 +1,68 @@
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useReportsData, useProductsData, calculateTopProducts } from "@/hooks/useReportsData"
+import { Skeleton } from "@/components/ui/skeleton"
+
+export function ProductsReport() {
+  const { data: orders = [], isLoading: ordersLoading } = useReportsData();
+  const { data: products = [], isLoading: productsLoading } = useProductsData();
+  const isLoading = ordersLoading || productsLoading;
+  const topProducts = calculateTopProducts(orders, products);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-[#1A1A1A] border-[#333333]">
+        <CardHeader>
+          <CardTitle className="text-white">Rendimiento de Productos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full bg-[#333333]" />
+            <Skeleton className="h-12 w-full bg-[#333333]" />
+            <Skeleton className="h-12 w-full bg-[#333333]" />
+            <Skeleton className="h-12 w-full bg-[#333333]" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-[#1A1A1A] border-[#333333]">
+      <CardHeader>
+        <CardTitle className="text-white">Rendimiento de Productos</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-[#333333] hover:bg-[#252525]">
+              <TableHead className="text-white">Producto</TableHead>
+              <TableHead className="text-right text-white">Unidades Vendidas</TableHead>
+              <TableHead className="text-right text-white">Ingresos</TableHead>
+              <TableHead className="text-right text-white">Beneficio</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {topProducts.length > 0 ? (
+              topProducts.map((item) => (
+                <TableRow key={item.id} className="border-[#333333] hover:bg-[#252525]">
+                  <TableCell className="font-medium text-white">{item.name}</TableCell>
+                  <TableCell className="text-right text-white">{item.sales}</TableCell>
+                  <TableCell className="text-right text-white">${item.revenue.toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-white">${item.profit.toFixed(2)}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow className="border-[#333333]">
+                <TableCell colSpan={4} className="text-center text-white py-4">
+                  No hay datos disponibles
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
+}
