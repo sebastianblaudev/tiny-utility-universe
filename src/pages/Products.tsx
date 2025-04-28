@@ -18,7 +18,7 @@ const VALID_CATEGORY_PREFIXES = ["cat_pizza", "cat_bebidas", "cat_postres"];
 
 async function cleanupHardcodedProducts() {
   try {
-    const db = await openDB('pizzaPos', 3);
+    const db = await openDB('pizzaPos', 5); // Updated to version 5
     if (!db) return;
     const allProducts = await db.getAll('products');
 
@@ -201,7 +201,7 @@ const Products = () => {
     queryKey: ['products'],
     queryFn: async () => {
       try {
-        const db = await openDB('pizzaPos', 4);
+        const db = await openDB('pizzaPos', 5); // Updated to version 5
         if (!db) {
           console.error("No se pudo abrir la base de datos");
           return [];
@@ -274,7 +274,7 @@ const Products = () => {
         });
         return;
       }
-      const db = await openDB('pizzaPos', 4);
+      const db = await openDB('pizzaPos', 5); // Updated to version 5
       if (!db) {
         console.error("No se pudo abrir la base de datos");
         toast({
@@ -330,7 +330,7 @@ const Products = () => {
         });
         return;
       }
-      const db = await openDB('pizzaPos', 4);
+      const db = await openDB('pizzaPos', 5); // Updated to version 5
       await db.put('products', product);
       toast({
         title: "Producto actualizado exitosamente"
@@ -347,7 +347,7 @@ const Products = () => {
 
   const handleDeleteProduct = async (id: string) => {
     try {
-      const db = await openDB('pizzaPos', 4);
+      const db = await openDB('pizzaPos', 5); // Updated to version 5
       await db.delete('products', id);
       toast({
         title: "Producto eliminado exitosamente"
@@ -363,7 +363,7 @@ const Products = () => {
 
   const handleSaveIngredients = async (ingredients: ProductIngredient[]) => {
     try {
-      const db = await openDB('pizzaPos', 4);
+      const db = await openDB('pizzaPos', 5); // Updated to version 5
       const product = products.find((p: any) => p.id === activeProductId);
       if (!product) return;
       await db.put('products', { ...product, ingredients });
