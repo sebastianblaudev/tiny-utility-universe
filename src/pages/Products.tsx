@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash, Save, Utensils } from "lucide-react";
+import { Plus, Edit, Trash, Save, Utensils, Barcode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -41,6 +40,20 @@ async function cleanupHardcodedProducts() {
   }
 }
 
+const generateBarcode = () => {
+  let barcode = '200';
+  for(let i = 0; i < 9; i++) {
+    barcode += Math.floor(Math.random() * 10);
+  }
+  let sum = 0;
+  for(let i = 0; i < 12; i++) {
+    sum += parseInt(barcode[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  barcode += checkDigit;
+  return barcode;
+};
+
 export const updateIngredientsStock = async (productId: string, quantity: number = 1) => {
   try {
     console.log(`Actualizando stock para producto ID: ${productId}, cantidad: ${quantity}`);
@@ -51,24 +64,21 @@ export const updateIngredientsStock = async (productId: string, quantity: number
       return false;
     }
     
-    // Get the product from the database
     const product = await db.get('products', productId);
     
     console.log("Producto encontrado:", product);
     
-    // Check if the product has ingredients
     if (!product || !product.ingredients || product.ingredients.length === 0) {
       console.log("El producto no tiene ingredientes configurados");
-      return true; // Return true to avoid showing error for products without ingredients
+      return true;
     }
     
-    // Retrieve ingredients from localStorage
     let ingredients;
     try {
       const storedIngredients = localStorage.getItem("ingredients");
       if (!storedIngredients) {
         console.log("No hay ingredientes almacenados en localStorage");
-        return true; // Return true to avoid showing error when no ingredients exist
+        return true;
       }
       
       ingredients = JSON.parse(storedIngredients);
@@ -80,7 +90,6 @@ export const updateIngredientsStock = async (productId: string, quantity: number
     
     let updated = false;
     const updatedIngredients = ingredients.map(ingredient => {
-      // Find the ingredient in the product's ingredients list
       const productIngredient = product.ingredients.find(pi => pi.id === ingredient.id);
       
       if (productIngredient) {
@@ -89,13 +98,11 @@ export const updateIngredientsStock = async (productId: string, quantity: number
         const amountToSubtract = productIngredient.quantity * quantity;
         console.log(`Cantidad a descontar: ${amountToSubtract}g`);
         
-        // If ingredient.stock is undefined, initialize it
         if (ingredient.stock === undefined) {
           ingredient.stock = ingredient.quantity ? ingredient.quantity * 1000 : 0;
           console.log(`Stock inicial asignado: ${ingredient.stock}g`);
         }
         
-        // Ensure stock doesn't go below zero
         const newStock = Math.max(0, ingredient.stock - amountToSubtract);
         console.log(`Stock anterior: ${ingredient.stock}g, nuevo stock: ${newStock}g`);
         
@@ -150,7 +157,8 @@ const Products = () => {
       personal: 0,
       mediana: 0,
       familiar: 0
-    }
+    },
+    barcode: ''
   });
   const [ingredientModalOpen, setIngredientModalOpen] = React.useState(false);
   const [selectedProductIngredients, setSelectedProductIngredients] = React.useState<ProductIngredient[]>([]);
@@ -167,7 +175,6 @@ const Products = () => {
         setCategories(cats);
         setCategoriesLoaded(true);
         
-        // Set default category once categories are loaded
         if (cats.length > 0) {
           setNewProduct((current) => ({
             ...current,
@@ -207,7 +214,6 @@ const Products = () => {
     }
   });
 
-  // Restore the missing functions
   const handleSizePriceChange = (size: string, value: number) => {
     if (editingProduct) {
       setEditingProduct({
@@ -284,6 +290,7 @@ const Products = () => {
         ...newProduct,
         id,
         image: null,
+        barcode: newProduct.barcode || null
       } as Product;
       
       await db.add('products', productData);
@@ -296,6 +303,7 @@ const Products = () => {
         name: '', 
         price: 0, 
         category: categories[0]?.id || '',
+        barcode: '',
         sizes: {
           personal: 0,
           mediana: 0,
@@ -399,6 +407,21 @@ const Products = () => {
                 onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                 className="bg-neutral-800 border border-neutral-700 text-white placeholder-gray-400 rounded-md shadow-inner"
               />
+              <div className="flex gap-2 w-full">
+                <Input
+                  placeholder="Código de barras"
+                  value={newProduct.barcode || ''}
+                  onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+                  className="bg-neutral-800 border border-neutral-700 text-white placeholder-gray-400 rounded-md shadow-inner"
+                />
+                <Button
+                  onClick={() => setNewProduct({ ...newProduct, barcode: generateBarcode() })}
+                  variant="outline"
+                  className="border border-purple-600 text-purple-400 hover:bg-purple-700/30"
+                >
+                  <Barcode className="h-4 w-4" />
+                </Button>
+              </div>
               <Select
                 value={newProduct.category}
                 onValueChange={(value) => handleCategoryChange(value, 'new')}
@@ -462,6 +485,7 @@ const Products = () => {
             <TableHeader>
               <TableRow className="border-b border-neutral-700 hover:bg-neutral-700/40 transition-colors duration-300">
                 <TableHead className="text-white tracking-wide">Nombre</TableHead>
+                <TableHead className="text-white tracking-wide">Código</TableHead>
                 <TableHead className="text-white tracking-wide">Precio</TableHead>
                 <TableHead className="text-white tracking-wide">Categoría</TableHead>
                 <TableHead className="text-white tracking-wide">Ingredientes</TableHead>
@@ -483,6 +507,27 @@ const Products = () => {
                       />
                     ) : (
                       <span className="text-white font-medium">{product.name}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingProduct?.id === product.id ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editingProduct.barcode || ''}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, barcode: e.target.value })}
+                          className="bg-neutral-800 border border-neutral-700 text-white"
+                          placeholder="Código de barras"
+                        />
+                        <Button
+                          onClick={() => setEditingProduct({ ...editingProduct, barcode: generateBarcode() })}
+                          variant="outline"
+                          className="border border-purple-600 text-purple-400 hover:bg-purple-700/30"
+                        >
+                          <Barcode className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-white font-medium">{product.barcode || '-'}</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -551,7 +596,7 @@ const Products = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex gap-1 items-center border border-purple-600 text-purple-400 hover:bg-purple-700/30 hover:text-white transition"
+                      className="flex gap-1 items-center border border-purple-600 text-purple-400 hover:bg-purple-700/30 transition"
                       onClick={() => handleOpenIngredients(product)}
                     >
                       <Utensils size={18} />

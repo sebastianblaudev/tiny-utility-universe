@@ -13,6 +13,7 @@ interface Product {
   price: number;
   category: string;
   image: string | null;
+  barcode?: string | null;
   sizes?: {
     personal: number;
     mediana: number;
