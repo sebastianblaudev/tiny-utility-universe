@@ -11,6 +11,7 @@ export function useProductsData() {
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [exactBarcodeMatch, setExactBarcodeMatch] = useState<Product | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -106,6 +107,7 @@ export function useProductsData() {
     if (!query || query.trim() === '') {
       setSearchResults([]);
       setIsSearchActive(false);
+      setExactBarcodeMatch(null);
       return;
     }
 
@@ -124,6 +126,10 @@ export function useProductsData() {
       return false;
     });
     
+    // Check for exact barcode match
+    const exactMatch = products.find(product => product.barcode === normalizedQuery);
+    setExactBarcodeMatch(exactMatch || null);
+    
     setSearchResults(results);
     setIsSearchActive(true);
   };
@@ -132,12 +138,14 @@ export function useProductsData() {
   const handleBarcodeScanned = (barcode: string) => {
     // We're using the same search function but we know it's a barcode
     searchProducts(barcode);
+    return products.find(product => product.barcode === barcode) || null;
   };
 
   // Clear search results and deactivate search
   const clearSearch = () => {
     setSearchResults([]);
     setIsSearchActive(false);
+    setExactBarcodeMatch(null);
   };
 
   return {
@@ -151,6 +159,7 @@ export function useProductsData() {
     isSearchActive,
     clearSearch,
     handleBarcodeScanned,
+    exactBarcodeMatch,
     refresh: () => {
       // Esta función puede ser llamada para recargar los datos
       setIsLoading(true);

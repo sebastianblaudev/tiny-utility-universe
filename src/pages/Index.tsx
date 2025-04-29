@@ -68,7 +68,8 @@ export default function PizzaPOS() {
     searchResults,
     isSearchActive,
     clearSearch,
-    handleBarcodeScanned
+    handleBarcodeScanned,
+    exactBarcodeMatch
   } = useProductsData();
   
   const [cart, setCart] = useState<any[]>([]);
@@ -158,6 +159,66 @@ export default function PizzaPOS() {
       };
     }
   }, [isScannerActive, handleBarcodeScanned]);
+
+  useEffect(() => {
+    if (exactBarcodeMatch) {
+      const isPizza = exactBarcodeMatch.category === 'pizzas' || 
+                     exactBarcodeMatch.categoryId === 'cat_pizza' || 
+                     (exactBarcodeMatch.category && (/pizza/i.test(exactBarcodeMatch.category)));
+      
+      if (isPizza) {
+        if (exactBarcodeMatch.sizes) {
+          const sizes = exactBarcodeMatch.sizes;
+          const sizeKey = Object.keys(sizes)[0];
+          const price = sizes[sizeKey];
+          
+          const cartItem = {
+            ...exactBarcodeMatch,
+            price,
+            size: sizeKey,
+            quantity: 1,
+          };
+
+          const existingItemIndex = cart.findIndex(
+            (i) => i.id === exactBarcodeMatch.id && i.size === sizeKey
+          );
+
+          if (existingItemIndex >= 0) {
+            const newCart = [...cart];
+            newCart[existingItemIndex].quantity += 1;
+            setCart(newCart);
+          } else {
+            setCart([...cart, cartItem]);
+          }
+          
+          toast({
+            title: "Producto agregado",
+            description: `${exactBarcodeMatch.name} (${sizeKey}) agregado al carrito`,
+            variant: "default"
+          });
+        }
+      } else {
+        const existingItemIndex = cart.findIndex((cartItem) => cartItem.id === exactBarcodeMatch.id);
+
+        if (existingItemIndex >= 0) {
+          const newCart = [...cart];
+          newCart[existingItemIndex].quantity += 1;
+          setCart(newCart);
+        } else {
+          setCart([...cart, { ...exactBarcodeMatch, quantity: 1 }]);
+        }
+        
+        toast({
+          title: "Producto agregado",
+          description: `${exactBarcodeMatch.name} agregado al carrito`,
+          variant: "default"
+        });
+      }
+      
+      clearSearch();
+      setSearchQuery("");
+    }
+  }, [exactBarcodeMatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
