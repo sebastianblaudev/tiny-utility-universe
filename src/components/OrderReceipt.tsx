@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
@@ -18,6 +19,11 @@ type ReceiptSettings = {
   kitchenPrinter: string;
 };
 
+type TaxSettings = {
+  taxEnabled: boolean;
+  taxPercentage: string;
+};
+
 const defaultSettings: ReceiptSettings = {
   logoUrl: null,
   header: "Pizza Point\nCalle Ejemplo 123\nTel: (123) 456-7890",
@@ -27,8 +33,14 @@ const defaultSettings: ReceiptSettings = {
   kitchenPrinter: "",
 };
 
+const defaultTaxSettings: TaxSettings = {
+  taxEnabled: true,
+  taxPercentage: "16",
+};
+
 export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }) => {
   const [settings, setSettings] = useState<ReceiptSettings>(defaultSettings);
+  const [taxSettings, setTaxSettings] = useState<TaxSettings>(defaultTaxSettings);
   const [businessName, setBusinessName] = useState<string>("");
 
   useEffect(() => {
@@ -45,13 +57,19 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
     };
 
     loadBusinessData();
+    
     try {
       const savedSettings = localStorage.getItem("receiptSettings");
       if (savedSettings) {
         setSettings(JSON.parse(savedSettings));
       }
+      
+      const savedTaxSettings = localStorage.getItem("taxSettings");
+      if (savedTaxSettings) {
+        setTaxSettings(JSON.parse(savedTaxSettings));
+      }
     } catch (error) {
-      console.error("Error loading receipt settings:", error);
+      console.error("Error loading settings:", error);
     }
   }, []);
 
@@ -74,6 +92,10 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const headerLines = settings.header.split('\n');
   const footerLines = settings.footer.split('\n');
   const contentWidthClass = settings.printerSize === "80mm" ? "min-w-[300px] max-w-[400px]" : "min-w-[200px] max-w-[280px]";
+
+  // Calculate tax amount based on settings
+  const taxPercentage = taxSettings.taxEnabled ? parseFloat(taxSettings.taxPercentage) / 100 : 0;
+  const taxAmount = (order.total || 0) * taxPercentage;
 
   return (
     <div className={`p-4 ${contentWidthClass} text-sm`} id="print-content">
@@ -192,10 +214,12 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             <span>Subtotal:</span>
             <span>{formatCurrency(order.subtotal)}</span>
           </div>
-          <div className="flex justify-between mb-2">
-            <span>IVA (16%):</span>
-            <span>{formatCurrency((order.total || 0) * 0.16)}</span>
-          </div>
+          {taxSettings.taxEnabled && (
+            <div className="flex justify-between mb-2">
+              <span>IVA ({taxSettings.taxPercentage}%):</span>
+              <span>{formatCurrency(taxAmount)}</span>
+            </div>
+          )}
           {order.tip > 0 && (
             <div className="flex justify-between mb-2">
               <span>Propina:</span>

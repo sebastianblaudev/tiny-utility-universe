@@ -4,6 +4,7 @@ import { BackButton } from "@/components/BackButton"
 import { ReceiptSettings } from "@/components/settings/ReceiptSettings"
 import { LocaleSettings } from "@/components/settings/LocaleSettings";
 import { UsersSettings } from "@/components/settings/UsersSettings";
+import { TaxSettings } from "@/components/settings/TaxSettings";
 import { Auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +42,7 @@ export default function Settings() {
             </Card>
 
             <LocaleSettings />
+            <TaxSettings />
             {isAdmin && <UsersSettings />}
             <Card className="bg-[#1A1A1A] border-zinc-800">
               <CardHeader>
