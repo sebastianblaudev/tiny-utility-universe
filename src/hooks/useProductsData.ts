@@ -9,6 +9,8 @@ export function useProductsData() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -99,12 +101,56 @@ export function useProductsData() {
     loadData();
   }, []);
 
+  // Search function that searches by barcode or product name
+  const searchProducts = (query: string) => {
+    if (!query || query.trim() === '') {
+      setSearchResults([]);
+      setIsSearchActive(false);
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase().trim();
+    const results = products.filter(product => {
+      // Search by barcode (exact match)
+      if (product.barcode && product.barcode === normalizedQuery) {
+        return true;
+      }
+      
+      // Search by name (partial match)
+      if (product.name.toLowerCase().includes(normalizedQuery)) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    setSearchResults(results);
+    setIsSearchActive(true);
+  };
+
+  // Function to handle barcode scanner input
+  const handleBarcodeScanned = (barcode: string) => {
+    // We're using the same search function but we know it's a barcode
+    searchProducts(barcode);
+  };
+
+  // Clear search results and deactivate search
+  const clearSearch = () => {
+    setSearchResults([]);
+    setIsSearchActive(false);
+  };
+
   return {
     products,
     categories,
     productsByCategory,
     isLoading,
     error,
+    searchProducts,
+    searchResults,
+    isSearchActive,
+    clearSearch,
+    handleBarcodeScanned,
     refresh: () => {
       // Esta función puede ser llamada para recargar los datos
       setIsLoading(true);

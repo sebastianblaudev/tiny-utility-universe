@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   ShoppingCart,
@@ -20,6 +20,9 @@ import {
   Users,
   Eye,
   Tag,
+  X,
+  Barcode,
+  ScanBarcode
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -60,7 +63,12 @@ export default function PizzaPOS() {
     products, 
     categories, 
     productsByCategory, 
-    isLoading 
+    isLoading,
+    searchProducts,
+    searchResults,
+    isSearchActive,
+    clearSearch,
+    handleBarcodeScanned
   } = useProductsData();
   
   const [cart, setCart] = useState<any[]>([]);
@@ -78,6 +86,9 @@ export default function PizzaPOS() {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([])
   const [extraModal, setExtraModal] = useState<{ open: boolean, itemIdx: number | null }>({ open: false, itemIdx: null });
   const [pendingExtra, setPendingExtra] = useState<{ idx: number | null }>({ idx: null });
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isScannerActive, setIsScannerActive] = useState<boolean>(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (categories.length > 0 && !selectedCategory) {
@@ -118,6 +129,64 @@ export default function PizzaPOS() {
   useEffect(() => {
     localStorage.setItem("pizzaPOSCart", JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    if (isScannerActive) {
+      let barcodeBuffer = '';
+      const keyDownHandler = (e: KeyboardEvent) => {
+        if (!isScannerActive) return;
+        
+        if (e.key !== 'Enter') {
+          barcodeBuffer += e.key;
+        } else {
+          if (barcodeBuffer) {
+            handleBarcodeScanned(barcodeBuffer);
+            setSearchQuery(barcodeBuffer);
+            barcodeBuffer = '';
+          }
+        }
+      };
+
+      window.addEventListener('keydown', keyDownHandler);
+      
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+
+      return () => {
+        window.removeEventListener('keydown', keyDownHandler);
+      };
+    }
+  }, [isScannerActive, handleBarcodeScanned]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    searchProducts(value);
+  };
+
+  const toggleScanner = () => {
+    const newScannerState = !isScannerActive;
+    setIsScannerActive(newScannerState);
+    
+    if (newScannerState) {
+      toast({
+        title: "Escáner activado",
+        description: "Escanee un código de barras",
+        variant: "default"
+      });
+      
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    } else {
+      toast({
+        title: "Escáner desactivado",
+        description: "Modo de búsqueda manual",
+        variant: "default"
+      });
+    }
+  };
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -421,6 +490,8 @@ export default function PizzaPOS() {
     });
   };
 
+  const productsToDisplay = isSearchActive ? searchResults : (productsByCategory[selectedCategory] || []);
+
   return (
     <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
       <div className="flex flex-col flex-1">
@@ -511,6 +582,47 @@ export default function PizzaPOS() {
           </div>
         </motion.div>
 
+        <div className="bg-[#151515] p-2 border-b border-zinc-800 flex items-center space-x-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+            <Input
+              ref={searchInputRef}
+              placeholder="Buscar por nombre o código de barras"
+              className="pl-9 bg-[#1A1A1A] border-[#333333] focus:border-orange-500 text-white"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  clearSearch();
+                }}
+                className="absolute right-3 top-2.5 text-zinc-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <Button 
+            variant={isScannerActive ? "default" : "outline"}
+            size="sm"
+            onClick={toggleScanner}
+            className={
+              isScannerActive 
+                ? "bg-orange-600 hover:bg-orange-700" 
+                : "bg-[#1A1A1A] hover:bg-[#252525] border-[#333333]"
+            }
+            title={isScannerActive ? "Desactivar escáner" : "Activar escáner de código de barras"}
+          >
+            {isScannerActive ? (
+              <Barcode className="h-4 w-4" />
+            ) : (
+              <ScanBarcode className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
         <motion.div
           className="bg-zinc-900 border-b border-zinc-800"
           initial={{ opacity: 0 }}
@@ -520,7 +632,7 @@ export default function PizzaPOS() {
           {isLoading ? (
             <div className="p-8 text-center">Cargando productos...</div>
           ) : (
-            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+            <Tabs value={selectedCategory} onValueChange={(isSearchActive ? (v) => { setSelectedCategory(v); clearSearch(); setSearchQuery(''); } : setSelectedCategory)} className="w-full">
               <TabsList className="bg-[#151515] p-0 h-14 w-full justify-start overflow-x-auto border-b border-[#222222]">
                 {categories.map((cat) => {
                   const Icon = defaultIcons[(cat.name || '').toLowerCase()] || Tag;
@@ -534,7 +646,7 @@ export default function PizzaPOS() {
                         px-6 h-full transition-all duration-300 hover:bg-[#252525] flex items-center gap-2
                       `}
                       style={{
-                        ...(selectedCategory === cat.id
+                        ...(selectedCategory === cat.id && !isSearchActive
                           ? { background: catColor, color: '#fff' }
                           : {}),
                       }}
@@ -546,107 +658,122 @@ export default function PizzaPOS() {
                 })}
               </TabsList>
 
-              <AnimatePresence mode="sync">
-                {categories.map((cat) => {
-                  const borderColor = getCategoryColor(cat);
-                  const productsInCategory = productsByCategory[cat.id] || [];
-                  
-                  return (
-                    <TabsContent 
-                      key={cat.id} 
-                      value={cat.id} 
-                      className="m-0 p-4 bg-black"
-                      forceMount={selectedCategory === cat.id ? true : undefined}
-                    >
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {productsInCategory.length > 0 ? (
-                          productsInCategory.map((prod, index) => {
-                            return (
-                              <motion.div
-                                key={prod.id}
-                                className={`
-                                  bg-[#1A1A1A] rounded-lg overflow-hidden cursor-pointer hover:bg-[#252525]
-                                  transition-all duration-300 shadow-md hover:shadow-[0_5px_15px_rgba(0,0,0,0.3)]
-                                  border-b-4 relative
-                                `}
-                                style={{
-                                  borderBottomColor: borderColor,
-                                  borderImage: `linear-gradient(to right, transparent, ${borderColor}, transparent) 1`
+              <div className="p-4 bg-black">
+                {isSearchActive && searchResults.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-orange-500 text-sm mb-2">
+                      {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'} encontrados
+                    </p>
+                  </div>
+                )}
+
+                {isSearchActive && searchResults.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
+                    <Search className="h-8 w-8 mb-2" />
+                    <p>No se encontraron productos</p>
+                    <p className="text-sm mt-1">Intente con otro término de búsqueda</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {productsToDisplay.length > 0 ? (
+                    productsToDisplay.map((prod, index) => {
+                      const prodCategory = categories.find(c => c.id === (prod.categoryId || prod.category));
+                      const borderColor = prodCategory ? getCategoryColor(prodCategory) : '#FF931E';
+                      
+                      return (
+                        <motion.div
+                          key={prod.id}
+                          className={`
+                            bg-[#1A1A1A] rounded-lg overflow-hidden cursor-pointer hover:bg-[#252525]
+                            transition-all duration-300 shadow-md hover:shadow-[0_5px_15px_rgba(0,0,0,0.3)]
+                            border-b-4 relative
+                          `}
+                          style={{
+                            borderBottomColor: borderColor,
+                            borderImage: `linear-gradient(to right, transparent, ${borderColor}, transparent) 1`
+                          }}
+                          onClick={e => {
+                            if ((prod.category === 'pizzas' || prod.categoryId === 'cat_pizza') && (e.ctrlKey || e.metaKey)) {
+                              setShowHalfAndHalfDialog(true);
+                              setSelectedPizzas(productsByCategory['cat_pizza'] || []);
+                            } else {
+                              handleAddToCart(prod);
+                            }
+                          }}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05, duration: 0.3 }}
+                          whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          {prod.image ? (
+                            <div className="relative">
+                              <img
+                                src={prod.image}
+                                alt={prod.name}
+                                className="w-full h-32 object-cover"
+                              />
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                                <span className="text-lg font-bold">
+                                  {prod.name}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-4 flex flex-col items-center">
+                              <h3 className="font-medium text-center">{prod.name}</h3>
+                            </div>
+                          )}
+                          
+                          {prod.barcode && (
+                            <div className="absolute top-2 right-2 bg-zinc-800/80 px-2 py-1 rounded text-xs flex items-center">
+                              <Barcode className="h-3 w-3 mr-1 text-orange-500" />
+                              <span className="text-zinc-300">{prod.barcode}</span>
+                            </div>
+                          )}
+                          
+                          {(prod.category === 'pizzas' || prod.categoryId === 'cat_pizza') && (
+                            <div className="absolute top-2 right-2 flex items-center space-x-1">
+                              <div 
+                                className="bg-orange-500/20 p-1 rounded-full hover:bg-orange-500/40 transition-all"
+                                title="Mitad y Mitad"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowHalfAndHalfDialog(true);
+                                  setSelectedPizzas(productsByCategory['cat_pizza'] || []);
                                 }}
-                                onClick={e => {
-                                  if ((prod.category === 'pizzas' || prod.categoryId === 'cat_pizza') && (e.ctrlKey || e.metaKey)) {
-                                    setShowHalfAndHalfDialog(true);
-                                    setSelectedPizzas(productsByCategory['cat_pizza'] || []);
-                                  } else {
-                                    handleAddToCart(prod);
-                                  }
-                                }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05, duration: 0.3 }}
-                                whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-                                whileTap={{ scale: 0.97 }}
                               >
-                                {prod.image ? (
-                                  <div className="relative">
-                                    <img
-                                      src={prod.image}
-                                      alt={prod.name}
-                                      className="w-full h-32 object-cover"
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                                      <span className="text-lg font-bold">
-                                        {prod.name}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="p-4 flex flex-col items-center">
-                                    <h3 className="font-medium text-center">{prod.name}</h3>
-                                  </div>
-                                )}
-                                {(prod.category === 'pizzas' || prod.categoryId === 'cat_pizza') && (
-                                  <div className="absolute top-2 right-2 flex items-center space-x-1">
-                                    <div 
-                                      className="bg-orange-500/20 p-1 rounded-full hover:bg-orange-500/40 transition-all"
-                                      title="Mitad y Mitad"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowHalfAndHalfDialog(true);
-                                        setSelectedPizzas(productsByCategory['cat_pizza'] || []);
-                                      }}
-                                    >
-                                      <svg 
-                                        xmlns="http://www.w3.org/2000/svg" 
-                                        width="20" 
-                                        height="20" 
-                                        viewBox="0 0 24 24" 
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        strokeWidth="2" 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round" 
-                                        className="text-orange-500"
-                                      >
-                                        <path d="M12 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8V2Z"/>
-                                        <path d="M2 12h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2v-12Z"/>
-                                      </svg>
-                                    </div>
-                                  </div>
-                                )}
-                              </motion.div>
-                            );
-                          })
-                        ) : (
-                          <div className="text-center text-zinc-500 w-full col-span-4">
-                            No hay productos en esta categoría.
-                          </div>
-                        )}
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  width="20" 
+                                  height="20" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  className="text-orange-500"
+                                >
+                                  <path d="M12 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8V2Z"/>
+                                  <path d="M2 12h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2v-12Z"/>
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    })
+                  ) : (
+                    !isSearchActive && (
+                      <div className="text-center text-zinc-500 w-full col-span-4">
+                        No hay productos en esta categoría.
                       </div>
-                    </TabsContent>
-                  );
-                })}
-              </AnimatePresence>
+                    )
+                  )}
+                </div>
+              </div>
             </Tabs>
           )}
         </motion.div>
