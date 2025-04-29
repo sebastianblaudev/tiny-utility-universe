@@ -36,8 +36,14 @@ export function TaxSettings() {
 
   const onSubmit = (data: TaxSettingsFormValues) => {
     try {
+      // Make sure we're saving exactly what the user entered
+      const formattedData = {
+        taxEnabled: data.taxEnabled,
+        taxPercentage: data.taxPercentage
+      };
+      
       // Save settings to localStorage
-      localStorage.setItem("taxSettings", JSON.stringify(data));
+      localStorage.setItem("taxSettings", JSON.stringify(formattedData));
       toast({
         title: "Configuración guardada",
         description: "La configuración de impuestos ha sido actualizada."

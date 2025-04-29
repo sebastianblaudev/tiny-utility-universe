@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle 
 } from "@/components/ui/dialog";
@@ -49,6 +49,21 @@ export function PaymentModal({
   const [tipPercentage, setTipPercentage] = useState<number>(0);
   const [customTip, setCustomTip] = useState<string>('');
   const { toast } = useToast();
+  const [taxSettings, setTaxSettings] = useState<{taxEnabled: boolean, taxPercentage: string}>({
+    taxEnabled: true,
+    taxPercentage: "16"
+  });
+
+  useEffect(() => {
+    try {
+      const savedTaxSettings = localStorage.getItem("taxSettings");
+      if (savedTaxSettings) {
+        setTaxSettings(JSON.parse(savedTaxSettings));
+      }
+    } catch (error) {
+      console.error("Error loading tax settings:", error);
+    }
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -76,8 +91,10 @@ export function PaymentModal({
   };
 
   const cartTotal = calculateCartTotal();
-
-  const finalTotal = cartTotal + calculateTipAmount();
+  const taxPercentage = taxSettings.taxEnabled ? parseFloat(taxSettings.taxPercentage) / 100 : 0;
+  const subtotal = cartTotal;
+  const taxAmount = subtotal * taxPercentage;
+  const finalTotal = subtotal + taxAmount + calculateTipAmount();
 
   const handleSplitPaymentAdd = () => {
     setSplitPayments([...splitPayments, { method: 'efectivo', amount: '' }]);
@@ -117,7 +134,8 @@ export function PaymentModal({
           size: item.size || null
         })),
         total: finalTotal,
-        subtotal: total / 1.16,
+        subtotal: subtotal,
+        taxPercentage: taxSettings.taxEnabled ? parseFloat(taxSettings.taxPercentage) : 0,
         tip: tipAmount,
         orderType: orderType,
         tableNumber: orderType === 'mesa' ? activeTable : undefined,

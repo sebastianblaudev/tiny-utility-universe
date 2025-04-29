@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Receipt } from "lucide-react";
 import { useRef, useState } from "react";
@@ -72,7 +73,34 @@ export default function History() {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         
-        return sortedOrders.slice(start, start + ordersPerPage);
+        // Load tax settings for display purposes if they don't have saved tax info
+        let taxSettings = {
+          taxEnabled: true,
+          taxPercentage: "16"
+        };
+        
+        try {
+          const savedTaxSettings = localStorage.getItem("taxSettings");
+          if (savedTaxSettings) {
+            taxSettings = JSON.parse(savedTaxSettings);
+          }
+        } catch (e) {
+          console.error("Error loading tax settings:", e);
+        }
+        
+        // Apply tax settings to orders that don't have tax info
+        const processedOrders = sortedOrders.map(order => {
+          if (order.taxPercentage === undefined) {
+            // For older orders without tax info, apply current settings
+            return {
+              ...order,
+              taxPercentage: parseFloat(taxSettings.taxPercentage),
+            };
+          }
+          return order;
+        });
+        
+        return processedOrders.slice(start, start + ordersPerPage);
       } catch (error) {
         console.error("Error al obtener órdenes:", error);
         toast({

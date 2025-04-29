@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
@@ -93,9 +92,11 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const footerLines = settings.footer.split('\n');
   const contentWidthClass = settings.printerSize === "80mm" ? "min-w-[300px] max-w-[400px]" : "min-w-[200px] max-w-[280px]";
 
-  // Calculate tax amount based on settings
+  // Calculate tax amount based on user settings
   const taxPercentage = taxSettings.taxEnabled ? parseFloat(taxSettings.taxPercentage) / 100 : 0;
-  const taxAmount = (order.total || 0) * taxPercentage;
+  const subtotal = order.subtotal || order.total / (1 + taxPercentage); // Calculate subtotal if not provided
+  const taxAmount = subtotal * taxPercentage;
+  const total = subtotal + taxAmount + (order.tip || 0);
 
   return (
     <div className={`p-4 ${contentWidthClass} text-sm`} id="print-content">
@@ -212,7 +213,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
         <div className="mt-4 border-t pt-4">
           <div className="flex justify-between mb-2">
             <span>Subtotal:</span>
-            <span>{formatCurrency(order.subtotal)}</span>
+            <span>{formatCurrency(subtotal)}</span>
           </div>
           {taxSettings.taxEnabled && (
             <div className="flex justify-between mb-2">
@@ -228,7 +229,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
           )}
           <div className="flex justify-between font-bold">
             <span>Total:</span>
-            <span>{formatCurrency(order.total)}</span>
+            <span>{formatCurrency(total)}</span>
           </div>
           
           <div className="mt-4 text-center text-sm">
