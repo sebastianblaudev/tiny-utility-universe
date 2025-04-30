@@ -40,7 +40,10 @@ export interface Customer {
   name: string;
   phone: string;
   email?: string;
-  address?: string;
+  address?: {
+    street: string;
+    reference?: string;
+  };
   orders?: Array<any>; // Adding for compatibility
   createdAt?: Date;
   updatedAt?: Date;
@@ -55,7 +58,7 @@ export interface Order {
   total: number;
   date: Date;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
-  paymentMethod: 'cash' | 'card' | 'transfer' | 'other';
+  paymentMethod: 'cash' | 'card' | 'transfer' | 'other' | 'dividido';
   paymentSplits?: any[]; // Adding for compatibility
   notes?: string;
   createdAt?: Date;
@@ -99,16 +102,23 @@ export interface Cashier {
   id: string;
   name: string;
   pin?: string;
+  active?: boolean; // Added active field
 }
 
 export interface Shift {
   id: string;
   cashierId: string;
-  openTime: Date;
-  closeTime?: Date;
-  openBalance: number;
-  closeBalance?: number;
+  cashierName?: string; // Added cashierName field
+  openTime?: Date; // Compatibility with startTime
+  closeTime?: Date; // Compatibility with endTime
+  startTime?: Date; // Added startTime field
+  endTime?: Date; // Added endTime field
+  openBalance?: number; // Compatibility with startAmount
+  closeBalance?: number; // Compatibility with endAmount
+  startAmount?: number; // Added startAmount field
+  endAmount?: number; // Added endAmount field
   status: 'open' | 'closed';
+  note?: string; // Added note field
 }
 
 export interface Promotion {
@@ -122,7 +132,7 @@ export interface Promotion {
   active: boolean;
   products?: string[];
   categories?: string[];
-  type?: string;
+  type?: 'percentage' | 'fixed' | 'bogo' | 'bundle';
   value?: number;
   code?: string;
   minimumPurchase?: number;
@@ -131,6 +141,7 @@ export interface Promotion {
   daysOfWeek?: string[];
   applicableProducts?: string[];
   applicableCategories?: string[];
+  exclusiveProducts?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -269,6 +280,20 @@ export async function initDB() {
         promotionsStore.createIndex('by-name', 'name');
         promotionsStore.createIndex('by-active', 'active');
         promotionsStore.createIndex('by-date', 'startDate');
+      }
+      
+      if (oldVersion < 6) {
+        // Create cashiers store in version 6
+        const cashiersStore = db.createObjectStore('cashiers', { keyPath: 'id' });
+        cashiersStore.createIndex('by-name', 'name');
+      }
+      
+      if (oldVersion < 7) {
+        // Create shifts store in version 7
+        const shiftsStore = db.createObjectStore('shifts', { keyPath: 'id' });
+        shiftsStore.createIndex('by-cashier', 'cashierId');
+        shiftsStore.createIndex('by-status', 'status');
+        shiftsStore.createIndex('by-date', 'startTime');
       }
     }
   });

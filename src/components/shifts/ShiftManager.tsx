@@ -89,10 +89,11 @@ export function ShiftManager() {
     try {
       const shift: Shift = {
         id: `shift-${Date.now()}`,
-        startAmount: parseFloat(startAmount),
-        startTime: new Date(),
         cashierId: selectedCashier.id,
         cashierName: selectedCashier.name,
+        startTime: new Date(),
+        startAmount: parseFloat(startAmount),
+        status: 'open'
       };
 
       const db = await initDB();
@@ -136,7 +137,7 @@ export function ShiftManager() {
       // Filter orders for current shift
       const shiftOrders = allOrders.filter(order => {
         const orderDate = new Date(order.createdAt);
-        const shiftStart = new Date(activeShift.startTime);
+        const shiftStart = new Date(activeShift.startTime || activeShift.openTime || new Date());
         const shiftEnd = new Date();
         return orderDate >= shiftStart && orderDate <= shiftEnd;
       });
@@ -178,7 +179,7 @@ export function ShiftManager() {
   }
 
   if (activeShift) {
-    const startTime = new Date(activeShift.startTime).toLocaleTimeString();
+    const startTime = new Date(activeShift.startTime || activeShift.openTime || new Date()).toLocaleTimeString();
     return (
       <Card>
         <CardHeader>
