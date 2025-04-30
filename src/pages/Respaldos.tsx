@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Save, FolderOpen, Upload, Server } from "lucide-react"
+import { Save, FolderOpen, Upload, Server, CloudOff } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { 
   selectBackupDirectory, 
@@ -13,8 +14,7 @@ import {
   getLastBackupDate,
   restoreFromLocalBackup,
   isServerBackupEnabled,
-  getServerBackupUrl,
-  initializeBackupSystem
+  getServerBackupUrl
 } from "@/utils/autoBackup"
 import { Badge } from "@/components/ui/badge"
 import { useBackupMonitor } from "@/hooks/useBackupMonitor"
@@ -31,24 +31,11 @@ export default function RespaldosPage() {
   const backupMonitor = useBackupMonitor();
 
   useEffect(() => {
-    // Initialize the backup system on component mount
-    initializeBackupSystem();
-    
     setAutoBackupActive(isAutoBackupEnabled())
     setLastBackup(getLastBackupDate())
     setServerBackupActive(isServerBackupEnabled())
     setServerUrl(getServerBackupUrl())
   }, [])
-
-  // Update from backupMonitor
-  useEffect(() => {
-    setAutoBackupActive(backupMonitor.isBackupRunning);
-    setServerBackupActive(backupMonitor.isServerEnabled);
-    setLastBackup(backupMonitor.lastBackupTime);
-    if (backupMonitor.serverUrl) {
-      setServerUrl(backupMonitor.serverUrl);
-    }
-  }, [backupMonitor]);
 
   const handleSelectDirectory = async () => {
     const success = await selectBackupDirectory()
@@ -206,8 +193,8 @@ export default function RespaldosPage() {
                           Respaldo a servidor remoto activo
                         </h3>
                         {serverUrl && (
-                          <p className="text-xs text-purple-300 break-all">
-                            Enviando a: {serverUrl}
+                          <p className="text-xs text-purple-300">
+                            Enviando a: {serverUrl.length > 30 ? `${serverUrl.substring(0, 30)}...` : serverUrl}
                           </p>
                         )}
                       </div>

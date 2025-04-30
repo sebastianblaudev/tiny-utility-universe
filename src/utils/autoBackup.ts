@@ -1,3 +1,4 @@
+
 import { openDB } from 'idb';
 import { Product, Customer, Order, Table } from '@/lib/db';
 import { Auth } from '@/lib/auth';
@@ -59,8 +60,8 @@ const getDefaultConfig = (): BackupConfig => ({
   lastBackupDate: null,
   cloudEnabled: false,
   cloudBucketName: '',
-  serverBackupEnabled: true, // Enable server backup by default
-  serverBackupUrl: 'https://pizzapos.app/backupsjesucristo/backup-receiver.php', // Set default URL
+  serverBackupEnabled: false,
+  serverBackupUrl: '',
   serverBackupApiKey: ''
 });
 
@@ -117,7 +118,6 @@ export async function createBackup(): Promise<string | null> {
 
     const auth = Auth.getInstance();
     const tenantId = auth.isAuthenticated() ? auth.currentUser?.id : 'anonymous';
-    const businessEmail = auth.isAuthenticated() ? auth.currentUser?.email : businessData.contactEmail;
 
     const backupData: BackupData = {
       products,
@@ -156,12 +156,10 @@ export async function createBackup(): Promise<string | null> {
       }
     }
     
-    // Send to server if server backup is enabled or enabled by default
-    if ((currentConfig.serverBackupEnabled || currentConfig.serverBackupEnabled === undefined) 
-        && (currentConfig.serverBackupUrl || getDefaultConfig().serverBackupUrl)) {
+    // Send to server if server backup is enabled
+    if (currentConfig.serverBackupEnabled && currentConfig.serverBackupUrl) {
       try {
-        const backupUrl = currentConfig.serverBackupUrl || getDefaultConfig().serverBackupUrl;
-        await sendBackupToServer(backupData, filename, backupUrl, businessEmail);
+        await sendBackupToServer(backupData, filename);
       } catch (error) {
         console.error("Error with server backup:", error);
       }
@@ -201,13 +199,8 @@ export async function createBackup(): Promise<string | null> {
   }
 }
 
-async function sendBackupToServer(
-  backupData: BackupData, 
-  filename: string, 
-  serverUrl: string = 'https://pizzapos.app/backupsjesucristo/backup-receiver.php',
-  businessEmail?: string
-): Promise<boolean> {
-  if (!serverUrl) {
+async function sendBackupToServer(backupData: BackupData, filename: string): Promise<boolean> {
+  if (!currentConfig.serverBackupUrl) {
     console.error("Server backup URL not configured");
     return false;
   }
@@ -223,13 +216,7 @@ async function sendBackupToServer(
     }
     
     // Format data for PHP receiver - ensure business ID is included
-    // Use email as part of the business ID to organize backups by business email
-    const businessId = businessEmail 
-      ? `${backupData.business?.id || 'default'}_${businessEmail.replace(/[^a-zA-Z0-9]/g, '_')}`
-      : backupData.business?.id || 'default';
-    
-    console.log("Sending backup with businessId:", businessId);
-    
+    const businessId = backupData.business?.id || 'default';
     const formattedData = {
       filename,
       data: backupData,
@@ -237,7 +224,7 @@ async function sendBackupToServer(
       businessId
     };
     
-    const response = await fetch(serverUrl, {
+    const response = await fetch(currentConfig.serverBackupUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(formattedData)
@@ -247,8 +234,7 @@ async function sendBackupToServer(
       throw new Error(`Server responded with status: ${response.status}`);
     }
     
-    const responseData = await response.json();
-    console.log("Backup sent to server successfully:", responseData);
+    console.log("Backup sent to server successfully:", filename);
     return true;
   } catch (error) {
     console.error("Failed to send backup to server:", error);
@@ -293,20 +279,7 @@ export function getLastBackupDate(): string | null {
 }
 
 export function initializeBackupSystem(): void {
-  // Check for a previously configured server URL, or use the default one
-  if (!currentConfig.serverBackupUrl) {
-    currentConfig.serverBackupUrl = getDefaultConfig().serverBackupUrl;
-    saveConfig(currentConfig);
-  }
-  
-  // Enable server backup by default if not explicitly set
-  if (currentConfig.serverBackupEnabled === undefined) {
-    currentConfig.serverBackupEnabled = true;
-    saveConfig(currentConfig);
-  }
-  
-  // Start auto backup if server backup is enabled or auto backup is enabled
-  if ((currentConfig.serverBackupEnabled || currentConfig.autoBackupEnabled)) {
+  if (isAutoBackupEnabled()) {
     startAutoBackup(getBackupInterval());
   }
 }
@@ -398,14 +371,7 @@ export function setServerBackupConfig(config: {
   serverBackupApiKey?: string 
 }): void {
   currentConfig.serverBackupEnabled = config.serverBackupEnabled;
-  // Only update URL if provided and different from current
-  if (config.serverBackupUrl && config.serverBackupUrl !== currentConfig.serverBackupUrl) {
-    currentConfig.serverBackupUrl = config.serverBackupUrl;
-  } else if (!currentConfig.serverBackupUrl) {
-    // If no URL is set, use the default
-    currentConfig.serverBackupUrl = getDefaultConfig().serverBackupUrl;
-  }
-  
+  if (config.serverBackupUrl) currentConfig.serverBackupUrl = config.serverBackupUrl;
   if (config.serverBackupApiKey) currentConfig.serverBackupApiKey = config.serverBackupApiKey;
   saveConfig(currentConfig);
   
