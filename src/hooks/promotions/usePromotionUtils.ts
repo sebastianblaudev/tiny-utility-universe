@@ -6,13 +6,14 @@ export function usePromotionUtils() {
   const isPromotionActive = (promotion: Promotion): boolean => {
     const now = new Date();
     const today = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const todayString = today.toString();
     
     return (
       promotion.active &&
       new Date(promotion.startDate) <= now &&
       new Date(promotion.endDate) >= now &&
       (!promotion.usageLimit || promotion.usageCount < promotion.usageLimit) &&
-      (!promotion.daysOfWeek || promotion.daysOfWeek.includes(today.toString()))
+      (!promotion.daysOfWeek || !promotion.daysOfWeek.length || promotion.daysOfWeek.includes(todayString))
     );
   };
 
@@ -28,8 +29,8 @@ export function usePromotionUtils() {
       const itemProductId = item.id || item.productId;
       
       return (
-        promotion.applicableCategories?.includes(itemCategoryId) ||
-        promotion.applicableProducts?.includes(itemProductId)
+        (promotion.applicableCategories && promotion.applicableCategories.includes(itemCategoryId)) ||
+        (promotion.applicableProducts && promotion.applicableProducts.includes(itemProductId))
       );
     });
   };

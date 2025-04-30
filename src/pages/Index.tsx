@@ -253,8 +253,12 @@ export default function PizzaPOS() {
   };
 
   const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchCustomer.toLowerCase()) || customer.phone.includes(searchCustomer)
+    (customer) => {
+      // Ensure customer properties exist before using them
+      const name = customer?.name || '';
+      const phone = customer?.phone || '';
+      return name.toLowerCase().includes(searchCustomer.toLowerCase()) || phone.includes(searchCustomer);
+    }
   );
 
   useEffect(() => {
@@ -399,7 +403,13 @@ export default function PizzaPOS() {
   };
 
   const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
+    // Ensure customer has orders property, initialize if needed
+    const customerWithOrders = {
+      ...customer,
+      orders: customer.orders || []
+    };
+    
+    setSelectedCustomer(customerWithOrders);
     setShowCustomerDialog(false);
   };
 
@@ -476,7 +486,7 @@ export default function PizzaPOS() {
   const handleLoadPreviousOrder = async (customerId: string) => {
     const lastOrder = await loadPreviousOrder(customerId);
     
-    if (!lastOrder || !lastOrder.items || !lastOrder.items.length) {
+    if (!lastOrder || !lastOrder.items || !Array.isArray(lastOrder.items) || !lastOrder.items.length) {
       toast({
         title: "Sin pedidos",
         description: "El cliente no tiene pedidos anteriores",
@@ -492,11 +502,13 @@ export default function PizzaPOS() {
           let productCategory = '';
           
           for (const category in productsByCategory) {
-            const product = productsByCategory[category].find(p => p.id === item.productId);
-            if (product) {
-              productName = product.name;
-              productCategory = category;
-              break;
+            if (productsByCategory[category] && Array.isArray(productsByCategory[category])) {
+              const product = productsByCategory[category].find(p => p.id === item.productId);
+              if (product) {
+                productName = product.name;
+                productCategory = category;
+                break;
+              }
             }
           }
           
@@ -747,7 +759,7 @@ export default function PizzaPOS() {
                   <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
                     <Search className="h-8 w-8 mb-2" />
                     <p>No se encontraron productos</p>
-                    <p className="text-sm mt-1">Intente con otro término de búsqueda</p>
+                    <p className="text-sm mt-1">Intente con otro t��rmino de búsqueda</p>
                   </div>
                 )}
 
