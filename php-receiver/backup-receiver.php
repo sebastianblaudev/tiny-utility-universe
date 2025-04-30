@@ -17,7 +17,7 @@
 define('API_KEY', ''); // Déjala vacía para desactivar la verificación o pon tu clave personalizada
 define('BACKUPS_DIR', './backups/');      // Directorio donde se guardarán los respaldos
 define('LOG_FILE', './backup_log.txt');   // Archivo de registro para eventos de respaldo
-define('MAX_BACKUPS_PER_BUSINESS', 50);   // Máximo de respaldos a mantener por negocio
+define('MAX_BACKUPS_PER_BUSINESS', 1);    // Máximo de respaldos a mantener por negocio (cambiado a 1)
 
 // Cabeceras CORS para permitir solicitudes desde cualquier origen
 header('Access-Control-Allow-Origin: *');
@@ -99,28 +99,23 @@ $timestamp = date('Y-m-d_H-i-s');
 $filename = $business_id . '_backup_' . $timestamp . '.json';
 $filepath = $business_dir . $filename;
 
+// Antes de guardar el nuevo respaldo, eliminar todos los respaldos anteriores
+$previous_files = glob($business_dir . '*.json');
+foreach ($previous_files as $file) {
+    if (basename($file) !== 'metadata.json') { // No eliminar el archivo de metadatos
+        unlink($file);
+        write_log("Respaldo anterior eliminado: $file");
+    }
+}
+
 // Guardar el respaldo
 if (file_put_contents($filepath, json_encode($data['data'], JSON_PRETTY_PRINT))) {
     write_log("Respaldo guardado: $filepath");
     
-    // Limpiar respaldos antiguos si excedemos el límite
-    $files = glob($business_dir . '*.json');
-    if (count($files) > MAX_BACKUPS_PER_BUSINESS) {
-        usort($files, function($a, $b) {
-            return filemtime($a) - filemtime($b);
-        });
-        
-        $files_to_delete = array_slice($files, 0, count($files) - MAX_BACKUPS_PER_BUSINESS);
-        foreach ($files_to_delete as $file) {
-            unlink($file);
-            write_log("Respaldo antiguo eliminado: $file");
-        }
-    }
-    
     // Crear un archivo de metadatos que incluye información del último respaldo
     $meta_data = [
         'lastBackup' => $timestamp,
-        'backupCount' => count(glob($business_dir . '*.json')),
+        'backupCount' => 1, // Siempre será 1 ahora
         'businessId' => $business_id,
         'latestBackupFile' => $filename
     ];
