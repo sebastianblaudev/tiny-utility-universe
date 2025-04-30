@@ -1,3 +1,4 @@
+
 import { openDB } from 'idb';
 
 export interface Product {
@@ -6,9 +7,20 @@ export interface Product {
   description?: string;
   price: number;
   category: string;
+  categoryId?: string; // Adding this field for compatibility
   image?: string;
   barcode?: string;
   stock?: number;
+  sizes?: {
+    personal: number;
+    mediana: number;
+    familiar: number;
+  };
+  ingredients?: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+  }>;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -29,6 +41,7 @@ export interface Customer {
   phone: string;
   email?: string;
   address?: string;
+  orders?: Array<any>; // Adding for compatibility
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -38,10 +51,12 @@ export interface Order {
   customerId?: string;
   tableId?: string;
   products: { productId: string; quantity: number }[];
+  items?: any[]; // Adding for compatibility with existing code
   total: number;
   date: Date;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
   paymentMethod: 'cash' | 'card' | 'transfer' | 'other';
+  paymentSplits?: any[]; // Adding for compatibility
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -62,6 +77,7 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
+  color?: string; // Adding color property
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -79,6 +95,22 @@ export interface CashShift {
   updatedAt?: Date;
 }
 
+export interface Cashier {
+  id: string;
+  name: string;
+  pin?: string;
+}
+
+export interface Shift {
+  id: string;
+  cashierId: string;
+  openTime: Date;
+  closeTime?: Date;
+  openBalance: number;
+  closeBalance?: number;
+  status: 'open' | 'closed';
+}
+
 export interface Promotion {
   id: string;
   name: string;
@@ -90,6 +122,15 @@ export interface Promotion {
   active: boolean;
   products?: string[];
   categories?: string[];
+  type?: string;
+  value?: number;
+  code?: string;
+  minimumPurchase?: number;
+  usageLimit?: number;
+  usageCount?: number;
+  daysOfWeek?: string[];
+  applicableProducts?: string[];
+  applicableCategories?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -176,9 +217,9 @@ type DBSchemaValue =
   | Category 
   | any /* settings */ 
   | CashShift 
-  | Promotion;  // Make sure Promotion is included here
+  | Promotion;
 
-const dbVersion = 5;
+const dbVersion = 7; // Updated database version from 5 to 7
 
 export async function initDB() {
   return openDB<DBSchema>('pizzaPos', dbVersion, {
