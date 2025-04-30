@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -578,7 +579,10 @@ export default function PizzaPOS() {
     });
   };
 
-  const productsToDisplay = isSearchActive ? searchResults : (productsByCategory[selectedCategory] || []);
+  // Make sure productsToDisplay is always an array, even if undefined
+  const productsToDisplay = isSearchActive 
+    ? (searchResults || []) 
+    : (productsByCategory[selectedCategory] || []);
 
   return (
     <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
@@ -722,9 +726,11 @@ export default function PizzaPOS() {
           ) : (
             <Tabs value={selectedCategory} onValueChange={(isSearchActive ? (v) => { setSelectedCategory(v); clearSearch(); setSearchQuery(''); } : setSelectedCategory)} className="w-full">
               <TabsList className="bg-[#151515] p-0 h-14 w-full justify-start overflow-x-auto border-b border-[#222222]">
-                {categories.map((cat) => {
+                {categories && categories.length > 0 ? categories.map((cat) => {
+                  // Use a default icon if the category doesn't map to one of our predefined icons
                   const Icon = defaultIcons[(cat.name || '').toLowerCase()] || Tag;
                   const catColor = getCategoryColor(cat);
+                  
                   return (
                     <TabsTrigger
                       key={cat.id}
@@ -743,11 +749,13 @@ export default function PizzaPOS() {
                       {cat.name}
                     </TabsTrigger>
                   );
-                })}
+                }) : (
+                  <div className="p-4 text-zinc-500">No hay categorías disponibles</div>
+                )}
               </TabsList>
 
               <div className="p-4 bg-black">
-                {isSearchActive && searchResults.length > 0 && (
+                {isSearchActive && searchResults && searchResults.length > 0 && (
                   <div className="mb-4">
                     <p className="text-orange-500 text-sm mb-2">
                       {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'} encontrados
@@ -755,18 +763,19 @@ export default function PizzaPOS() {
                   </div>
                 )}
 
-                {isSearchActive && searchResults.length === 0 && (
+                {isSearchActive && (!searchResults || searchResults.length === 0) && (
                   <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
                     <Search className="h-8 w-8 mb-2" />
                     <p>No se encontraron productos</p>
-                    <p className="text-sm mt-1">Intente con otro t��rmino de búsqueda</p>
+                    <p className="text-sm mt-1">Intente con otro término de búsqueda</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {productsToDisplay.length > 0 ? (
+                  {productsToDisplay && productsToDisplay.length > 0 ? (
                     productsToDisplay.map((prod, index) => {
-                      const prodCategory = categories.find(c => c.id === (prod.categoryId || prod.category));
+                      // Find the category for this product
+                      const prodCategory = categories && categories.find(c => c.id === (prod.categoryId || prod.category));
                       const borderColor = prodCategory ? getCategoryColor(prodCategory) : '#FF931E';
                       
                       return (
