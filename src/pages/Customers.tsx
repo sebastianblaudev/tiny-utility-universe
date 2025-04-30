@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { BackButton } from "@/components/BackButton";
@@ -107,7 +106,7 @@ const Customers = () => {
                     <TableCell className="text-white">{customer.email || "—"}</TableCell>
                     <TableCell className="text-white">{customer.phone}</TableCell>
                     <TableCell className="text-white">
-                      {customer.address && customer.address.street ? customer.address.street : "—"}
+                      {customer.address?.street || "—"}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-row gap-2 justify-center">

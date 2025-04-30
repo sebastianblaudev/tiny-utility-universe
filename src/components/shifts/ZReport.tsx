@@ -51,14 +51,12 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
         });
       } else {
         // For single payment methods, add the total to the corresponding method
-        acc[order.paymentMethod === 'cash' ? 'efectivo' : 
-            order.paymentMethod === 'card' ? 'tarjeta' : 
-            order.paymentMethod === 'transfer' ? 'transferencia' : 'otros'] += order.total;
+        acc[order.paymentMethod] += order.total;
       }
       acc.total += order.total;
       return acc;
     },
-    { efectivo: 0, tarjeta: 0, transferencia: 0, otros: 0, total: 0 }
+    { efectivo: 0, tarjeta: 0, transferencia: 0, total: 0 }
   );
 
   // Split header text by newline characters
@@ -82,17 +80,17 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
         )}
         <p className="text-xl font-bold mb-1">{headerLines[0] || "Pizza Point"}</p>
         <p className="text-sm text-gray-600">Reporte Z - Cierre de Caja</p>
-        <p className="text-sm text-gray-600">Cajero: {shift.cashierName || 'No especificado'}</p>
+        <p className="text-sm text-gray-600">Cajero: {shift.cashierName}</p>
       </div>
 
       <div className="mb-4">
         <div className="flex justify-between text-sm">
           <span>Apertura:</span>
-          <span>{formatDate(shift.startTime || shift.openTime || new Date())}</span>
+          <span>{formatDate(shift.startTime)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span>Cierre:</span>
-          <span>{formatDate(shift.endTime || shift.closeTime || new Date())}</span>
+          <span>{formatDate(shift.endTime || new Date())}</span>
         </div>
       </div>
 
@@ -120,13 +118,13 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
         </div>
         <div className="flex justify-between">
           <span>Fondo Inicial:</span>
-          <span>${(shift.startAmount || shift.openBalance || 0).toFixed(2)}</span>
+          <span>${shift.startAmount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span>Monto Final:</span>
-          <span>${(shift.endAmount || shift.closeBalance || 0).toFixed(2)}</span>
+          <span>${shift.endAmount?.toFixed(2)}</span>
         </div>
-        {(shift.note) && (
+        {shift.note && (
           <div className="mt-4 text-sm">
             <span className="font-bold">Nota: </span>
             <span>{shift.note}</span>

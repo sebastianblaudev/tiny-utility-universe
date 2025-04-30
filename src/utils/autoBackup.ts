@@ -1,4 +1,3 @@
-
 import { openDB } from 'idb';
 import { Product, Customer, Order, Table } from '@/lib/db';
 import { Auth } from '@/lib/auth';
@@ -51,20 +50,18 @@ interface BackupConfig {
   serverBackupEnabled?: boolean;
   serverBackupUrl?: string;
   serverBackupApiKey?: string;
-  businessEmail?: string; // Added to store the business email
 }
 
 const getDefaultConfig = (): BackupConfig => ({
   autoBackupEnabled: false,
-  backupInterval: 10, // Changed to 10 minutes by default
+  backupInterval: 5, // 5 minutes by default
   backupPath: '',
   lastBackupDate: null,
   cloudEnabled: false,
   cloudBucketName: '',
   serverBackupEnabled: true, // Enable server backup by default
   serverBackupUrl: 'https://pizzapos.app/backupsjesucristo/backup-receiver.php', // Set default URL
-  serverBackupApiKey: '',
-  businessEmail: '' // Initialize empty business email
+  serverBackupApiKey: ''
 });
 
 const loadConfig = (): BackupConfig => {
@@ -105,7 +102,7 @@ export async function selectBackupDirectory(): Promise<boolean> {
 
 export async function createBackup(): Promise<string | null> {
   try {
-    const db = await openDB('pizzaPos', 5); // Updated to version 5
+    const db = await openDB('pizzaPos', 4);
     
     const products = await db.getAll('products');
     const customers = await db.getAll('customers');
@@ -120,9 +117,7 @@ export async function createBackup(): Promise<string | null> {
 
     const auth = Auth.getInstance();
     const tenantId = auth.isAuthenticated() ? auth.currentUser?.id : 'anonymous';
-    
-    // Use stored business email from config or fallback to business data
-    const businessEmail = currentConfig.businessEmail || businessData.email || '';
+    const businessEmail = auth.isAuthenticated() ? auth.currentUser?.email : businessData.contactEmail;
 
     const backupData: BackupData = {
       products,
@@ -227,8 +222,8 @@ async function sendBackupToServer(
       headers['X-API-Key'] = currentConfig.serverBackupApiKey;
     }
     
-    // Format data for PHP receiver - use email as primary identifier for backups
-    // This ensures backups are organized by business email
+    // Format data for PHP receiver - ensure business ID is included
+    // Use email as part of the business ID to organize backups by business email
     const businessId = businessEmail 
       ? `${backupData.business?.id || 'default'}_${businessEmail.replace(/[^a-zA-Z0-9]/g, '_')}`
       : backupData.business?.id || 'default';
@@ -239,8 +234,7 @@ async function sendBackupToServer(
       filename,
       data: backupData,
       timestamp: new Date().toISOString(),
-      businessId,
-      email: businessEmail // Include email explicitly for PHP receiver
+      businessId
     };
     
     const response = await fetch(serverUrl, {
@@ -262,7 +256,7 @@ async function sendBackupToServer(
   }
 }
 
-export function startAutoBackup(intervalMinutes: number = 10): void { // Changed default to 10 minutes
+export function startAutoBackup(intervalMinutes: number = 5): void {
   if (backupInterval) {
     clearInterval(backupInterval);
   }
@@ -302,19 +296,14 @@ export function initializeBackupSystem(): void {
   // Check for a previously configured server URL, or use the default one
   if (!currentConfig.serverBackupUrl) {
     currentConfig.serverBackupUrl = getDefaultConfig().serverBackupUrl;
+    saveConfig(currentConfig);
   }
   
   // Enable server backup by default if not explicitly set
   if (currentConfig.serverBackupEnabled === undefined) {
     currentConfig.serverBackupEnabled = true;
+    saveConfig(currentConfig);
   }
-
-  // Update default interval to 10 minutes if not set
-  if (currentConfig.backupInterval !== 10) {
-    currentConfig.backupInterval = 10;
-  }
-  
-  saveConfig(currentConfig);
   
   // Start auto backup if server backup is enabled or auto backup is enabled
   if ((currentConfig.serverBackupEnabled || currentConfig.autoBackupEnabled)) {
@@ -406,8 +395,7 @@ export async function testGoogleCloudConnection(): Promise<boolean> {
 export function setServerBackupConfig(config: { 
   serverBackupEnabled: boolean, 
   serverBackupUrl?: string,
-  serverBackupApiKey?: string,
-  businessEmail?: string // Added business email parameter
+  serverBackupApiKey?: string 
 }): void {
   currentConfig.serverBackupEnabled = config.serverBackupEnabled;
   // Only update URL if provided and different from current
@@ -419,27 +407,12 @@ export function setServerBackupConfig(config: {
   }
   
   if (config.serverBackupApiKey) currentConfig.serverBackupApiKey = config.serverBackupApiKey;
-  
-  // Store the business email if provided
-  if (config.businessEmail) currentConfig.businessEmail = config.businessEmail;
-  
   saveConfig(currentConfig);
   
   // If we're enabling server backup and auto backup isn't running, start it
   if (config.serverBackupEnabled && !currentConfig.autoBackupEnabled) {
-    startAutoBackup(currentConfig.backupInterval || 10);
+    startAutoBackup(currentConfig.backupInterval || 5);
   }
-}
-
-export function setBusinessEmail(email: string): void {
-  if (email && email !== currentConfig.businessEmail) {
-    currentConfig.businessEmail = email;
-    saveConfig(currentConfig);
-  }
-}
-
-export function getBusinessEmail(): string {
-  return currentConfig.businessEmail || '';
 }
 
 export function isServerBackupEnabled(): boolean {

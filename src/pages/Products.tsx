@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,7 +19,7 @@ const VALID_CATEGORY_PREFIXES = ["cat_pizza", "cat_bebidas", "cat_postres"];
 
 async function cleanupHardcodedProducts() {
   try {
-    const db = await openDB('pizzaPos', 7); // Updated to version 7
+    const db = await openDB('pizzaPos', 6); // Updated to version 6
     if (!db) return;
     const allProducts = await db.getAll('products');
 
@@ -58,7 +59,7 @@ export const updateIngredientsStock = async (productId: string, quantity: number
   try {
     console.log(`Actualizando stock para producto ID: ${productId}, cantidad: ${quantity}`);
     
-    const db = await openDB('pizzaPos', 7); // Updated to version 7
+    const db = await openDB('pizzaPos', 6); // Updated to version 6
     if (!db) {
       console.error("No se pudo abrir la base de datos");
       return false;
@@ -201,7 +202,7 @@ const Products = () => {
     queryKey: ['products'],
     queryFn: async () => {
       try {
-        const db = await openDB('pizzaPos', 7); // Updated to version 7
+        const db = await openDB('pizzaPos', 6); // Updated to version 6
         if (!db) {
           console.error("No se pudo abrir la base de datos");
           return [];
@@ -274,7 +275,7 @@ const Products = () => {
         });
         return;
       }
-      const db = await openDB('pizzaPos', 7); // Updated to version 7
+      const db = await openDB('pizzaPos', 6); // Updated to version 6
       if (!db) {
         console.error("No se pudo abrir la base de datos");
         toast({
@@ -330,7 +331,7 @@ const Products = () => {
         });
         return;
       }
-      const db = await openDB('pizzaPos', 7); // Updated to version 7
+      const db = await openDB('pizzaPos', 6); // Updated to version 6
       await db.put('products', product);
       toast({
         title: "Producto actualizado exitosamente"
@@ -347,7 +348,7 @@ const Products = () => {
 
   const handleDeleteProduct = async (id: string) => {
     try {
-      const db = await openDB('pizzaPos', 7); // Updated to version 7
+      const db = await openDB('pizzaPos', 6); // Updated to version 6
       await db.delete('products', id);
       toast({
         title: "Producto eliminado exitosamente"
@@ -363,7 +364,7 @@ const Products = () => {
 
   const handleSaveIngredients = async (ingredients: ProductIngredient[]) => {
     try {
-      const db = await openDB('pizzaPos', 7); // Updated to version 7
+      const db = await openDB('pizzaPos', 6); // Updated to version 6
       const product = products.find((p: any) => p.id === activeProductId);
       if (!product) return;
       await db.put('products', { ...product, ingredients });

@@ -76,7 +76,7 @@ export function CashierSelector({ onCashierSelect }: CashierSelectorProps) {
       const newCashier: Cashier = {
         id: `cashier-${Date.now()}`,
         name: newCashierName.trim(),
-        active: true
+        active: true,
       }
 
       const db = await initDB()

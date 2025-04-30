@@ -1,300 +1,326 @@
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import type { BusinessData } from '@/types/business';
 
-import { openDB } from 'idb';
-
-export interface Product {
+interface Category {
   id: string;
   name: string;
-  description?: string;
+  color: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
   price: number;
   category: string;
-  categoryId?: string; // Adding this field for compatibility
-  image?: string;
-  barcode?: string;
-  stock?: number;
+  image: string | null;
+  barcode?: string | null;
   sizes?: {
     personal: number;
     mediana: number;
     familiar: number;
   };
-  ingredients?: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-  }>;
-  createdAt?: Date;
-  updatedAt?: Date;
+  categoryId?: string;
+  ingredients?: any[];
 }
 
-export interface Table {
-  id: string;
-  number: number;
-  status: 'available' | 'occupied' | 'reserved';
-  seats: number;
-  location?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface Customer {
+interface Customer {
   id: string;
   name: string;
   phone: string;
   email?: string;
+  orders: string[];
   address?: {
     street: string;
-    reference?: string;
+    reference: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
   };
-  orders?: Array<any>; // Adding for compatibility
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
-export interface Order {
+interface Order {
   id: string;
-  customerId?: string;
-  tableId?: string;
-  products: { productId: string; quantity: number }[];
-  items?: any[]; // Adding for compatibility with existing code
+  customerId: string | null;
+  customerName?: string | null;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    price: number;
+    name: string;
+    size?: string;
+  }>;
   total: number;
-  date: Date;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
-  paymentMethod: 'cash' | 'card' | 'transfer' | 'other' | 'dividido';
-  paymentSplits?: any[]; // Adding for compatibility
-  notes?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  subtotal: number;
+  tip?: number;
+  orderType: 'mesa' | 'delivery' | 'takeaway';
+  tableNumber?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdAt: Date;
+  paymentMethod: 'efectivo' | 'tarjeta' | 'transferencia' | 'dividido';
+  paymentSplits?: PaymentSplit[];
+  type?: string;
 }
 
-export interface BusinessData {
-  id: string;
-  name: string;
-  email: string;
-  address?: string;
-  phone?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  license_key?: string;
+interface Table {
+  number: string;
+  status: 'free' | 'occupied';
+  currentOrderId?: string;
 }
 
-export interface Category {
+interface Shift {
   id: string;
-  name: string;
-  description?: string;
-  color?: string; // Adding color property
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface CashShift {
-  id: string;
+  startAmount: number;
+  endAmount?: number;
+  startTime: Date;
+  endTime?: Date;
+  note?: string;
   cashierId: string;
-  openingBalance: number;
-  closingBalance?: number;
-  startDate: Date;
-  endDate?: Date;
-  status: 'open' | 'closed';
-  notes?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  cashierName: string;
 }
 
-export interface Cashier {
+interface Cashier {
   id: string;
   name: string;
-  pin?: string;
-  active?: boolean; // Added active field
+  active: boolean;
 }
 
-export interface Shift {
-  id: string;
-  cashierId: string;
-  cashierName?: string; // Added cashierName field
-  openTime?: Date; // Compatibility with startTime
-  closeTime?: Date; // Compatibility with endTime
-  startTime?: Date; // Added startTime field
-  endTime?: Date; // Added endTime field
-  openBalance?: number; // Compatibility with startAmount
-  closeBalance?: number; // Compatibility with endAmount
-  startAmount?: number; // Added startAmount field
-  endAmount?: number; // Added endAmount field
-  status: 'open' | 'closed';
-  note?: string; // Added note field
+interface PaymentSplit {
+  method: 'efectivo' | 'tarjeta' | 'transferencia';
+  amount: number;
 }
 
-export interface Promotion {
+interface Promotion {
   id: string;
   name: string;
-  description?: string;
+  description: string;
+  type: 'percentage' | 'fixed' | 'bogo' | 'bundle';
+  value: number;
   startDate: Date;
   endDate: Date;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
   active: boolean;
-  products?: string[];
-  categories?: string[];
-  type?: 'percentage' | 'fixed' | 'bogo' | 'bundle';
-  value?: number;
-  code?: string;
   minimumPurchase?: number;
-  usageLimit?: number;
-  usageCount?: number;
-  daysOfWeek?: string[];
-  applicableProducts?: string[];
-  applicableCategories?: string[];
+  applicableCategories: string[];
+  applicableProducts: string[];
   exclusiveProducts?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  code?: string;
+  usageLimit?: number;
+  usageCount: number;
+  daysOfWeek?: number[];
+  createdAt: Date;
 }
 
-export interface DBSchema {
+// Corrected interface to properly support all the types we need
+interface DBSchemaValue {
+  key: string | number;
+  value: any;
+  indexes?: {
+    [name: string]: string | number | boolean | Date | string[] | ArrayBufferView | {
+      [key: string]: any;
+    };
+  };
+}
+
+// Define our custom schema
+interface PizzaPOSDB extends DBSchema {
   products: {
     key: string;
     value: Product;
-    indexes: {
-      'by-category': string;
-      'by-name': string;
-      'by-barcode': string;
-    };
-  };
-  tables: {
-    key: string;
-    value: Table;
-    indexes: {
-      'by-number': number;
-      'by-status': string;
-    };
+    indexes: { 'by-category': string };
   };
   customers: {
     key: string;
     value: Customer;
-    indexes: {
-      'by-name': string;
-      'by-phone': string;
-      'by-email': string;
-    };
+    indexes: { 'by-phone': string };
   };
   orders: {
     key: string;
     value: Order;
-    indexes: {
-      'by-customer': string;
-      'by-table': string;
-      'by-date': Date;
-      'by-status': string;
-    };
+    indexes: { 'by-customer': string; 'by-date': Date };
   };
-  business: {
-    key: number;
-    value: BusinessData;
+  tables: {
+    key: string;
+    value: Table;
+  };
+  shifts: {
+    key: string;
+    value: Shift;
+  };
+  cashiers: {
+    key: string;
+    value: Cashier;
   };
   categories: {
     key: string;
     value: Category;
-    indexes: {
-      'by-name': string;
-    };
+    indexes: { 'by-name': string };
   };
-  settings: {
+  business: {
     key: string;
-    value: any;
-  };
-  cashShifts: {
-    key: string;
-    value: CashShift;
-    indexes: {
-      'by-date': Date;
-      'by-cashier': string;
-      'by-status': string;
-    };
+    value: BusinessData;
   };
   promotions: {
     key: string;
     value: Promotion;
-    indexes: {
-      'by-name': string;
+    indexes: { 
       'by-active': boolean;
       'by-date': Date;
+      'by-name': string;
     };
   };
 }
 
-// Define the union of all value types
-type DBSchemaValue = 
-  | Product 
-  | Table 
-  | Customer 
-  | Order 
-  | BusinessData 
-  | Category 
-  | any /* settings */ 
-  | CashShift 
-  | Promotion;
+let dbPromise: Promise<IDBPDatabase<PizzaPOSDB>> | null = null;
 
-const dbVersion = 7; // Updated database version from 5 to 7
+export const initDB = async () => {
+  if (!dbPromise) {
+    try {
+      const db = await openDB<PizzaPOSDB>('pizzaPos', 7, {
+        upgrade(db, oldVersion, newVersion) {
+          if (!db.objectStoreNames.contains('products')) {
+            const productStore = db.createObjectStore('products', { keyPath: 'id' });
+            productStore.createIndex('by-category', 'category');
+          }
 
-export async function initDB() {
-  return openDB<DBSchema>('pizzaPos', dbVersion, {
-    upgrade(db, oldVersion, newVersion, transaction) {
-      if (oldVersion < 1) {
-        const productsStore = db.createObjectStore('products', { keyPath: 'id' });
-        productsStore.createIndex('by-category', 'category');
-        productsStore.createIndex('by-name', 'name');
-        productsStore.createIndex('by-barcode', 'barcode');
+          if (!db.objectStoreNames.contains('customers')) {
+            const customerStore = db.createObjectStore('customers', { keyPath: 'id' });
+            customerStore.createIndex('by-phone', 'phone');
+          }
 
-        const tablesStore = db.createObjectStore('tables', { keyPath: 'id' });
-        tablesStore.createIndex('by-number', 'number');
-        tablesStore.createIndex('by-status', 'status');
+          if (!db.objectStoreNames.contains('orders')) {
+            const orderStore = db.createObjectStore('orders', { keyPath: 'id' });
+            orderStore.createIndex('by-customer', 'customerId');
+            orderStore.createIndex('by-date', 'createdAt');
+          }
 
-        const customersStore = db.createObjectStore('customers', { keyPath: 'id' });
-        customersStore.createIndex('by-name', 'name');
-        customersStore.createIndex('by-phone', 'phone');
-        customersStore.createIndex('by-email', 'email');
+          if (!db.objectStoreNames.contains('tables')) {
+            const tableStore = db.createObjectStore('tables', { keyPath: 'number' });
+            for (let i = 1; i <= 8; i++) {
+              tableStore.put({
+                number: i.toString(),
+                status: 'free' as const
+              });
+            }
+          }
 
-        const ordersStore = db.createObjectStore('orders', { keyPath: 'id' });
-        ordersStore.createIndex('by-customer', 'customerId');
-        ordersStore.createIndex('by-table', 'tableId');
-        ordersStore.createIndex('by-date', 'date');
-        ordersStore.createIndex('by-status', 'status');
+          if (!db.objectStoreNames.contains('shifts')) {
+            db.createObjectStore('shifts', { keyPath: 'id' });
+          }
 
-        db.createObjectStore('business', { keyPath: 'id' });
-      }
+          if (!db.objectStoreNames.contains('cashiers')) {
+            db.createObjectStore('cashiers', { keyPath: 'id' });
+          }
 
-      if (oldVersion < 2) {
-        const categoriesStore = db.createObjectStore('categories', { keyPath: 'id' });
-        categoriesStore.createIndex('by-name', 'name');
-      }
+          if (!db.objectStoreNames.contains('categories')) {
+            const categoryStore = db.createObjectStore('categories', { keyPath: 'id' });
+            categoryStore.createIndex('by-name', 'name');
+            
+            categoryStore.put({
+              id: 'cat_pizza',
+              name: 'Pizzas',
+              color: '#FF5733'
+            });
+            
+            categoryStore.put({
+              id: 'cat_bebidas',
+              name: 'Bebidas',
+              color: '#3498DB'
+            });
+            
+            categoryStore.put({
+              id: 'cat_postres',
+              name: 'Postres',
+              color: '#F1C40F'
+            });
 
-      if (oldVersion < 3) {
-        db.createObjectStore('settings', { keyPath: 'id' });
-      }
+            categoryStore.put({
+              id: 'cat_extras',
+              name: 'Extras',
+              color: '#2ECC71'
+            });
+          }
 
-      if (oldVersion < 4) {
-        const cashShiftsStore = db.createObjectStore('cashShifts', { keyPath: 'id' });
-        cashShiftsStore.createIndex('by-date', 'startDate');
-        cashShiftsStore.createIndex('by-cashier', 'cashierId');
-        cashShiftsStore.createIndex('by-status', 'status');
-      }
+          if (!db.objectStoreNames.contains('business')) {
+            db.createObjectStore('business', { keyPath: 'id' });
+          }
+
+          // For version 6: Add migration to disable taxes completely
+          if (oldVersion < 6) {
+            // Ensure tax settings exist and are disabled
+            try {
+              const businessStore = db.transaction('business', 'readwrite').objectStore('business');
+              
+              businessStore.put({
+                id: 'taxSettings',
+                taxEnabled: false,
+                taxPercentage: "0"
+              } as BusinessData);
+            } catch (error) {
+              console.error("Error during tax settings migration:", error);
+            }
+          }
+
+          // Add promotions store in version 7
+          if (oldVersion < 7) {
+            if (!db.objectStoreNames.contains('promotions')) {
+              const promotionStore = db.createObjectStore('promotions', { keyPath: 'id' });
+              promotionStore.createIndex('by-active', 'active');
+              promotionStore.createIndex('by-date', 'endDate');
+              promotionStore.createIndex('by-name', 'name');
+            }
+          }
+        },
+      });
       
-      if (oldVersion < 5) {
-        const promotionsStore = db.createObjectStore('promotions', { keyPath: 'id' });
-        promotionsStore.createIndex('by-name', 'name');
-        promotionsStore.createIndex('by-active', 'active');
-        promotionsStore.createIndex('by-date', 'startDate');
-      }
+      dbPromise = Promise.resolve(db);
       
-      if (oldVersion < 6) {
-        // Create cashiers store in version 6
-        const cashiersStore = db.createObjectStore('cashiers', { keyPath: 'id' });
-        cashiersStore.createIndex('by-name', 'name');
-      }
+      db.addEventListener('versionchange', () => {
+        db.close();
+        dbPromise = null;
+      });
       
-      if (oldVersion < 7) {
-        // Create shifts store in version 7
-        const shiftsStore = db.createObjectStore('shifts', { keyPath: 'id' });
-        shiftsStore.createIndex('by-cashier', 'cashierId');
-        shiftsStore.createIndex('by-status', 'status');
-        shiftsStore.createIndex('by-date', 'startTime');
-      }
+      // Immediately after initialization, make sure taxes are disabled
+      const disableTaxes = async () => {
+        try {
+          const tx = db.transaction('business', 'readwrite');
+          const businessStore = tx.objectStore('business');
+          
+          await businessStore.put({
+            id: 'taxSettings',
+            taxEnabled: false,
+            taxPercentage: "0"
+          } as BusinessData);
+          
+          // Dispatch an event to notify components
+          window.dispatchEvent(new CustomEvent('taxSettingsChanged', { 
+            detail: {
+              taxEnabled: false,
+              taxPercentage: "0"
+            }
+          }));
+          
+          console.log("Taxes disabled system-wide");
+          
+          // Clean up localStorage for consistency
+          localStorage.setItem("taxSettings", JSON.stringify({
+            taxEnabled: false,
+            taxPercentage: "0"
+          }));
+        } catch (error) {
+          console.error("Error disabling taxes:", error);
+        }
+      };
+      
+      disableTaxes();
+      
+      return db;
+    } catch (error) {
+      console.error("Database initialization error:", error);
+      throw error;
     }
-  });
-}
+  }
+  
+  return dbPromise;
+};
+
+export type { Product, Customer, Order, Table, Shift, Cashier, Category, BusinessData, Promotion };

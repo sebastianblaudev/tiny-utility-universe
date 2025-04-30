@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { initDB } from "@/lib/db";
-import { setBusinessEmail, setServerBackupConfig } from "@/utils/autoBackup";
 
 const BusinessWizard = () => {
   const [businessName, setBusinessName] = useState("");
@@ -70,18 +68,11 @@ const BusinessWizard = () => {
         createdAt: new Date()
       });
 
-      // Configure automatic backups using the business email
-      setBusinessEmail(email);
-      setServerBackupConfig({
-        serverBackupEnabled: true,
-        businessEmail: email
-      });
-
       showConfetti();
       
       toast({
         title: "¡Registro exitoso! 🎉",
-        description: "Tu negocio ha sido registrado correctamente. Los respaldos automáticos cada 10 minutos han sido configurados.",
+        description: "Tu negocio ha sido registrado correctamente",
       });
 
       // Sign out from Supabase (we'll use local auth for the app)

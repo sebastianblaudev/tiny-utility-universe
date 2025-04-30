@@ -8,8 +8,7 @@ import {
   isServerBackupEnabled,
   getLastBackupDate,
   getServerBackupUrl,
-  initializeBackupSystem,
-  getBusinessEmail
+  initializeBackupSystem
 } from '@/utils/autoBackup';
 
 export const useBackupMonitor = () => {
@@ -18,7 +17,6 @@ export const useBackupMonitor = () => {
   const [lastBackupTime, setLastBackupTime] = useState<string | null>(getLastBackupDate());
   const [backupInterval, setBackupInterval] = useState(getBackupInterval());
   const [serverUrl, setServerUrl] = useState(getServerBackupUrl());
-  const [businessEmail, setBusinessEmail] = useState(getBusinessEmail());
   const { toast } = useToast();
   
   // Initialize backup system on first load
@@ -34,7 +32,6 @@ export const useBackupMonitor = () => {
     setLastBackupTime(getLastBackupDate());
     setBackupInterval(getBackupInterval());
     setServerUrl(getServerBackupUrl());
-    setBusinessEmail(getBusinessEmail());
     
     // Set up polling to check if backup status has changed
     const intervalId = setInterval(() => {
@@ -42,7 +39,6 @@ export const useBackupMonitor = () => {
       const currentServerEnabled = isServerBackupEnabled();
       const currentLastBackup = getLastBackupDate();
       const currentServerUrl = getServerBackupUrl();
-      const currentBusinessEmail = getBusinessEmail();
       
       if (currentBackupRunning !== isBackupRunning) {
         setIsBackupRunning(currentBackupRunning);
@@ -56,10 +52,6 @@ export const useBackupMonitor = () => {
         setServerUrl(currentServerUrl);
       }
       
-      if (currentBusinessEmail !== businessEmail) {
-        setBusinessEmail(currentBusinessEmail);
-      }
-      
       if (currentLastBackup !== lastBackupTime) {
         setLastBackupTime(currentLastBackup);
         // Show toast when a new backup is created
@@ -71,7 +63,7 @@ export const useBackupMonitor = () => {
     }, 30000); // Check every 30 seconds
     
     return () => clearInterval(intervalId);
-  }, [isBackupRunning, isServerEnabled, lastBackupTime, toast, serverUrl, businessEmail]);
+  }, [isBackupRunning, isServerEnabled, lastBackupTime, toast, serverUrl]);
   
   // Ensure backup is running if server backup is enabled
   useEffect(() => {
@@ -93,6 +85,5 @@ export const useBackupMonitor = () => {
     lastBackupTime,
     backupInterval,
     serverUrl,
-    businessEmail,
   };
 };

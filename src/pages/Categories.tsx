@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +43,6 @@ export default function Categories() {
       const categoryData = {
         ...newCategory,
         id,
-        createdAt: new Date(),
       } as Category;
       
       await db.add('categories', categoryData);
@@ -66,10 +64,7 @@ export default function Categories() {
   const handleUpdateCategory = async (category: Category) => {
     try {
       const db = await initDB();
-      await db.put('categories', {
-        ...category,
-        updatedAt: new Date()
-      });
+      await db.put('categories', category);
       toast({
         title: "Categoría actualizada exitosamente"
       });
