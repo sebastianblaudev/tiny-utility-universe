@@ -6,7 +6,9 @@ import {
   getBackupInterval, 
   startAutoBackup,
   isServerBackupEnabled,
-  getLastBackupDate
+  getLastBackupDate,
+  getServerBackupUrl,
+  initializeBackupSystem
 } from '@/utils/autoBackup';
 
 export const useBackupMonitor = () => {
@@ -14,7 +16,13 @@ export const useBackupMonitor = () => {
   const [isServerEnabled, setIsServerEnabled] = useState(isServerBackupEnabled());
   const [lastBackupTime, setLastBackupTime] = useState<string | null>(getLastBackupDate());
   const [backupInterval, setBackupInterval] = useState(getBackupInterval());
+  const [serverUrl, setServerUrl] = useState(getServerBackupUrl());
   const { toast } = useToast();
+  
+  // Initialize backup system on first load
+  useEffect(() => {
+    initializeBackupSystem();
+  }, []);
   
   // Monitor backup status
   useEffect(() => {
@@ -23,12 +31,14 @@ export const useBackupMonitor = () => {
     setIsServerEnabled(isServerBackupEnabled());
     setLastBackupTime(getLastBackupDate());
     setBackupInterval(getBackupInterval());
+    setServerUrl(getServerBackupUrl());
     
     // Set up polling to check if backup status has changed
     const intervalId = setInterval(() => {
       const currentBackupRunning = isAutoBackupEnabled();
       const currentServerEnabled = isServerBackupEnabled();
       const currentLastBackup = getLastBackupDate();
+      const currentServerUrl = getServerBackupUrl();
       
       if (currentBackupRunning !== isBackupRunning) {
         setIsBackupRunning(currentBackupRunning);
@@ -36,6 +46,10 @@ export const useBackupMonitor = () => {
       
       if (currentServerEnabled !== isServerEnabled) {
         setIsServerEnabled(currentServerEnabled);
+      }
+
+      if (currentServerUrl !== serverUrl) {
+        setServerUrl(currentServerUrl);
       }
       
       if (currentLastBackup !== lastBackupTime) {
@@ -49,7 +63,7 @@ export const useBackupMonitor = () => {
     }, 30000); // Check every 30 seconds
     
     return () => clearInterval(intervalId);
-  }, [isBackupRunning, isServerEnabled, lastBackupTime, toast]);
+  }, [isBackupRunning, isServerEnabled, lastBackupTime, toast, serverUrl]);
   
   // Ensure backup is running if server backup is enabled
   useEffect(() => {
@@ -70,5 +84,6 @@ export const useBackupMonitor = () => {
     isServerEnabled,
     lastBackupTime,
     backupInterval,
+    serverUrl,
   };
 };
