@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Save, FolderOpen, Upload, Server, Mail } from "lucide-react"
+import { Save, FolderOpen, Upload, Server } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { 
   selectBackupDirectory, 
@@ -15,8 +14,7 @@ import {
   restoreFromLocalBackup,
   isServerBackupEnabled,
   getServerBackupUrl,
-  initializeBackupSystem,
-  getBusinessEmail
+  initializeBackupSystem
 } from "@/utils/autoBackup"
 import { Badge } from "@/components/ui/badge"
 import { useBackupMonitor } from "@/hooks/useBackupMonitor"
@@ -28,7 +26,6 @@ export default function RespaldosPage() {
   const [isRestoring, setIsRestoring] = useState(false)
   const [serverBackupActive, setServerBackupActive] = useState(false)
   const [serverUrl, setServerUrl] = useState<string>("")
-  const [businessEmail, setBusinessEmail] = useState<string>("")
   
   // Use the backup monitor hook
   const backupMonitor = useBackupMonitor();
@@ -41,7 +38,6 @@ export default function RespaldosPage() {
     setLastBackup(getLastBackupDate())
     setServerBackupActive(isServerBackupEnabled())
     setServerUrl(getServerBackupUrl())
-    setBusinessEmail(getBusinessEmail())
   }, [])
 
   // Update from backupMonitor
@@ -51,9 +47,6 @@ export default function RespaldosPage() {
     setLastBackup(backupMonitor.lastBackupTime);
     if (backupMonitor.serverUrl) {
       setServerUrl(backupMonitor.serverUrl);
-    }
-    if (backupMonitor.businessEmail) {
-      setBusinessEmail(backupMonitor.businessEmail);
     }
   }, [backupMonitor]);
 
@@ -216,14 +209,6 @@ export default function RespaldosPage() {
                           <p className="text-xs text-purple-300 break-all">
                             Enviando a: {serverUrl}
                           </p>
-                        )}
-                        {businessEmail && (
-                          <div className="flex items-center mt-1">
-                            <Mail className="h-3 w-3 text-purple-400 mr-1" />
-                            <p className="text-xs text-purple-300 break-all">
-                              ID de respaldo: {businessEmail}
-                            </p>
-                          </div>
                         )}
                       </div>
                     </div>
