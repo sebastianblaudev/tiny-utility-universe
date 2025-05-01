@@ -1,8 +1,0 @@
-
-project_id = "zrhrmffmddiylzdneenv"
-[functions.get_business_license_status]
-verify_jwt = false
-[functions.activate_business_license]
-verify_jwt = false
-[functions.deactivate_business_license]
-verify_jwt = false
