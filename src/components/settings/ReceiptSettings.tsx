@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { ImagePlus, ImageOff } from "lucide-react";
+import { ImagePlus, ImageOff, Printer } from "lucide-react";
 
 type ReceiptSettings = {
   logoUrl: string | null;
@@ -176,21 +177,41 @@ export const ReceiptSettings = () => {
             name="printerSize"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Tamaño de Impresora</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <Printer className="h-4 w-4" />
+                  Tamaño de Impresora Térmica
+                </FormLabel>
                 <FormControl>
-                  <select 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-white"
-                    {...field}
-                  >
-                    <option value="58mm">58mm</option>
-                    <option value="80mm">80mm</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className={`flex flex-col items-center justify-center p-4 rounded-md cursor-pointer border border-gray-300 ${field.value === '58mm' ? 'bg-orange-100 border-orange-500' : 'bg-background'}`}>
+                      <input 
+                        type="radio" 
+                        value="58mm" 
+                        checked={field.value === '58mm'}
+                        onChange={() => field.onChange('58mm')} 
+                        className="sr-only"
+                      />
+                      <span className="text-base font-medium mb-1">58mm</span>
+                      <span className="text-xs text-gray-500">Impresora térmica estándar</span>
+                    </label>
+                    <label className={`flex flex-col items-center justify-center p-4 rounded-md cursor-pointer border border-gray-300 ${field.value === '80mm' ? 'bg-orange-100 border-orange-500' : 'bg-background'}`}>
+                      <input 
+                        type="radio" 
+                        value="80mm" 
+                        checked={field.value === '80mm'}
+                        onChange={() => field.onChange('80mm')} 
+                        className="sr-only"
+                      />
+                      <span className="text-base font-medium mb-1">80mm</span>
+                      <span className="text-xs text-gray-500">Impresora térmica ancha</span>
+                    </label>
+                  </div>
                 </FormControl>
               </FormItem>
             )}
           />
 
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? "Guardando..." : "Guardar configuración"}
           </Button>
         </form>

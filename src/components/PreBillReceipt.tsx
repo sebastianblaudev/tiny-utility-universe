@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { formatCurrency } from "@/lib/utils";
 import { Customer } from "@/lib/db";
 import { Printer, CheckCircle, Receipt } from "lucide-react";
@@ -14,6 +14,24 @@ interface PreBillReceiptProps {
   total: number;
 }
 
+type ReceiptSettings = {
+  logoUrl: string | null;
+  header: string;
+  footer: string;
+  printerSize: string;
+  receiptPrinter: string;
+  kitchenPrinter: string;
+};
+
+const defaultSettings: ReceiptSettings = {
+  logoUrl: null,
+  header: "Pizza Point\nCalle Ejemplo 123\nTel: (123) 456-7890",
+  footer: "¡Gracias por su compra!\nConserve este ticket como comprobante",
+  printerSize: "58mm",
+  receiptPrinter: "",
+  kitchenPrinter: "",
+};
+
 export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
   cart,
   activeTable,
@@ -23,11 +41,27 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
   taxAmount,
   total
 }) => {
+  const [settings, setSettings] = useState<ReceiptSettings>(defaultSettings);
   const printRef = useRef<HTMLDivElement>(null);
   
   // Calculate 10% tip
   const tipAmount = total * 0.1;
   const totalWithTip = total + tipAmount;
+  
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem("receiptSettings");
+        if (savedSettings) {
+          setSettings(JSON.parse(savedSettings));
+        }
+      } catch (error) {
+        console.error("Error loading receipt settings:", error);
+      }
+    };
+
+    loadSettings();
+  }, []);
   
   const printPreBill = () => {
     if (printRef.current) {
@@ -36,17 +70,23 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
       
       if (!windowPrint) return;
       
+      // Apply printer size settings
+      const pageWidth = settings.printerSize === "80mm" ? "80mm" : "58mm";
+      const fontSize = settings.printerSize === "58mm" ? "10px" : "12px";
+      
       windowPrint.document.write(`
         <html>
           <head>
             <title>Pre-Cuenta</title>
             <style>
+              @page { size: ${pageWidth} auto; margin: 0; }
               body {
                 font-family: 'Arial', sans-serif;
-                width: 80mm;
+                width: ${pageWidth};
+                max-width: ${pageWidth};
                 margin: 0 auto;
                 padding: 5mm;
-                font-size: 12px;
+                font-size: ${fontSize};
                 background-color: white;
               }
               .header {
@@ -56,7 +96,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 border-bottom: 1px dashed #ccc;
               }
               .header h2 {
-                font-size: 20px;
+                font-size: ${settings.printerSize === "58mm" ? "16px" : "20px"};
                 margin-bottom: 5px;
               }
               .divider {
@@ -71,7 +111,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
               .extras {
                 padding-left: 15px;
                 font-style: italic;
-                font-size: 11px;
+                font-size: ${settings.printerSize === "58mm" ? "9px" : "11px"};
                 color: #666;
               }
               .total-section {
@@ -83,14 +123,14 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 display: flex;
                 justify-content: space-between;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: ${settings.printerSize === "58mm" ? "12px" : "14px"};
                 margin: 5px 0;
               }
               .tip-row {
                 display: flex;
                 justify-content: space-between;
                 margin: 5px 0;
-                font-size: 13px;
+                font-size: ${settings.printerSize === "58mm" ? "11px" : "13px"};
               }
               .tip-section {
                 background-color: #f8f8f8;
@@ -131,10 +171,13 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
   const dateString = now.toLocaleDateString();
   const timeString = now.toLocaleTimeString();
 
+  // Determine width class based on printer size
+  const contentWidthClass = settings.printerSize === "80mm" ? "min-w-[300px] max-w-[400px]" : "min-w-[200px] max-w-[280px]";
+
   return (
     <>
       <div className="hidden">
-        <div ref={printRef}>
+        <div ref={printRef} className={contentWidthClass}>
           <div className="header">
             <h2>PRE-CUENTA</h2>
             <p>Fecha: {dateString} - Hora: {timeString}</p>

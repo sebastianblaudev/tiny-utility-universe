@@ -94,6 +94,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const headerLines = settings.header.split('\n');
   const footerLines = settings.footer.split('\n');
   const contentWidthClass = settings.printerSize === "80mm" ? "min-w-[300px] max-w-[400px]" : "min-w-[200px] max-w-[280px]";
+  const fontSizeClass = settings.printerSize === "58mm" ? "text-xs" : "text-sm";
 
   // Use the total directly from the order
   const total = order.total;
@@ -104,7 +105,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const hasCustomerInfo = order.customerName || (order.customerPhone || order.customerTelephone);
   
   return (
-    <div className={`p-4 ${contentWidthClass} text-sm bg-white rounded-md shadow-md`} id="print-content">
+    <div className={`p-4 ${contentWidthClass} ${fontSizeClass} bg-white rounded-md shadow-md`} id="print-content">
       {receiptType === 'customer' ? (
         <>
           <div className="text-center mb-6">
@@ -113,15 +114,15 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                 <img 
                   src={settings.logoUrl} 
                   alt="Logo" 
-                  className="h-20 max-w-[200px] object-contain"
+                  className={`${settings.printerSize === "58mm" ? "h-16" : "h-20"} max-w-[200px] object-contain`}
                   style={{ background: "#fff", padding: "4px" }}
                 />
               </div>
             )}
-            <p className="text-2xl font-bold mb-1">{businessName || headerLines[0]}</p>
+            <p className={`${settings.printerSize === "58mm" ? "text-xl" : "text-2xl"} font-bold mb-1`}>{businessName || headerLines[0]}</p>
             <div className="border-t border-b border-gray-200 py-2 my-2">
               {headerLines.slice(1).map((line, index) => (
-                <p key={`header-${index}`} className="text-sm text-gray-600">
+                <p key={`header-${index}`} className={`${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} text-gray-600`}>
                   {line}
                 </p>
               ))}
@@ -155,7 +156,9 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                     <div>
                       <div>{order.address.street}</div>
                       {order.address.reference && (
-                        <div className="text-xs text-gray-600">Ref: {order.address.reference}</div>
+                        <div className={`${settings.printerSize === "58mm" ? "text-[10px]" : "text-xs"} text-gray-600`}>
+                          Ref: {order.address.reference}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -180,7 +183,9 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                         <div>
                           <div>{order.address.street}</div>
                           {order.address.reference && (
-                            <div className="text-xs text-gray-600">Ref: {order.address.reference}</div>
+                            <div className={`${settings.printerSize === "58mm" ? "text-[10px]" : "text-xs"} text-gray-600`}>
+                              Ref: {order.address.reference}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -199,12 +204,14 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
       ) : (
         <div className="mb-6">
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-2 text-gray-800">
+            <h2 className={`${settings.printerSize === "58mm" ? "text-2xl" : "text-3xl"} font-bold mb-2 text-gray-800`}>
               {order.orderType === 'mesa' ? `MESA ${order.tableNumber}` : 
               order.orderType === 'delivery' ? 'DELIVERY' : 'PARA LLEVAR'}
             </h2>
             <div className="bg-gray-200 p-2 rounded-md inline-block px-4">
-              <span className="text-xl font-medium">Orden #{order.id.slice(-4)}</span>
+              <span className={`${settings.printerSize === "58mm" ? "text-lg" : "text-xl"} font-medium`}>
+                Orden #{order.id.slice(-4)}
+              </span>
             </div>
             <div className="text-sm mt-2">{formatDate(order.createdAt)}</div>
           </div>
@@ -236,7 +243,9 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                 <div>
                   <div className="font-medium">{order.address.street}</div>
                   {order.address.reference && (
-                    <div className="text-sm text-gray-600">Ref: {order.address.reference}</div>
+                    <div className={`${settings.printerSize === "58mm" ? "text-[10px]" : "text-sm"} text-gray-600`}>
+                      Ref: {order.address.reference}
+                    </div>
                   )}
                 </div>
               </div>
@@ -250,7 +259,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
           <TableBody>
             {order.items.map((item: any, index: number) => (
               <TableRow key={index} className={`border-b ${receiptType === 'kitchen' ? "border-gray-300" : ""}`}>
-                <TableCell className={`py-2 pl-0 font-medium ${receiptType === 'kitchen' ? "text-base" : ""}`}>
+                <TableCell className={`py-2 pl-0 font-medium ${receiptType === 'kitchen' ? (settings.printerSize === "58mm" ? "text-sm" : "text-base") : ""}`}>
                   {receiptType === 'kitchen' && (
                     <span className="inline-block bg-gray-800 text-white px-2 py-0.5 rounded mr-2">
                       {item.quantity}x
@@ -264,7 +273,7 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                     </span>
                   )}
                   {receiptType === 'kitchen' && item.notes && (
-                    <div className="block text-sm bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-2 mt-1">
+                    <div className={`block ${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-2 mt-1`}>
                       <span className="font-bold">Notas:</span> {item.notes}
                     </div>
                   )}
@@ -301,14 +310,14 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             </div>
           )}
           
-          <div className="flex justify-between font-bold text-lg bg-gray-100 p-2 rounded-md mt-2">
+          <div className={`flex justify-between font-bold ${settings.printerSize === "58mm" ? "text-base" : "text-lg"} bg-gray-100 p-2 rounded-md mt-2`}>
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>
           </div>
           
           <div className="mt-6 text-center text-sm border-t border-dashed pt-3">
             {footerLines.map((line, index) => (
-              <p key={`footer-${index}`} className={index === 0 ? "font-medium" : "text-xs text-gray-500 mt-1"}>
+              <p key={`footer-${index}`} className={index === 0 ? "font-medium" : `${settings.printerSize === "58mm" ? "text-[10px]" : "text-xs"} text-gray-500 mt-1`}>
                 {line}
               </p>
             ))}

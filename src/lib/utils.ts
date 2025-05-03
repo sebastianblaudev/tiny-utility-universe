@@ -108,6 +108,7 @@ export function printElement(content: HTMLElement) {
             max-width: ${pageWidth};
             margin: 0;
             padding: 2mm;
+            font-size: ${printerSettings.printerSize === "58mm" ? "10px" : "12px"};
           }
           table { width: 100%; }
           td { padding: 4px 0; }
