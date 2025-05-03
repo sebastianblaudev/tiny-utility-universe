@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { UserPlus, Users } from "lucide-react"
 import type { Cashier } from "@/lib/db"
-import { initDB } from "@/lib/db"
+import { initDB, Auth } from "@/lib/db"
 
 interface CashierSelectorProps {
   onCashierSelect: (cashier: Cashier) => void;
@@ -46,9 +46,29 @@ export function CashierSelector({ onCashierSelect }: CashierSelectorProps) {
         return;
       }
       
-      const allCashiers = await db.getAll('cashiers')
-      console.log("Loaded cashiers:", allCashiers);
-      setCashiers(allCashiers)
+      // Get cashiers from IndexedDB
+      const dbCashiers = await db.getAll('cashiers')
+      console.log("Loaded IndexedDB cashiers:", dbCashiers);
+      
+      // Get cashiers from Auth (UsersSettings)
+      const auth = Auth.getInstance();
+      const authCashiers = auth.getCashiers().map(c => ({
+        id: c.id,
+        name: c.username,
+        active: true,
+        pin: c.pin
+      }));
+      console.log("Loaded Auth cashiers:", authCashiers);
+      
+      // Merge both lists, avoiding duplicates (prefer IndexedDB entries if duplicate IDs)
+      const existingIds = new Set(dbCashiers.map(c => c.id));
+      const mergedCashiers = [
+        ...dbCashiers,
+        ...authCashiers.filter(c => !existingIds.has(c.id))
+      ];
+      
+      console.log("Merged cashiers:", mergedCashiers);
+      setCashiers(mergedCashiers)
     } catch (error) {
       console.error("Error loading cashiers:", error)
       toast({
@@ -140,6 +160,7 @@ export function CashierSelector({ onCashierSelect }: CashierSelectorProps) {
             >
               <Users className="h-4 w-4 mr-2" />
               {cashier.name}
+              {cashier.pin && <span className="ml-auto text-xs text-muted-foreground">PIN: {cashier.pin}</span>}
             </Button>
           ))
         ) : (
