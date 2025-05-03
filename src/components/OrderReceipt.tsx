@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
-import { MapPin } from "lucide-react";
+import { MapPin, Phone, User } from "lucide-react";
 import { initDB } from "@/lib/db";
 
 interface OrderReceiptProps {
@@ -101,6 +101,8 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const taxPercentage = order.taxSettings?.taxPercentage || 0;
   const taxAmount = order.tax || 0;
   
+  const hasCustomerInfo = order.customerName || (order.customerPhone || order.customerTelephone);
+  
   return (
     <div className={`p-4 ${contentWidthClass} text-sm`} id="print-content">
       {receiptType === 'customer' ? (
@@ -129,18 +131,43 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
               <span>Fecha: {formatDate(order.createdAt)}</span>
               <span>Orden #{order.id.slice(-4)}</span>
             </div>
+            
+            {/* Cliente información */}
+            {hasCustomerInfo && (
+              <div className="border-t border-b border-dashed py-2 my-2">
+                <div className="flex items-start gap-1 mb-1">
+                  <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div className="font-bold">{order.customerName}</div>
+                </div>
+                
+                {order.customerPhone && (
+                  <div className="flex items-start gap-1 mb-1">
+                    <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>{order.customerPhone}</div>
+                  </div>
+                )}
+                
+                {order.address && (
+                  <div className="flex items-start gap-1 mb-1">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div>{order.address.street}</div>
+                      {order.address.reference && (
+                        <div className="text-xs text-gray-600">Ref: {order.address.reference}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="text-sm">
               {order.orderType === 'mesa' && `Mesa: ${order.tableNumber}`}
               {order.orderType === 'delivery' && (
                 <div className="border-t border-b border-dashed py-2 my-2">
                   <div className="font-bold mb-1">DELIVERY</div>
-                  {order.customerName && (
-                    <div className="mb-1">Cliente: {order.customerName}</div>
-                  )}
-                  {order.customerPhone && (
-                    <div className="mb-1">Tel: {order.customerPhone}</div>
-                  )}
-                  {order.address && (
+                  
+                  {!hasCustomerInfo && order.address && (
                     <>
                       <div className="flex items-start gap-1 mb-1">
                         <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -167,10 +194,29 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
           </h2>
           <div className="text-xl">Orden #{order.id.slice(-4)}</div>
           <div className="text-sm">{formatDate(order.createdAt)}</div>
+          
+          {/* Información del cliente en recibo de cocina */}
+          {hasCustomerInfo && (
+            <div className="mt-2 text-left border-t border-dashed py-2">
+              <div className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                <div>{order.customerName}</div>
+              </div>
+              {order.customerPhone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-4 w-4" />
+                  <div>{order.customerPhone}</div>
+                </div>
+              )}
+            </div>
+          )}
+          
           {order.orderType === 'delivery' && order.address && (
             <div className="mt-2 text-left border-t border-b border-dashed py-2">
-              <div>Cliente: {order.customerName}</div>
-              {order.customerPhone && <div>Tel: {order.customerPhone}</div>}
+              {!hasCustomerInfo && (
+                <div>Cliente: {order.customerName || "No especificado"}</div>
+              )}
+              {!hasCustomerInfo && order.customerPhone && <div>Tel: {order.customerPhone}</div>}
               <div className="flex items-start gap-1 mt-1">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div>
