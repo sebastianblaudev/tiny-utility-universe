@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react" 
 import { useNavigate, useLocation } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +26,8 @@ import {
   Barcode,
   ScanBarcode,
   Save,
-  Printer
+  Printer,
+  StickyNote
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
