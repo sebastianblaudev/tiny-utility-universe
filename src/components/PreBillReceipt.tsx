@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { formatCurrency } from "@/lib/utils";
 import { Customer } from "@/lib/db";
-import { Printer } from "lucide-react";
+import { Printer, CheckCircle, Receipt } from "lucide-react";
 
 interface PreBillReceiptProps {
   cart: any[];
@@ -42,44 +42,74 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
             <title>Pre-Cuenta</title>
             <style>
               body {
-                font-family: 'Courier New', monospace;
+                font-family: 'Arial', sans-serif;
                 width: 80mm;
                 margin: 0 auto;
                 padding: 5mm;
                 font-size: 12px;
+                background-color: white;
               }
               .header {
                 text-align: center;
-                margin-bottom: 10px;
-                font-size: 14px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px dashed #ccc;
+              }
+              .header h2 {
+                font-size: 20px;
+                margin-bottom: 5px;
               }
               .divider {
-                border-top: 1px dashed #000;
+                border-top: 1px dashed #ccc;
                 margin: 10px 0;
               }
               .item {
                 display: flex;
                 justify-content: space-between;
-                margin: 5px 0;
+                margin: 8px 0;
               }
               .extras {
                 padding-left: 15px;
                 font-style: italic;
                 font-size: 11px;
+                color: #666;
               }
               .total-section {
-                margin-top: 10px;
-                border-top: 1px dashed #000;
+                margin-top: 15px;
+                border-top: 1px dashed #ccc;
                 padding-top: 10px;
               }
               .total-row {
                 display: flex;
                 justify-content: space-between;
                 font-weight: bold;
+                font-size: 14px;
+                margin: 5px 0;
               }
               .tip-row {
                 display: flex;
                 justify-content: space-between;
+                margin: 5px 0;
+                font-size: 13px;
+              }
+              .tip-section {
+                background-color: #f8f8f8;
+                padding: 10px;
+                border-radius: 5px;
+                margin: 10px 0;
+              }
+              .client-info {
+                margin: 10px 0;
+                padding: 10px;
+                background-color: #f8f8f8;
+                border-radius: 5px;
+                border-left: 3px solid #666;
+              }
+              .thankyou {
+                text-align: center;
+                margin-top: 15px;
+                font-style: italic;
+                color: #666;
               }
             </style>
           </head>
@@ -111,7 +141,14 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
             {orderType === "mesa" && <p>Mesa: {activeTable}</p>}
             {orderType === "delivery" && <p>Delivery</p>}
             {orderType === "takeaway" && <p>Para llevar</p>}
-            {selectedCustomer && <p>Cliente: {selectedCustomer.name}</p>}
+            
+            {selectedCustomer && (
+              <div className="client-info">
+                <p><strong>Cliente:</strong> {selectedCustomer.name}</p>
+                {selectedCustomer.phone && <p><strong>Teléfono:</strong> {selectedCustomer.phone}</p>}
+                {selectedCustomer.address && <p><strong>Dirección:</strong> {selectedCustomer.address.street}</p>}
+              </div>
+            )}
           </div>
           
           <div className="divider"></div>
@@ -153,21 +190,28 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
               <span>Total:</span>
               <span>{formatCurrency(total, false)}</span>
             </div>
-            <div className="tip-row">
-              <span>Propina sugerida (10%):</span>
-              <span>{formatCurrency(tipAmount, false)}</span>
+            
+            <div className="tip-section">
+              <div className="tip-row">
+                <span>Propina sugerida (10%):</span>
+                <span>{formatCurrency(tipAmount, false)}</span>
+              </div>
+              <div className="total-row" style={{ marginTop: "5px", borderTop: "1px dashed #ccc", paddingTop: "5px" }}>
+                <span>Total con propina:</span>
+                <span>{formatCurrency(totalWithTip, false)}</span>
+              </div>
             </div>
-            <div className="total-row" style={{ marginTop: "10px", borderTop: "1px dashed #000", paddingTop: "5px" }}>
-              <span>Total con propina:</span>
-              <span>{formatCurrency(totalWithTip, false)}</span>
-            </div>
+          </div>
+          
+          <div className="thankyou">
+            Gracias por su visita
           </div>
         </div>
       </div>
       
       <button 
         onClick={printPreBill} 
-        className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white py-2 px-4 rounded-md"
+        className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 px-4 rounded-md shadow"
       >
         <Printer className="h-4 w-4" />
         Imprimir Pre-Cuenta

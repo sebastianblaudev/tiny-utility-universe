@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
-import { MapPin, Phone, User } from "lucide-react";
+import { MapPin, Phone, User, CheckCircle } from "lucide-react";
 import { initDB } from "@/lib/db";
 
 interface OrderReceiptProps {
@@ -104,52 +104,54 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   const hasCustomerInfo = order.customerName || (order.customerPhone || order.customerTelephone);
   
   return (
-    <div className={`p-4 ${contentWidthClass} text-sm`} id="print-content">
+    <div className={`p-4 ${contentWidthClass} text-sm bg-white rounded-md shadow-md`} id="print-content">
       {receiptType === 'customer' ? (
         <>
-          <div className="text-center mb-4">
+          <div className="text-center mb-6">
             {settings.logoUrl && (
-              <div className="flex justify-center mb-2">
+              <div className="flex justify-center mb-3">
                 <img 
                   src={settings.logoUrl} 
                   alt="Logo" 
-                  className="h-16 max-w-[180px] object-contain"
+                  className="h-20 max-w-[200px] object-contain"
                   style={{ background: "#fff", padding: "4px" }}
                 />
               </div>
             )}
-            <p className="text-xl font-bold mb-1">{businessName || headerLines[0]}</p>
-            {headerLines.slice(1).map((line, index) => (
-              <p key={`header-${index}`} className="text-sm text-gray-600">
-                {line}
-              </p>
-            ))}
+            <p className="text-2xl font-bold mb-1">{businessName || headerLines[0]}</p>
+            <div className="border-t border-b border-gray-200 py-2 my-2">
+              {headerLines.slice(1).map((line, index) => (
+                <p key={`header-${index}`} className="text-sm text-gray-600">
+                  {line}
+                </p>
+              ))}
+            </div>
           </div>
           
-          <div className="mb-4">
-            <div className="flex justify-between text-sm">
+          <div className="mb-6">
+            <div className="flex justify-between text-sm font-medium bg-gray-50 p-2 rounded-lg mb-3">
               <span>Fecha: {formatDate(order.createdAt)}</span>
-              <span>Orden #{order.id.slice(-4)}</span>
+              <span className="font-bold text-orange-600">Orden #{order.id.slice(-4)}</span>
             </div>
             
             {/* Cliente información */}
             {hasCustomerInfo && (
-              <div className="border-t border-b border-dashed py-2 my-2">
-                <div className="flex items-start gap-1 mb-1">
-                  <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <div className="border-t border-b border-dashed py-3 my-3 bg-gray-50 rounded-lg p-3">
+                <div className="flex items-start gap-2 mb-2">
+                  <User className="h-4 w-4 mt-0.5 flex-shrink-0 text-orange-500" />
                   <div className="font-bold">{order.customerName}</div>
                 </div>
                 
                 {order.customerPhone && (
-                  <div className="flex items-start gap-1 mb-1">
-                    <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 mb-2">
+                    <Phone className="h-4 w-4 mt-0.5 flex-shrink-0 text-orange-500" />
                     <div>{order.customerPhone}</div>
                   </div>
                 )}
                 
                 {order.address && (
-                  <div className="flex items-start gap-1 mb-1">
-                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 mb-1">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-orange-500" />
                     <div>
                       <div>{order.address.street}</div>
                       {order.address.reference && (
@@ -162,10 +164,14 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             )}
             
             <div className="text-sm">
-              {order.orderType === 'mesa' && `Mesa: ${order.tableNumber}`}
+              {order.orderType === 'mesa' && (
+                <div className="bg-orange-100 text-orange-800 font-medium p-2 rounded-md text-center">
+                  Mesa: {order.tableNumber}
+                </div>
+              )}
               {order.orderType === 'delivery' && (
-                <div className="border-t border-b border-dashed py-2 my-2">
-                  <div className="font-bold mb-1">DELIVERY</div>
+                <div className="bg-blue-100 text-blue-800 font-medium p-2 rounded-md">
+                  <div className="text-center mb-1">DELIVERY</div>
                   
                   {!hasCustomerInfo && order.address && (
                     <>
@@ -182,29 +188,37 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                   )}
                 </div>
               )}
-              {order.orderType === 'takeaway' && 'Para llevar'}
+              {order.orderType === 'takeaway' && (
+                <div className="bg-green-100 text-green-800 font-medium p-2 rounded-md text-center">
+                  Para llevar
+                </div>
+              )}
             </div>
           </div>
         </>
       ) : (
-        <div className="mb-4 text-center">
-          <h2 className="text-2xl font-bold mb-1">
-            {order.orderType === 'mesa' ? `MESA ${order.tableNumber}` : 
-             order.orderType === 'delivery' ? 'DELIVERY' : 'PARA LLEVAR'}
-          </h2>
-          <div className="text-xl">Orden #{order.id.slice(-4)}</div>
-          <div className="text-sm">{formatDate(order.createdAt)}</div>
+        <div className="mb-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-2 text-gray-800">
+              {order.orderType === 'mesa' ? `MESA ${order.tableNumber}` : 
+              order.orderType === 'delivery' ? 'DELIVERY' : 'PARA LLEVAR'}
+            </h2>
+            <div className="bg-gray-200 p-2 rounded-md inline-block px-4">
+              <span className="text-xl font-medium">Orden #{order.id.slice(-4)}</span>
+            </div>
+            <div className="text-sm mt-2">{formatDate(order.createdAt)}</div>
+          </div>
           
           {/* Información del cliente en recibo de cocina */}
           {hasCustomerInfo && (
-            <div className="mt-2 text-left border-t border-dashed py-2">
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <div>{order.customerName}</div>
+            <div className="mt-4 text-left border-t border-dashed py-3 bg-gray-50 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <User className="h-4 w-4 text-orange-500" />
+                <div className="font-medium">{order.customerName}</div>
               </div>
               {order.customerPhone && (
-                <div className="flex items-center gap-1">
-                  <Phone className="h-4 w-4" />
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-orange-500" />
                   <div>{order.customerPhone}</div>
                 </div>
               )}
@@ -212,17 +226,17 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
           )}
           
           {order.orderType === 'delivery' && order.address && (
-            <div className="mt-2 text-left border-t border-b border-dashed py-2">
+            <div className="mt-4 text-left border border-blue-200 bg-blue-50 py-3 rounded-lg p-3">
               {!hasCustomerInfo && (
-                <div>Cliente: {order.customerName || "No especificado"}</div>
+                <div className="font-medium mb-1">Cliente: {order.customerName || "No especificado"}</div>
               )}
-              {!hasCustomerInfo && order.customerPhone && <div>Tel: {order.customerPhone}</div>}
-              <div className="flex items-start gap-1 mt-1">
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              {!hasCustomerInfo && order.customerPhone && <div className="mb-2">Tel: {order.customerPhone}</div>}
+              <div className="flex items-start gap-2 mt-1">
+                <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0 text-blue-500" />
                 <div>
-                  <div>{order.address.street}</div>
+                  <div className="font-medium">{order.address.street}</div>
                   {order.address.reference && (
-                    <div className="text-xs">Ref: {order.address.reference}</div>
+                    <div className="text-sm text-gray-600">Ref: {order.address.reference}</div>
                   )}
                 </div>
               </div>
@@ -231,66 +245,85 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
         </div>
       )}
 
-      <Table>
-        <TableBody>
-          {order.items.map((item: any, index: number) => (
-            <TableRow key={index} className="border-b">
-              <TableCell className="py-2 pl-0 font-medium">
-                {item.quantity}x {item.name} 
-                {item.size && (
-                  <span className="ml-1 font-bold">
-                    ({getSizeAbbreviation(item.size)})
-                  </span>
-                )}
-                {receiptType === 'kitchen' && item.notes && (
-                  <span className="block text-xs text-gray-600 mt-1">
-                    Notas: {item.notes}
-                  </span>
-                )}
-              </TableCell>
-              {receiptType === 'customer' && (
-                <TableCell className="py-2 pr-0 text-right">
-                  {formatCurrency(item.price * item.quantity)}
+      <div className={`${receiptType === 'kitchen' ? "border-2 border-gray-300 rounded-lg p-2 bg-gray-50" : ""}`}>
+        <Table>
+          <TableBody>
+            {order.items.map((item: any, index: number) => (
+              <TableRow key={index} className={`border-b ${receiptType === 'kitchen' ? "border-gray-300" : ""}`}>
+                <TableCell className={`py-2 pl-0 font-medium ${receiptType === 'kitchen' ? "text-base" : ""}`}>
+                  {receiptType === 'kitchen' && (
+                    <span className="inline-block bg-gray-800 text-white px-2 py-0.5 rounded mr-2">
+                      {item.quantity}x
+                    </span>
+                  )}
+                  {receiptType !== 'kitchen' && `${item.quantity}x `}
+                  {item.name} 
+                  {item.size && (
+                    <span className={`ml-1 font-bold ${receiptType === 'kitchen' ? "text-gray-700" : ""}`}>
+                      ({getSizeAbbreviation(item.size)})
+                    </span>
+                  )}
+                  {receiptType === 'kitchen' && item.notes && (
+                    <div className="block text-sm bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-2 mt-1">
+                      <span className="font-bold">Notas:</span> {item.notes}
+                    </div>
+                  )}
                 </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                {receiptType === 'customer' && (
+                  <TableCell className="py-2 pr-0 text-right">
+                    {formatCurrency(item.price * item.quantity)}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {receiptType === 'customer' && (
-        <div className="mt-4 border-t pt-4">
-          <div className="flex justify-between mb-2">
+        <div className="mt-6 border-t pt-4">
+          <div className="flex justify-between mb-2 text-gray-700">
             <span>Subtotal:</span>
             <span>{formatCurrency(order.subtotal)}</span>
           </div>
           
           {taxEnabled && taxPercentage > 0 && (
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between mb-2 text-gray-700">
               <span>IVA ({taxPercentage}%):</span>
               <span>{formatCurrency(taxAmount)}</span>
             </div>
           )}
           
           {order.tip > 0 && (
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between mb-2 text-gray-700">
               <span>Propina:</span>
               <span>{formatCurrency(order.tip)}</span>
             </div>
           )}
           
-          <div className="flex justify-between font-bold">
+          <div className="flex justify-between font-bold text-lg bg-gray-100 p-2 rounded-md mt-2">
             <span>Total:</span>
             <span>{formatCurrency(total)}</span>
           </div>
           
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-6 text-center text-sm border-t border-dashed pt-3">
             {footerLines.map((line, index) => (
-              <p key={`footer-${index}`} className={index === 0 ? "" : "text-xs text-gray-500"}>
+              <p key={`footer-${index}`} className={index === 0 ? "font-medium" : "text-xs text-gray-500 mt-1"}>
                 {line}
               </p>
             ))}
+            
+            <div className="flex items-center justify-center mt-3 text-gray-500 text-xs">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              <span>Gracias por su preferencia</span>
+            </div>
           </div>
+        </div>
+      )}
+
+      {receiptType === 'kitchen' && (
+        <div className="mt-4 border-t pt-3 text-center text-gray-500">
+          <p className="text-sm">{formatDate(new Date())}</p>
         </div>
       )}
     </div>
