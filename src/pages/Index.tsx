@@ -850,6 +850,24 @@ export default function PizzaPOS() {
     checkSavedOrders();
   }, [tableCount]);
 
+  // Add this function for updating item notes
+  const handleSaveItemNote = (itemIndex: number, note: string) => {
+    if (itemIndex < 0 || itemIndex >= cart.length) return;
+    
+    const newCart = [...cart];
+    newCart[itemIndex] = {
+      ...newCart[itemIndex],
+      notes: note
+    };
+    setCart(newCart);
+
+    toast({
+      title: "Comentario guardado",
+      description: "El comentario ha sido agregado al producto",
+      variant: "default"
+    });
+  };
+
   return (
     <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
       <div className="flex flex-col flex-1">
@@ -1464,6 +1482,7 @@ export default function PizzaPOS() {
         onClose={() => setNoteDialogConfig({ open: false, itemIdx: null, initialNote: "" })} 
         itemIndex={noteDialogConfig.itemIdx || 0}
         initialNote={noteDialogConfig.initialNote}
+        onSaveNote={handleSaveItemNote}
       />
     </div>
   );

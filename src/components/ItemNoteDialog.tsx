@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useTableOrder } from "@/contexts/TableOrderContext";
 import { StickyNote } from "lucide-react";
 
 interface ItemNoteDialogProps {
@@ -11,6 +10,7 @@ interface ItemNoteDialogProps {
   onClose: () => void;
   itemIndex: number;
   initialNote?: string;
+  onSaveNote: (index: number, note: string) => void;
 }
 
 export const ItemNoteDialog: React.FC<ItemNoteDialogProps> = ({
@@ -18,12 +18,12 @@ export const ItemNoteDialog: React.FC<ItemNoteDialogProps> = ({
   onClose,
   itemIndex,
   initialNote = "",
+  onSaveNote,
 }) => {
   const [note, setNote] = useState(initialNote);
-  const { updateItemNote } = useTableOrder();
 
   const handleSaveNote = () => {
-    updateItemNote(itemIndex, note.trim());
+    onSaveNote(itemIndex, note.trim());
     onClose();
   };
 

@@ -100,18 +100,16 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
     }
   };
 
-  // Add function to update item notes
+  // Fix the type error by specifying the correct return type
   const updateItemNote = (itemIndex: number, note: string) => {
     if (itemIndex < 0 || itemIndex >= cart.length) return;
     
-    setCart(currentCart => {
-      const newCart = [...currentCart];
-      newCart[itemIndex] = {
-        ...newCart[itemIndex],
-        notes: note
-      };
-      return newCart;
-    });
+    const newCart = [...cart];
+    newCart[itemIndex] = {
+      ...newCart[itemIndex],
+      notes: note
+    };
+    setCart(newCart);
 
     toast({
       title: "Comentario guardado",
@@ -130,7 +128,7 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
       loadExistingTableOrder,
       handleOrderSaved,
       handleLoadExistingOrder,
-      updateItemNote // Add the new function to the context
+      updateItemNote
     }}>
       {children}
     </TableOrderContext.Provider>
