@@ -14,6 +14,7 @@ interface TableOrderContextType {
   loadExistingTableOrder: (tableNumber: string) => Promise<Order | null>;
   handleOrderSaved: () => void;
   handleLoadExistingOrder: (order: Order) => void;
+  updateItemNote: (itemIndex: number, note: string) => void; // New function to update item notes
 }
 
 const TableOrderContext = createContext<TableOrderContextType | null>(null);
@@ -99,6 +100,26 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
     }
   };
 
+  // Add function to update item notes
+  const updateItemNote = (itemIndex: number, note: string) => {
+    if (itemIndex < 0 || itemIndex >= cart.length) return;
+    
+    setCart(currentCart => {
+      const newCart = [...currentCart];
+      newCart[itemIndex] = {
+        ...newCart[itemIndex],
+        notes: note
+      };
+      return newCart;
+    });
+
+    toast({
+      title: "Comentario guardado",
+      description: "El comentario ha sido agregado al producto",
+      variant: "default"
+    });
+  };
+
   return (
     <TableOrderContext.Provider value={{
       activeTable,
@@ -108,7 +129,8 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
       closeTableOrderDialog,
       loadExistingTableOrder,
       handleOrderSaved,
-      handleLoadExistingOrder
+      handleLoadExistingOrder,
+      updateItemNote // Add the new function to the context
     }}>
       {children}
     </TableOrderContext.Provider>

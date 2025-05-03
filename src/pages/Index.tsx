@@ -49,6 +49,7 @@ import { calculateTaxAmount, useTaxSettings } from "@/lib/utils"
 import { TableOrderManager } from "@/components/TableOrderManager"
 import { PreBillReceipt } from "@/components/PreBillReceipt"
 import { TableSelectionModal } from "@/components/TableSelectionModal"
+import { ItemNoteDialog } from "@/components/ItemNoteDialog"
 
 const defaultIcons: { [key: string]: any } = {
   pizzas: Pizza,
@@ -102,6 +103,11 @@ export default function PizzaPOS() {
   const [showTableSelectionModal, setShowTableSelectionModal] = useState(false);
   const [tableWithOrders, setTablesWithOrders] = useState<number[]>([]);
   const [tableCount, setTableCount] = useState<number>(8); // Define tableCount with a default value of 8
+  const [noteDialogConfig, setNoteDialogConfig] = useState<{ open: boolean, itemIdx: number | null, initialNote: string }>({ 
+    open: false, 
+    itemIdx: null, 
+    initialNote: "" 
+  });
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -1246,8 +1252,33 @@ export default function PizzaPOS() {
                               ))}
                             </ul>
                           )}
+                          {/* Display the note if it exists */}
+                          {item.notes && (
+                            <div className="mt-2 text-xs bg-purple-500/20 border border-purple-400/20 p-2 rounded text-purple-300 flex items-start">
+                              <StickyNote className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                              <span>{item.notes}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col items-end gap-1">
+                          {/* Comment button */}
+                          <button
+                            type="button"
+                            className={`p-1 rounded-full ${
+                              item.notes 
+                                ? "bg-purple-600/40 hover:bg-purple-500/60 border border-purple-500"
+                                : "bg-[#333]/40 hover:bg-[#444]/60 border border-[#444]"
+                            } transition-colors shadow`}
+                            onClick={() => setNoteDialogConfig({ 
+                              open: true, 
+                              itemIdx: idx,
+                              initialNote: item.notes || ""
+                            })}
+                            title={item.notes ? "Editar comentario" : "Agregar comentario"}
+                          >
+                            <StickyNote className={`h-4 w-4 ${item.notes ? "text-purple-300" : "text-zinc-400"}`} />
+                          </button>
+                          
                           {(item.category === "pizzas" || item.categoryId === "cat_pizza") && (
                             <button
                               type="button"
@@ -1426,6 +1457,13 @@ export default function PizzaPOS() {
         activeTable={activeTable}
         tableWithOrders={tableWithOrders}
         onSelectTable={handleSelectTable}
+      />
+
+      <ItemNoteDialog 
+        open={noteDialogConfig.open} 
+        onClose={() => setNoteDialogConfig({ open: false, itemIdx: null, initialNote: "" })} 
+        itemIndex={noteDialogConfig.itemIdx || 0}
+        initialNote={noteDialogConfig.initialNote}
       />
     </div>
   );
