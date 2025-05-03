@@ -94,27 +94,28 @@ export const updateIngredientsStock = async (productId: string, quantity: number
     const updatedIngredients = ingredients.map(ingredient => {
       const productIngredient = product.ingredients.find(pi => pi.id === ingredient.id);
       
-      if (productIngredient) {
-        console.log(`Ingrediente ${ingredient.name} encontrado en el producto, cantidad: ${productIngredient.quantity}`);
-        
-        const amountToSubtract = productIngredient.quantity * quantity;
-        console.log(`Cantidad a descontar: ${amountToSubtract}g`);
-        
-        if (ingredient.stock === undefined) {
-          ingredient.stock = ingredient.quantity ? ingredient.quantity * 1000 : 0;
-          console.log(`Stock inicial asignado: ${ingredient.stock}g`);
-        }
-        
-        const newStock = Math.max(0, ingredient.stock - amountToSubtract);
-        console.log(`Stock anterior: ${ingredient.stock}g, nuevo stock: ${newStock}g`);
-        
-        if (newStock !== ingredient.stock) {
-          updated = true;
-          return { ...ingredient, stock: newStock };
-        }
+      if (!productIngredient) {
+        console.log(`Ingrediente ${ingredient.name} no encontrado en el producto`);
+        return ingredient;
       }
       
-      return ingredient;
+      console.log(`Ingrediente ${ingredient.name} encontrado en el producto, cantidad: ${productIngredient.quantity}`);
+      
+      const amountToSubtract = productIngredient.quantity * quantity;
+      console.log(`Cantidad a descontar: ${amountToSubtract}g`);
+      
+      if (ingredient.stock === undefined) {
+        ingredient.stock = ingredient.quantity ? ingredient.quantity * 1000 : 0;
+        console.log(`Stock inicial asignado: ${ingredient.stock}g`);
+      }
+      
+      const newStock = Math.max(0, ingredient.stock - amountToSubtract);
+      console.log(`Stock anterior: ${ingredient.stock}g, nuevo stock: ${newStock}g`);
+      
+      if (newStock !== ingredient.stock) {
+        updated = true;
+        return { ...ingredient, stock: newStock };
+      }
     });
     
     if (updated) {
@@ -181,7 +182,12 @@ const Products = () => {
         if (cats.length > 0) {
           setNewProduct((current) => ({
             ...current,
-            category: cats[0]?.id || ''
+            category: cats[0]?.id || '',
+            sizes: {
+              personal: 0,
+              mediana: 0,
+              familiar: 0
+            }
           }));
         }
       } catch (error) {
