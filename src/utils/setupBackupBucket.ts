@@ -1,6 +1,4 @@
 
-import { toast } from "sonner";
-
 export async function setupBackupBucket(): Promise<boolean> {
   try {
     // Create a local directory for backups
@@ -15,17 +13,13 @@ export async function setupBackupBucket(): Promise<boolean> {
     
     localStorage.setItem('backup_config', localBackupConfig);
     
-    // Show success message
-    toast.success('Configuración de respaldos locales', {
-      description: 'La configuración de respaldos locales ha sido inicializada correctamente'
-    });
+    // No toast notification here
+    console.log('Configuración de respaldos locales inicializada correctamente');
     
     return true;
   } catch (error) {
     console.error('Error in setupBackupBucket:', error);
-    toast.error('Error al configurar respaldos', {
-      description: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    // No toast notification here
     return false;
   }
 }

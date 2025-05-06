@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { 
   isAutoBackupEnabled, 
   getBackupInterval, 
@@ -12,7 +11,6 @@ export const useBackupMonitor = () => {
   const [isBackupRunning, setIsBackupRunning] = useState(isAutoBackupEnabled());
   const [lastBackupTime, setLastBackupTime] = useState<string | null>(getLastBackupDate());
   const [backupInterval, setBackupInterval] = useState(getBackupInterval());
-  const { toast } = useToast();
   
   // Monitor backup status
   useEffect(() => {
@@ -32,16 +30,12 @@ export const useBackupMonitor = () => {
       
       if (currentLastBackup !== lastBackupTime) {
         setLastBackupTime(currentLastBackup);
-        // Show toast when a new backup is created (but only for timestamp backups)
-        toast({
-          title: "Respaldo completado",
-          description: `Se han creado respaldos nuevos: uno con fecha y hora, y uno con nombre fijo para sincronización`,
-        });
+        // No toast notification here
       }
     }, 30000); // Check every 30 seconds
     
     return () => clearInterval(intervalId);
-  }, [isBackupRunning, lastBackupTime, toast]);
+  }, [isBackupRunning, lastBackupTime]);
   
   return {
     isBackupRunning,

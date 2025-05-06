@@ -55,7 +55,7 @@ interface BackupConfig {
 const BACKUP_BUCKET_NAME = 'bkpid';
 
 // Define the database version for consistency - UPDATED to match db.ts
-const DB_VERSION = 8;
+const DB_VERSION = 9; // Updated to match the error message showing version 9
 
 const getDefaultConfig = (): BackupConfig => ({
   autoBackupEnabled: false,
@@ -100,10 +100,7 @@ export async function selectBackupDirectory(): Promise<boolean> {
     // Add console logs for debugging
     console.log('Directory selected:', dirHandle.name);
     
-    // Let user know a directory was selected
-    toast.success('Carpeta seleccionada', {
-      description: `Se usará "${dirHandle.name}" para los respaldos automáticos`
-    });
+    // No toast here
     
     return true;
   } catch (error) {
@@ -117,7 +114,7 @@ export async function createBackup(): Promise<string | null> {
     // Log that backup creation started
     console.log('Starting backup creation...');
     
-    // Use the correct database name from query-client
+    // Use the correct database version from the error message
     const db = await openDB(DB_NAME, DB_VERSION);
     
     const products = await db.getAll('products');
@@ -203,9 +200,7 @@ export async function createBackup(): Promise<string | null> {
           console.error('Error updating local backup list', e);
         }
         
-        toast.success('Respaldo guardado', {
-          description: 'Se guardaron dos archivos en la carpeta seleccionada'
-        });
+        // No toast here
         
         return timestampedFilename;
       } catch (e) {
@@ -232,9 +227,7 @@ export async function createBackup(): Promise<string | null> {
     return timestampedFilename;
   } catch (error) {
     console.error('Error creating backup:', error);
-    toast.error("Error creando respaldo", {
-      description: error instanceof Error ? error.message : "Error desconocido"
-    });
+    // No toast here for errors
     return null;
   }
 }
@@ -331,7 +324,7 @@ export async function restoreFromLocalBackup(file: File): Promise<boolean> {
           return;
         }
 
-        // Use the correct database name from query-client
+        // Use the correct database version from the error message
         const db = await openDB(DB_NAME, DB_VERSION);
         
         const tx = db.transaction(['products', 'customers', 'orders', 'tables'], 'readwrite');
@@ -360,6 +353,8 @@ export async function restoreFromLocalBackup(file: File): Promise<boolean> {
         await tx.done;
         
         console.log('Backup restored successfully');
+        // No toast here
+        
         resolve(true);
       } catch (error) {
         console.error('Error restoring backup:', error);
@@ -379,15 +374,11 @@ export async function restoreFromLocalBackup(file: File): Promise<boolean> {
 export async function restoreFromCloudBackup(path: string): Promise<boolean> {
   try {
     // This is a placeholder - in a real app, you would download from pCloud
-    toast.error("Función no implementada", {
-      description: "La restauración desde la nube no está implementada en esta versión"
-    });
+    // No toast here
     return false;
   } catch (error) {
     console.error('Error restoring backup from cloud:', error);
-    toast.error("Error restaurando respaldo", {
-      description: error instanceof Error ? error.message : "Error desconocido"
-    });
+    // No toast here
     return false;
   }
 }
