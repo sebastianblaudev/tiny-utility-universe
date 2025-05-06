@@ -20,7 +20,8 @@ interface TableOrderContextType {
   showSavedOrdersOnly: boolean;
 }
 
-const TableOrderContext = createContext<TableOrderContextType | null>(null);
+// Export the context so it can be imported directly
+export const TableOrderContext = createContext<TableOrderContextType | null>(null);
 
 export const useTableOrder = () => {
   const context = useContext(TableOrderContext);

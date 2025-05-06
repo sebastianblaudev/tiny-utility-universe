@@ -255,18 +255,24 @@ const Products = () => {
 
   const handleSizePriceChange = (size: string, value: number) => {
     if (editingProduct) {
+      // Ensure sizes exists and has the required properties
+      const currentSizes = editingProduct.sizes || { ...defaultSizes };
+      
       setEditingProduct({
         ...editingProduct,
         sizes: {
-          ...(editingProduct.sizes || defaultSizes),
+          ...currentSizes,
           [size]: value
         }
       });
     } else {
+      // Ensure sizes exists and has the required properties
+      const currentSizes = newProduct.sizes || { ...defaultSizes };
+      
       setNewProduct({
         ...newProduct,
         sizes: {
-          ...(newProduct.sizes || defaultSizes),
+          ...currentSizes,
           [size]: value
         }
       });
