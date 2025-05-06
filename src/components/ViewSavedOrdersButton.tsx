@@ -1,10 +1,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
-import { useTableOrder } from "@/contexts/TableOrderContext";
+import { useContext } from "react";
+import { TableOrderContext } from "@/contexts/TableOrderContext";
 
 export function ViewSavedOrdersButton() {
-  const { showSavedOrdersDialog } = useTableOrder();
+  // Get the context but don't throw an error if it's not available
+  const context = useContext(TableOrderContext);
+  
+  // If context is not available, don't render the button
+  if (!context) {
+    return null;
+  }
+  
+  const { showSavedOrdersDialog } = context;
 
   return (
     <Button 
