@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useCallback } from 'react';
 import { getTableOrder, markItemsAsSentToKitchen, getNewOrderItems } from '@/lib/db';
 import { Order, OrderItem } from '@/lib/db';
@@ -17,6 +16,8 @@ interface TableOrderContextType {
   updateItemNote: (itemIndex: number, note: string) => void;
   getNewItems: (tableNumber: string) => Promise<OrderItem[]>;
   markItemsAsSent: (tableNumber: string, itemIds: string[]) => Promise<boolean>;
+  showSavedOrdersDialog: () => void;
+  showSavedOrdersOnly: boolean;
 }
 
 const TableOrderContext = createContext<TableOrderContextType | null>(null);
@@ -44,6 +45,7 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
 }) => {
   const [activeTable, setActiveTable] = useState<string | null>(null);
   const [isTableOrderDialogOpen, setIsTableOrderDialogOpen] = useState<boolean>(false);
+  const [showSavedOrdersOnly, setShowSavedOrdersOnly] = useState<boolean>(false);
   const location = useLocation();
 
   // Check if we have a selected table from navigation
@@ -75,7 +77,10 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
   }, []);
 
   const openTableOrderDialog = () => setIsTableOrderDialogOpen(true);
-  const closeTableOrderDialog = () => setIsTableOrderDialogOpen(false);
+  const closeTableOrderDialog = () => {
+    setIsTableOrderDialogOpen(false);
+    setShowSavedOrdersOnly(false); // Reset the flag when closing
+  };
 
   const handleOrderSaved = () => {
     clearCart();
@@ -160,6 +165,11 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
     });
   };
 
+  const showSavedOrdersDialog = () => {
+    setShowSavedOrdersOnly(true);
+    setIsTableOrderDialogOpen(true);
+  };
+
   return (
     <TableOrderContext.Provider value={{
       activeTable,
@@ -172,7 +182,9 @@ export const TableOrderProvider: React.FC<TableOrderProviderProps> = ({
       handleLoadExistingOrder,
       updateItemNote,
       getNewItems,
-      markItemsAsSent
+      markItemsAsSent,
+      showSavedOrdersDialog,
+      showSavedOrdersOnly
     }}>
       {children}
     </TableOrderContext.Provider>

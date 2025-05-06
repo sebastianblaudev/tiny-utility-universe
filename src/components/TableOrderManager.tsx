@@ -18,6 +18,7 @@ interface TableOrderManagerProps {
   activeTable: string | null;
   onOrderSaved: () => void;
   onLoadExistingOrder: (order: any) => void;
+  showSavedOrdersOnly?: boolean;
 }
 
 export function TableOrderManager({
@@ -27,10 +28,11 @@ export function TableOrderManager({
   selectedCustomer,
   activeTable,
   onOrderSaved,
-  onLoadExistingOrder
+  onLoadExistingOrder,
+  showSavedOrdersOnly = false
 }: TableOrderManagerProps) {
   const [savedOrders, setSavedOrders] = useState<any[]>([]);
-  const [showSavedOrders, setShowSavedOrders] = useState(false);
+  const [showSavedOrders, setShowSavedOrders] = useState(showSavedOrdersOnly);
   const [existingOrder, setExistingOrder] = useState<Order | null>(null);
   const [newItemsOnly, setNewItemsOnly] = useState(true);
   const [newItems, setNewItems] = useState<OrderItem[]>([]);
@@ -43,6 +45,13 @@ export function TableOrderManager({
       loadAllSavedOrders();
     }
   }, [isOpen, activeTable]);
+
+  // If showSavedOrdersOnly is set to true, make sure to show saved orders view
+  useEffect(() => {
+    if (showSavedOrdersOnly) {
+      setShowSavedOrders(true);
+    }
+  }, [showSavedOrdersOnly]);
 
   const loadExistingTable = async () => {
     if (!activeTable) return;
