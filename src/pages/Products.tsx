@@ -150,15 +150,19 @@ export const updateIngredientsStock = async (productId: string, quantity: number
 const Products = () => {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
+  
+  // Define the default sizes structure
+  const defaultSizes = {
+    personal: 0,
+    mediana: 0,
+    familiar: 0
+  };
+
   const [newProduct, setNewProduct] = React.useState<Partial<Product>>({
     name: '',
     price: 0,
     category: '',
-    sizes: {
-      personal: 0,
-      mediana: 0,
-      familiar: 0
-    },
+    sizes: defaultSizes,
     barcode: ''
   });
   const [ingredientModalOpen, setIngredientModalOpen] = React.useState(false);
@@ -191,11 +195,6 @@ const Products = () => {
           setNewProduct((current) => ({
             ...current,
             category: cats[0]?.id || '',
-            sizes: {
-              personal: 0,
-              mediana: 0,
-              familiar: 0
-            }
           }));
         }
       } catch (error) {
@@ -259,7 +258,7 @@ const Products = () => {
       setEditingProduct({
         ...editingProduct,
         sizes: {
-          ...(editingProduct.sizes || { personal: 0, mediana: 0, familiar: 0 }),
+          ...(editingProduct.sizes || defaultSizes),
           [size]: value
         }
       });
@@ -267,7 +266,7 @@ const Products = () => {
       setNewProduct({
         ...newProduct,
         sizes: {
-          ...(newProduct.sizes || { personal: 0, mediana: 0, familiar: 0 }),
+          ...(newProduct.sizes || defaultSizes),
           [size]: value
         }
       });
@@ -359,23 +358,19 @@ const Products = () => {
       }
 
       const id = `p${Date.now()}`;
-      // Fix the error: Ensure sizes always has required properties
-      const defaultSizes = {
-        personal: 0,
-        mediana: 0,
-        familiar: 0
-      };
       
+      // Ensure sizes has all required properties
       const productData = {
         ...newProduct,
         id,
         image: null,
         barcode: newProduct.barcode || null,
         // Ensure sizes always has the required properties
-        sizes: newProduct.sizes ? {
-          ...defaultSizes,
-          ...newProduct.sizes
-        } : defaultSizes
+        sizes: {
+          personal: newProduct.sizes?.personal ?? 0,
+          mediana: newProduct.sizes?.mediana ?? 0,
+          familiar: newProduct.sizes?.familiar ?? 0
+        }
       } as Product;
       
       await db.add('products', productData);
@@ -387,11 +382,7 @@ const Products = () => {
         price: 0, 
         category: categories[0]?.id || '',
         barcode: '',
-        sizes: {
-          personal: 0,
-          mediana: 0,
-          familiar: 0
-        }
+        sizes: defaultSizes
       });
       
       // Use invalidateQueries instead of direct refetch
