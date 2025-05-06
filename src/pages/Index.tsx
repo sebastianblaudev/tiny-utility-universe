@@ -370,9 +370,10 @@ export default function PizzaPOS() {
     if (isPizza) {
       console.log("Abriendo selector de tamaño para pizza:", item);
       
-      if (!item.sizes) {
+      // Fix: Initialize sizes with default values if it doesn't exist or is empty
+      if (!item.sizes || Object.keys(item.sizes).length === 0) {
         console.log("El producto no tiene tamaños definidos");
-        item.sizes = { personal: 0, mediana: 0, familiar: 0 };
+        item.sizes = { personal: 10, mediana: 15, familiar: 20 }; // Using default prices
       }
       
       const dialog = document.createElement('dialog');
@@ -941,7 +942,7 @@ export default function PizzaPOS() {
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-orange-600 hover:bg-orange-700 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
+                  className="bg-orange-600 hover:bg-orange-700 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
                   onClick={() => setShowTableSelectionModal(true)}
                 >
                   Mesa {activeTable}
