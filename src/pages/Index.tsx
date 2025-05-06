@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react" 
 import { useNavigate, useLocation } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +51,7 @@ import { TableOrderManager } from "@/components/TableOrderManager"
 import { PreBillReceipt } from "@/components/PreBillReceipt"
 import { TableSelectionModal } from "@/components/TableSelectionModal"
 import { ItemNoteDialog } from "@/components/ItemNoteDialog"
+import { ViewSavedOrdersButton } from "@/components/ViewSavedOrdersButton"
 
 const defaultIcons: { [key: string]: any } = {
   pizzas: Pizza,
@@ -1158,6 +1158,7 @@ export default function PizzaPOS() {
           <div className="flex items-center">
             <ShoppingCart className="h-5 w-5 mr-2 text-orange-500" />
             <h2 className="text-lg font-bold">Orden</h2>
+            <ViewSavedOrdersButton />
           </div>
           <div className="flex items-center space-x-2">
             {orderType === "mesa" && activeTable && <Badge className="bg-orange-600">Mesa {activeTable}</Badge>}
