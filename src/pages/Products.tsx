@@ -151,7 +151,7 @@ const Products = () => {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
   
-  // Define the default sizes structure
+  // Define a default size structure to avoid TypeScript errors
   const defaultSizes = {
     personal: 0,
     mediana: 0,
@@ -255,8 +255,8 @@ const Products = () => {
 
   const handleSizePriceChange = (size: string, value: number) => {
     if (editingProduct) {
-      // Ensure sizes exists and has the required properties
-      const currentSizes = editingProduct.sizes || { ...defaultSizes };
+      // Ensure sizes exists and has the required properties with proper typing
+      const currentSizes = editingProduct.sizes || defaultSizes;
       
       setEditingProduct({
         ...editingProduct,
@@ -266,8 +266,8 @@ const Products = () => {
         }
       });
     } else {
-      // Ensure sizes exists and has the required properties
-      const currentSizes = newProduct.sizes || { ...defaultSizes };
+      // Ensure sizes exists and has the required properties with proper typing
+      const currentSizes = newProduct.sizes || defaultSizes;
       
       setNewProduct({
         ...newProduct,

@@ -96,6 +96,15 @@ export async function selectBackupDirectory(): Promise<boolean> {
   try {
     const dirHandle = await window.showDirectoryPicker();
     (window as any)._backupDirectoryHandle = dirHandle;
+    
+    // Add console logs for debugging
+    console.log('Directory selected:', dirHandle.name);
+    
+    // Let user know a directory was selected
+    toast.success('Carpeta seleccionada', {
+      description: `Se usará "${dirHandle.name}" para los respaldos automáticos`
+    });
+    
     return true;
   } catch (error) {
     console.error('Error selecting directory:', error);
@@ -105,6 +114,9 @@ export async function selectBackupDirectory(): Promise<boolean> {
 
 export async function createBackup(): Promise<string | null> {
   try {
+    // Log that backup creation started
+    console.log('Starting backup creation...');
+    
     // Use the correct database name from query-client
     const db = await openDB(DB_NAME, DB_VERSION);
     
@@ -144,16 +156,22 @@ export async function createBackup(): Promise<string | null> {
     const syncFilename = `pizzapos_latest_backup.json`;
     
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-
+    
+    console.log('Backup data ready, trying to save...');
+    
     // Handle local file system backup with both files
     const dirHandle = (window as any)._backupDirectoryHandle;
     if (dirHandle) {
       try {
+        console.log('Directory handle found, saving files...');
+        
         // Save the timestamped backup
         const fileHandle = await dirHandle.getFileHandle(timestampedFilename, { create: true });
         const writable = await fileHandle.createWritable();
         await writable.write(JSON.stringify(backupData, null, 2));
         await writable.close();
+        
+        console.log(`Saved timestamped backup to: ${timestampedFilename}`);
         
         // Save/overwrite the latest backup with fixed name
         const latestFileHandle = await dirHandle.getFileHandle(syncFilename, { create: true });
@@ -161,13 +179,40 @@ export async function createBackup(): Promise<string | null> {
         await latestWritable.write(JSON.stringify(backupData, null, 2));
         await latestWritable.close();
         
+        console.log(`Saved latest backup to: ${syncFilename}`);
+        
         currentConfig.lastBackupDate = new Date().toISOString();
         saveConfig(currentConfig);
-        console.log('Backups locales creados:', timestampedFilename, 'y', syncFilename);
+        
+        // Save a list of local backups to localStorage for reference
+        try {
+          const localBackups = JSON.parse(localStorage.getItem('local_backup_list') || '[]');
+          localBackups.push({
+            name: timestampedFilename,
+            path: timestampedFilename,
+            updated_at: new Date().toISOString()
+          });
+          
+          // Keep only the last 20 backups in the list
+          if (localBackups.length > 20) {
+            localBackups.splice(0, localBackups.length - 20);
+          }
+          
+          localStorage.setItem('local_backup_list', JSON.stringify(localBackups));
+        } catch (e) {
+          console.error('Error updating local backup list', e);
+        }
+        
+        toast.success('Respaldo guardado', {
+          description: 'Se guardaron dos archivos en la carpeta seleccionada'
+        });
+        
         return timestampedFilename;
       } catch (e) {
         console.warn('No se pudo guardar en carpeta seleccionada, se usará descarga normal.', e);
       }
+    } else {
+      console.log('No directory handle found, using browser download instead');
     }
 
     // Fallback to browser download for the timestamped version
@@ -179,6 +224,8 @@ export async function createBackup(): Promise<string | null> {
     link.click();
     document.body.removeChild(link);
 
+    console.log('File download initiated through browser download API');
+    
     currentConfig.lastBackupDate = new Date().toISOString();
     saveConfig(currentConfig);
     
