@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BackButton } from "@/components/BackButton"
 import { ReceiptSettings } from "@/components/settings/ReceiptSettings"
@@ -22,6 +21,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useForm } from "react-hook-form";
 import { createLocalLicense } from "@/lib/license";
 import { useToast } from "@/components/ui/use-toast";
+import { Server } from "lucide-react";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -172,6 +172,37 @@ export default function Settings() {
                     </DialogContent>
                   </Dialog>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Nuevo Card para las herramientas de respaldo */}
+            <Card className="bg-[#1A1A1A] border-zinc-800">
+              <CardHeader>
+                <CardTitle className="text-white">Herramientas de Respaldo</CardTitle>
+                <CardDescription className="text-white">
+                  Herramientas para gestionar los respaldos de tu negocio
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => navigate("/backups")}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Server className="h-4 w-4" />
+                    Configuración de Respaldos
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate("/server-backup-test")}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-orange-600/20 hover:bg-orange-700/30 text-orange-400"
+                  >
+                    <Server className="h-4 w-4" />
+                    Probar Conexión con Servidor PHP
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

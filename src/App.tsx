@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
@@ -26,8 +27,9 @@ import PCloudStats from "./pages/PCloudStats";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GoogleBackups from "./pages/GoogleBackups";  
-import GoogleDriveBackup from "./pages/GoogleDriveBackup"; // Agregamos la nueva página
-import GoogleDriveTest from './pages/GoogleDriveTest'; // Importamos nuestra nueva página de prueba
+import GoogleDriveBackup from "./pages/GoogleDriveBackup";
+import GoogleDriveTest from './pages/GoogleDriveTest';
+import ServerBackupTest from './pages/ServerBackupTest'; // Importamos la nueva página
 import { lazy, Suspense } from "react";
 
 import "./App.css";
@@ -64,6 +66,7 @@ function App() {
             <Route path="/online-backup" element={<ProtectedRoute><OnlineBackup /></ProtectedRoute>} />
             <Route path="/google-backups" element={<ProtectedRoute><GoogleBackups /></ProtectedRoute>} />
             <Route path="/google-drive-backup" element={<ProtectedRoute><GoogleDriveBackup /></ProtectedRoute>} />
+            <Route path="/server-backup-test" element={<ProtectedRoute><ServerBackupTest /></ProtectedRoute>} />
             
             {/* Protected Routes - Non-Critical (Lazy Loaded) */}
             <Route path="/settings" element={
