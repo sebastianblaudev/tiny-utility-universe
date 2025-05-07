@@ -1,4 +1,3 @@
-
 import { openDB } from 'idb';
 import { DB_NAME } from '@/lib/query-client';
 import { Auth } from '@/lib/auth';
@@ -73,34 +72,48 @@ export const generateBackup = async (): Promise<BackupData | null> => {
 };
 
 /**
- * Sube un respaldo al servidor
+ * Sube un respaldo al servidor usando el endpoint PHP
  */
 export const uploadBackupToServer = async (data: BackupData): Promise<boolean> => {
   try {
-    // Obtenemos la URL del servidor desde la configuración
+    // Obtenemos la URL del servidor desde la configuración o usamos la predeterminada
     const config = await getBackupConfig();
-    const serverUrl = config?.serverBackupUrl;
+    const serverUrl = config?.serverBackupUrl || 'https://pizzapos.app/subir_respaldo.php';
     
     if (!serverUrl) {
       console.error('URL del servidor de respaldos no configurada');
       return false;
     }
     
-    // Preparamos el cuerpo de la solicitud
-    const body = JSON.stringify(data);
+    // Conseguir el ID de negocio
+    const businessId = data.businessId || data.business?.id || 'default';
     
-    // Hacemos la solicitud al servidor
+    // Preparamos el cuerpo de la solicitud según el formato esperado por el PHP
+    const requestBody = {
+      id_negocio: businessId,
+      respaldo: data
+    };
+    
+    // Hacemos la solicitud al servidor PHP
     const response = await fetch(serverUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body,
+      body: JSON.stringify(requestBody),
     });
     
     if (!response.ok) {
       console.error('Error al subir respaldo al servidor:', await response.text());
       return false;
+    }
+    
+    // Intentamos procesar la respuesta como JSON
+    try {
+      const result = await response.json();
+      console.log("Respuesta del servidor:", result);
+    } catch (e) {
+      console.log("Respuesta recibida pero no es JSON");
     }
     
     console.log('Respaldo subido exitosamente al servidor');
@@ -127,6 +140,7 @@ export const getBackupConfig = async (): Promise<BackupConfig | null> => {
         enabled: false,
         interval: 60, // 1 hora por defecto
         serverBackupEnabled: false,
+        serverBackupUrl: 'https://pizzapos.app/subir_respaldo.php', // URL predeterminada de PHP
       };
       
       // Guardar configuración predeterminada
@@ -170,7 +184,7 @@ export const updateBackupConfig = async (config: Partial<BackupConfig>): Promise
 };
 
 /**
- * Realiza un respaldo y lo sube al servidor
+ * Realiza un respaldo y lo sube al servidor PHP
  */
 export const performServerBackup = async (): Promise<boolean> => {
   try {
@@ -188,10 +202,10 @@ export const performServerBackup = async (): Promise<boolean> => {
       return false;
     }
     
-    // Subir al servidor
+    // Subir al servidor PHP
     const uploaded = await uploadBackupToServer(backupData);
     if (!uploaded) {
-      console.error('No se pudo subir el respaldo al servidor');
+      console.error('No se pudo subir el respaldo al servidor PHP');
       return false;
     }
     

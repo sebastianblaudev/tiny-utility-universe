@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,7 +90,7 @@ const Products = () => {
   const { toast } = useToast();
   
   // Fix for the TypeScript error about default prices
-  const defaultPrices = {
+  const sizes = {
     personal: 0,
     mediana: 0,
     familiar: 0

@@ -1,21 +1,19 @@
+
 import * as React from "react"
 
-const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 1000000
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast"
 
-type ToastActionElement = React.ReactElement<{
-  altText: string
-  onClick: () => void
-}>
+const TOAST_LIMIT = 20
+const TOAST_REMOVE_DELAY = 1000
 
-export type ToastProps = {
+type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
-  variant?: "default" | "destructive"
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -28,7 +26,7 @@ const actionTypes = {
 let count = 0
 
 function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
 
@@ -37,11 +35,11 @@ type ActionType = typeof actionTypes
 type Action =
   | {
       type: ActionType["ADD_TOAST"]
-      toast: ToastProps
+      toast: ToasterToast
     }
   | {
       type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToastProps> & { id: string }
+      toast: Partial<ToasterToast>
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -53,7 +51,7 @@ type Action =
     }
 
 interface State {
-  toasts: ToastProps[]
+  toasts: ToasterToast[]
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
@@ -140,19 +138,34 @@ function dispatch(action: Action) {
   })
 }
 
-interface Toast extends Omit<ToastProps, "id"> {
-  id?: string
-}
+type Toast = Omit<ToasterToast, "id">
 
-// Modified to be a no-op function
 function toast({ ...props }: Toast) {
-  const id = props.id || genId()
-  
-  // Simply return the functions without doing anything
+  const id = genId()
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: actionTypes.UPDATE_TOAST,
+      toast: { ...props, id },
+    })
+  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+
+  dispatch({
+    type: actionTypes.ADD_TOAST,
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
+      },
+    },
+  })
+
   return {
     id: id,
-    dismiss: () => {},
-    update: () => {},
+    dismiss,
+    update,
   }
 }
 
@@ -172,7 +185,7 @@ function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => {},  // No-op function
+    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
   }
 }
 
