@@ -1,19 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, RefreshCw } from "lucide-react";
+import { Loader2, Save, RefreshCw, Server, RadioTower } from "lucide-react";
 import { 
   getBackupConfig, 
   updateBackupConfig, 
   performServerBackup, 
   startServerBackups, 
-  stopServerBackups 
+  stopServerBackups,
+  uploadBackupToServer
 } from "@/utils/backupService";
 
 export function ServerBackupSettings() {
@@ -23,6 +23,8 @@ export function ServerBackupSettings() {
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [testInProgress, setTestInProgress] = useState(false);
+  const [testResult, setTestResult] = useState<{success: boolean; message: string} | null>(null);
 
   const { toast } = useToast();
 
@@ -203,6 +205,74 @@ export function ServerBackupSettings() {
     }
   };
 
+  // Test connection to server
+  const testServerConnection = async () => {
+    setTestInProgress(true);
+    setTestResult(null);
+    
+    try {
+      if (!serverUrl.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Por favor ingresa la URL del servidor de respaldos",
+        });
+        setTestInProgress(false);
+        return;
+      }
+
+      // Save the URL first
+      await updateBackupConfig({ serverBackupUrl: serverUrl });
+
+      // Create minimal test data
+      const testData = {
+        timestamp: new Date().toISOString(),
+        businessId: 'test-connection',
+        business: { name: 'Test Connection' },
+        products: [],
+        customers: [],
+        orders: [],
+        tables: []
+      };
+
+      // Try to upload the test data
+      const result = await uploadBackupToServer(testData);
+      
+      if (result) {
+        setTestResult({
+          success: true,
+          message: "Conexión exitosa. El servidor respondió correctamente."
+        });
+        toast({
+          title: "Prueba exitosa",
+          description: "La conexión con el servidor de respaldos funciona correctamente",
+        });
+      } else {
+        setTestResult({
+          success: false,
+          message: "El servidor no respondió correctamente. Verifica la URL y que el servidor esté en funcionamiento."
+        });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo conectar con el servidor de respaldos",
+        });
+      }
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : "Error desconocido al probar la conexión"
+      });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error desconocido al probar la conexión",
+      });
+    } finally {
+      setTestInProgress(false);
+    }
+  };
+
   // Formatear fecha
   const formatDate = (dateString: string) => {
     try {
@@ -228,7 +298,7 @@ export function ServerBackupSettings() {
               id="server-url"
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
-              placeholder="https://your-backup-server.com/api/backups"
+              placeholder="https://pizzapos.app/subir_respaldo.php"
               className="bg-zinc-900 border-zinc-700 text-white"
             />
             <p className="text-xs text-zinc-500">
@@ -248,7 +318,21 @@ export function ServerBackupSettings() {
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <Button
+              onClick={testServerConnection}
+              disabled={testInProgress}
+              variant="outline"
+              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            >
+              {testInProgress ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RadioTower className="h-4 w-4 mr-2" />
+              )}
+              Probar Conexión
+            </Button>
+
             <Button
               onClick={handleSaveConfig}
               disabled={isLoading}
@@ -262,6 +346,17 @@ export function ServerBackupSettings() {
               Guardar Configuración
             </Button>
           </div>
+
+          {testResult && (
+            <Alert className={testResult.success ? "bg-green-900/20 border-green-800" : "bg-red-900/20 border-red-800"}>
+              <AlertTitle className={testResult.success ? "text-green-400" : "text-red-400"}>
+                {testResult.success ? "Conexión Exitosa" : "Error de Conexión"}
+              </AlertTitle>
+              <AlertDescription className="text-zinc-300">
+                {testResult.message}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
             <div className="flex flex-col">
@@ -297,6 +392,7 @@ export function ServerBackupSettings() {
 
           {lastBackupDate && (
             <Alert className="bg-zinc-900 border-zinc-700">
+              <Server className="h-4 w-4 text-orange-500" />
               <AlertDescription className="text-zinc-300">
                 Último respaldo: {formatDate(lastBackupDate)}
               </AlertDescription>
