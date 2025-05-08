@@ -75,11 +75,21 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
     console.log("Añadiendo ingrediente al producto:", ingredient);
     const exists = selectedIng.find(i => i.id === ingredient.id);
     if (!exists) {
-      setSelectedIng([...selectedIng, { 
-        ...ingredient, 
-        quantity: 1,
-        sizeQuantities: isPizza ? { personal: 1, mediana: 1.5, familiar: 2 } : undefined
-      }]);
+      // Initialize with default size quantities for pizzas
+      const newIngredient: ProductIngredient = {
+        ...ingredient,
+        quantity: 1
+      };
+      
+      if (isPizza) {
+        newIngredient.sizeQuantities = {
+          personal: 1,
+          mediana: 1.5,
+          familiar: 2
+        };
+      }
+      
+      setSelectedIng([...selectedIng, newIngredient]);
     }
   };
 
@@ -215,54 +225,128 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
           )}
           
           {isPizza ? (
-            <TabsContent value="general" className="mt-0">
-              <ul className="space-y-2">
-                {selectedIng.map(ing => {
-                  const stockStatus = getStockStatus(ing.id);
-                  const insufficientStock = isInsufficientStock(ing.id, ing.quantity);
-                  const stockInfo = ingredientsList.find(i => i.id === ing.id)?.stock;
-                  
-                  return (
-                    <li key={ing.id} className="flex items-center gap-3">
-                      <span className="w-24 truncate">{ing.name}</span>
-                      <Input
-                        type="number"
-                        min={1}
-                        className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
-                        value={ing.quantity}
-                        onChange={e => handleChangeQty(ing.id, Number(e.target.value))}
-                      />
-                      <span>g</span>
-                      
-                      {stockInfo !== undefined && (
-                        <div className="flex items-center gap-1">
-                          <Package size={14} />
-                          <span className="text-xs">{stockInfo}g</span>
-                          
-                          {insufficientStock && (
-                            <Badge variant="destructive" className="text-xs">
-                              <AlertTriangle size={10} className="mr-1" />
-                              Insuficiente
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                      
-                      <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
-                      
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        className="ml-auto h-7 w-7 p-0"
-                        onClick={() => toggleAdvanced(ing.id)}
-                      >
-                        {showAdvanced[ing.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </TabsContent>
+            <>
+              <TabsContent value="general" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const stockStatus = getStockStatus(ing.id);
+                    const insufficientStock = isInsufficientStock(ing.id, ing.quantity);
+                    const stockInfo = ingredientsList.find(i => i.id === ing.id)?.stock;
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={ing.quantity}
+                          onChange={e => handleChangeQty(ing.id, Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        
+                        {stockInfo !== undefined && (
+                          <div className="flex items-center gap-1">
+                            <Package size={14} />
+                            <span className="text-xs">{stockInfo}g</span>
+                            
+                            {insufficientStock && (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle size={10} className="mr-1" />
+                                Insuficiente
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="ml-auto h-7 w-7 p-0"
+                          onClick={() => toggleAdvanced(ing.id)}
+                        >
+                          {showAdvanced[ing.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+
+              <TabsContent value="personal" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const sizeQty = ing.sizeQuantities?.personal || ing.quantity;
+                    const insufficientStock = isInsufficientStock(ing.id, sizeQty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={sizeQty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'personal', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+              
+              <TabsContent value="mediana" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const sizeQty = ing.sizeQuantities?.mediana || Math.round(ing.quantity * 1.5);
+                    const insufficientStock = isInsufficientStock(ing.id, sizeQty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={sizeQty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'mediana', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+              
+              <TabsContent value="familiar" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const sizeQty = ing.sizeQuantities?.familiar || Math.round(ing.quantity * 2);
+                    const insufficientStock = isInsufficientStock(ing.id, sizeQty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={sizeQty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'familiar', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+            </>
           ) : (
             <ul className="space-y-2">
               {selectedIng.map(ing => {
@@ -301,82 +385,6 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
                 );
               })}
             </ul>
-          )}
-          
-          {isPizza && (
-            <>
-              <TabsContent value="personal" className="mt-0">
-                <ul className="space-y-2">
-                  {selectedIng.map(ing => {
-                    const qty = ing.sizeQuantities?.personal || ing.quantity;
-                    const insufficientStock = isInsufficientStock(ing.id, qty);
-                    
-                    return (
-                      <li key={ing.id} className="flex items-center gap-3">
-                        <span className="w-24 truncate">{ing.name}</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
-                          value={qty}
-                          onChange={e => handleChangeSizeQty(ing.id, 'personal', Number(e.target.value))}
-                        />
-                        <span>g</span>
-                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </TabsContent>
-              
-              <TabsContent value="mediana" className="mt-0">
-                <ul className="space-y-2">
-                  {selectedIng.map(ing => {
-                    const qty = ing.sizeQuantities?.mediana || Math.round(ing.quantity * 1.5);
-                    const insufficientStock = isInsufficientStock(ing.id, qty);
-                    
-                    return (
-                      <li key={ing.id} className="flex items-center gap-3">
-                        <span className="w-24 truncate">{ing.name}</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
-                          value={qty}
-                          onChange={e => handleChangeSizeQty(ing.id, 'mediana', Number(e.target.value))}
-                        />
-                        <span>g</span>
-                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </TabsContent>
-              
-              <TabsContent value="familiar" className="mt-0">
-                <ul className="space-y-2">
-                  {selectedIng.map(ing => {
-                    const qty = ing.sizeQuantities?.familiar || Math.round(ing.quantity * 2);
-                    const insufficientStock = isInsufficientStock(ing.id, qty);
-                    
-                    return (
-                      <li key={ing.id} className="flex items-center gap-3">
-                        <span className="w-24 truncate">{ing.name}</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
-                          value={qty}
-                          onChange={e => handleChangeSizeQty(ing.id, 'familiar', Number(e.target.value))}
-                        />
-                        <span>g</span>
-                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </TabsContent>
-            </>
           )}
         </div>
         <DialogFooter>

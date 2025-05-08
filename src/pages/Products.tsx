@@ -388,14 +388,22 @@ const Products = () => {
 
       const id = `p${Date.now()}`;
       
-      // Ensure sizes has all required properties
+      // Initialize sizes with proper default values if it's a pizza category
+      let sizes = initialSizes;
+      if (isPizzaCategory(newProduct.category)) {
+        sizes = {
+          personal: newProduct.sizes?.personal || 0,
+          mediana: newProduct.sizes?.mediana || 0,
+          familiar: newProduct.sizes?.familiar || 0
+        };
+      }
+      
       const productData = {
         ...newProduct,
         id,
         image: null,
         barcode: newProduct.barcode || null,
-        // Ensure sizes always has the required properties
-        sizes: newProduct.sizes || { ...initialSizes }
+        sizes: sizes
       } as Product;
       
       await db.add('products', productData);
@@ -407,7 +415,7 @@ const Products = () => {
         price: 0, 
         category: categories[0]?.id || '',
         barcode: '',
-        sizes: initialSizes
+        sizes: { ...initialSizes }
       });
       
       // Use invalidateQueries instead of direct refetch
