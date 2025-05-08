@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProductIngredient } from '@/components/EditProductIngredientsModal';
+import { toast } from '@/components/ui/use-toast';
 
 type Ingredient = {
   id: string;
@@ -76,13 +77,15 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
     
     // Use size-specific ingredients if specified, otherwise use general ingredients
     let ingredientsToCheck = productIngredients;
+    let sizeInfo = '';
     
     if (size && ingredientsBySize && ingredientsBySize[size] && ingredientsBySize[size].length > 0) {
       // Use size-specific ingredients if available
-      console.log(`Using ${size}-specific ingredients:`, ingredientsBySize[size]);
       ingredientsToCheck = ingredientsBySize[size];
+      sizeInfo = `(tamaño específico: ${size})`;
+      console.log(`Usando ${ingredientsToCheck.length} ingredientes específicos para tamaño ${size}:`, ingredientsToCheck);
     } else {
-      console.log(`Using general ingredients for ${size || 'unknown'} size`);
+      console.log(`Usando ${ingredientsToCheck.length} ingredientes generales para ${size || 'tamaño desconocido'}`);
     }
     
     const lowStockFound = ingredientsToCheck.filter(prodIng => {
@@ -97,8 +100,19 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
     
     const insufficientStockFound = ingredientsToCheck.filter(prodIng => {
       const ing = ingredients.find(i => i.id === prodIng.id);
-      return ing && prodIng.quantity > ing.stock;
+      const requiredQuantity = prodIng.quantity || 0;
+      const availableStock = ing?.stock || 0;
+      
+      if (ing && requiredQuantity > availableStock) {
+        console.log(`Stock insuficiente para ${ing.name}: se requiere ${requiredQuantity}g pero hay ${availableStock}g disponibles ${sizeInfo}`);
+        return true;
+      }
+      return false;
     });
+    
+    if (insufficientStockFound.length > 0) {
+      console.log(`¡ATENCIÓN! ${insufficientStockFound.length} ingredientes con stock insuficiente ${sizeInfo}`);
+    }
     
     return {
       safe: lowStockFound.length === 0 && criticalStockFound.length === 0,
@@ -115,6 +129,44 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
   const refreshIngredients = () => {
     const event = new Event('ingredientsUpdated');
     window.dispatchEvent(event);
+    toast({
+      title: "Stock actualizado",
+      description: "Se ha actualizado la información de ingredientes",
+    });
+  };
+  
+  // Nueva función para visualizar el uso de ingredientes sin reducir stock
+  const simulateIngredientUsage = (productId: string, size?: string) => {
+    return async () => {
+      try {
+        const db = await import('@/lib/db').then(m => m.initDB());
+        if (!db) {
+          console.error("No se pudo abrir la base de datos");
+          return [];
+        }
+        
+        const product = await db.get('products', productId);
+        if (!product) return [];
+        
+        // Determinar qué set de ingredientes usar
+        let ingredientsToUse = product.ingredients || [];
+        
+        // Si se especificó un tamaño y existen ingredientes para ese tamaño, usar esos
+        if (size && product.ingredientsBySize && product.ingredientsBySize[size] && product.ingredientsBySize[size].length > 0) {
+          ingredientsToUse = product.ingredientsBySize[size];
+          console.log(`SIMULACIÓN: Usando ${ingredientsToUse.length} ingredientes específicos para tamaño ${size}:`, 
+            ingredientsToUse.map(ing => `${ing.name}: ${ing.quantity}g`));
+        } else {
+          console.log(`SIMULACIÓN: Usando ${ingredientsToUse.length} ingredientes generales:`,
+            ingredientsToUse.map(ing => `${ing.name}: ${ing.quantity}g`));
+        }
+        
+        return ingredientsToUse;
+      } catch (error) {
+        console.error("Error al simular uso de ingredientes:", error);
+        return [];
+      }
+    };
   };
   
   return {
@@ -125,6 +177,7 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
     hasCriticalStock: criticalStockIngredients.length > 0,
     checkProductIngredients,
     refreshIngredients,
+    simulateIngredientUsage,
     isLowStock: (id: string) => {
       const ing = ingredients.find(i => i.id === id);
       return ing && ing.stock <= lowThreshold && ing.stock > criticalThreshold;
