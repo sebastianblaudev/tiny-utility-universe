@@ -1,6 +1,0 @@
-
-# Ejecutar auto_sync.php cada 2 minutos (reducido de 5 minutos)
-*/2 * * * * php /ruta/completa/a/tu/hosting/auto_sync.php >> /ruta/completa/a/tu/hosting/cron_execution.log 2>&1
-
-# Nota: Reemplaza "/ruta/completa/a/tu/hosting/" con la ruta real de tu hosting
-
