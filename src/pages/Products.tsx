@@ -64,9 +64,9 @@ const generateBarcode = () => {
   return barcode;
 };
 
-export const updateIngredientsStock = async (productId: string, quantity: number = 1) => {
+export const updateIngredientsStock = async (productId: string, quantity: number = 1, size?: string) => {
   try {
-    console.log(`Actualizando stock para producto ID: ${productId}, cantidad: ${quantity}`);
+    console.log(`Actualizando stock para producto ID: ${productId}, cantidad: ${quantity}, tamaño: ${size || 'default'}`);
     
     const db = await initDB();
     if (!db) {
@@ -107,9 +107,23 @@ export const updateIngredientsStock = async (productId: string, quantity: number
         return ingredient;
       }
       
-      console.log(`Ingrediente ${ingredient.name} encontrado en el producto, cantidad: ${productIngredient.quantity}`);
+      // Determine the quantity to use based on size
+      let ingredientQuantity = productIngredient.quantity;
       
-      const amountToSubtract = productIngredient.quantity * quantity;
+      if (size && productIngredient.sizeQuantities && productIngredient.sizeQuantities[size] !== undefined) {
+        // Use size-specific quantity if available
+        ingredientQuantity = productIngredient.sizeQuantities[size];
+        console.log(`Usando cantidad específica para tamaño ${size}: ${ingredientQuantity}g`);
+      } else if (size) {
+        // Apply size multiplier if specific quantity not available but size is specified
+        const sizeMultiplier = size === 'mediana' ? 1.5 : size === 'familiar' ? 2 : 1;
+        ingredientQuantity = Math.round(productIngredient.quantity * sizeMultiplier);
+        console.log(`Calculando cantidad para tamaño ${size}: ${productIngredient.quantity}g * ${sizeMultiplier} = ${ingredientQuantity}g`);
+      }
+      
+      console.log(`Ingrediente ${ingredient.name} encontrado en el producto, cantidad a usar: ${ingredientQuantity}g`);
+      
+      const amountToSubtract = ingredientQuantity * quantity;
       console.log(`Cantidad a descontar: ${amountToSubtract}g`);
       
       if (ingredient.stock === undefined) {
@@ -124,6 +138,8 @@ export const updateIngredientsStock = async (productId: string, quantity: number
         updated = true;
         return { ...ingredient, stock: newStock };
       }
+      
+      return ingredient;
     });
     
     if (updated) {

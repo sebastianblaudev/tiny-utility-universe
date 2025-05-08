@@ -3,10 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Utensils, AlertTriangle, Info, Package } from "lucide-react";
+import { Utensils, AlertTriangle, Info, Package, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Ingredient = {
   id: string;
@@ -19,6 +20,12 @@ export type ProductIngredient = {
   id: string;
   name: string;
   quantity: number;
+  sizeQuantities?: {
+    personal?: number;
+    mediana?: number;
+    familiar?: number;
+    [key: string]: number | undefined;
+  };
 };
 
 interface EditProductIngredientsModalProps {
@@ -26,6 +33,7 @@ interface EditProductIngredientsModalProps {
   onClose: () => void;
   productIngredients?: ProductIngredient[];
   onSave: (ingredients: ProductIngredient[]) => void;
+  isPizza?: boolean;
 }
 
 function getIngredientsFromStorage(): Ingredient[] {
@@ -40,10 +48,13 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
   open,
   onClose,
   productIngredients,
-  onSave
+  onSave,
+  isPizza = false
 }) => {
   const [ingredientsList, setIngredientsList] = useState<Ingredient[]>([]);
   const [selectedIng, setSelectedIng] = useState<ProductIngredient[]>(productIngredients || []);
+  const [activeTab, setActiveTab] = useState<string>("general");
+  const [showAdvanced, setShowAdvanced] = useState<{ [key: string]: boolean }>({});
   const lowStockThreshold = 200;
   const criticalStockThreshold = 100;
 
@@ -64,7 +75,11 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
     console.log("Añadiendo ingrediente al producto:", ingredient);
     const exists = selectedIng.find(i => i.id === ingredient.id);
     if (!exists) {
-      setSelectedIng([...selectedIng, { ...ingredient, quantity: 1 }]);
+      setSelectedIng([...selectedIng, { 
+        ...ingredient, 
+        quantity: 1,
+        sizeQuantities: isPizza ? { personal: 1, mediana: 1.5, familiar: 2 } : undefined
+      }]);
     }
   };
 
@@ -79,6 +94,31 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
       return;
     }
     setSelectedIng(selectedIng.map(i => i.id === id ? { ...i, quantity: qty } : i));
+  };
+
+  const handleChangeSizeQty = (id: string, size: string, qty: number) => {
+    console.log(`Cambiando cantidad de ingrediente ${id} para tamaño ${size} a ${qty}g`);
+    if (qty <= 0) {
+      toast({
+        title: "Cantidad inválida",
+        description: "La cantidad debe ser mayor a 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSelectedIng(selectedIng.map(i => {
+      if (i.id === id) {
+        return { 
+          ...i, 
+          sizeQuantities: {
+            ...(i.sizeQuantities || {}),
+            [size]: qty
+          }
+        };
+      }
+      return i;
+    }));
   };
 
   const handleRemove = (id: string) => {
@@ -113,9 +153,16 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
     return requiredQuantity > ingredient.stock;
   };
 
+  const toggleAdvanced = (id: string) => {
+    setShowAdvanced(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={val => { if (!val) onClose(); }}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">
@@ -151,10 +198,72 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
               );
             })}
           </div>
-          <div className="mb-2">
-            {selectedIng.length === 0 && (
-              <div className="text-muted-foreground text-xs">Aún no hay ingredientes asignados.</div>
-            )}
+          
+          {isPizza && selectedIng.length > 0 && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+              <TabsList className="grid grid-cols-4 w-full">
+                <TabsTrigger value="general">General</TabsTrigger>
+                <TabsTrigger value="personal">Personal</TabsTrigger>
+                <TabsTrigger value="mediana">Mediana</TabsTrigger>
+                <TabsTrigger value="familiar">Familiar</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+          
+          {selectedIng.length === 0 && (
+            <div className="text-muted-foreground text-xs">Aún no hay ingredientes asignados.</div>
+          )}
+          
+          {isPizza ? (
+            <TabsContent value="general" className="mt-0">
+              <ul className="space-y-2">
+                {selectedIng.map(ing => {
+                  const stockStatus = getStockStatus(ing.id);
+                  const insufficientStock = isInsufficientStock(ing.id, ing.quantity);
+                  const stockInfo = ingredientsList.find(i => i.id === ing.id)?.stock;
+                  
+                  return (
+                    <li key={ing.id} className="flex items-center gap-3">
+                      <span className="w-24 truncate">{ing.name}</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                        value={ing.quantity}
+                        onChange={e => handleChangeQty(ing.id, Number(e.target.value))}
+                      />
+                      <span>g</span>
+                      
+                      {stockInfo !== undefined && (
+                        <div className="flex items-center gap-1">
+                          <Package size={14} />
+                          <span className="text-xs">{stockInfo}g</span>
+                          
+                          {insufficientStock && (
+                            <Badge variant="destructive" className="text-xs">
+                              <AlertTriangle size={10} className="mr-1" />
+                              Insuficiente
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                      
+                      <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="ml-auto h-7 w-7 p-0"
+                        onClick={() => toggleAdvanced(ing.id)}
+                      >
+                        {showAdvanced[ing.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </TabsContent>
+          ) : (
             <ul className="space-y-2">
               {selectedIng.map(ing => {
                 const stockStatus = getStockStatus(ing.id);
@@ -192,7 +301,83 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
                 );
               })}
             </ul>
-          </div>
+          )}
+          
+          {isPizza && (
+            <>
+              <TabsContent value="personal" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const qty = ing.sizeQuantities?.personal || ing.quantity;
+                    const insufficientStock = isInsufficientStock(ing.id, qty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={qty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'personal', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+              
+              <TabsContent value="mediana" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const qty = ing.sizeQuantities?.mediana || Math.round(ing.quantity * 1.5);
+                    const insufficientStock = isInsufficientStock(ing.id, qty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={qty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'mediana', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+              
+              <TabsContent value="familiar" className="mt-0">
+                <ul className="space-y-2">
+                  {selectedIng.map(ing => {
+                    const qty = ing.sizeQuantities?.familiar || Math.round(ing.quantity * 2);
+                    const insufficientStock = isInsufficientStock(ing.id, qty);
+                    
+                    return (
+                      <li key={ing.id} className="flex items-center gap-3">
+                        <span className="w-24 truncate">{ing.name}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          className={`w-20 ${insufficientStock ? 'border-red-600' : ''}`}
+                          value={qty}
+                          onChange={e => handleChangeSizeQty(ing.id, 'familiar', Number(e.target.value))}
+                        />
+                        <span>g</span>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemove(ing.id)}>Quitar</Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </TabsContent>
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
