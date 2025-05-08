@@ -175,17 +175,11 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
   
   // Define a default size structure to avoid TypeScript errors
-  const initialSizes = {
-    personal: 0,
-    mediana: 0,
-    familiar: 0
-  };
-
   const [newProduct, setNewProduct] = React.useState<Partial<Product>>({
     name: '',
     price: 0,
     category: '',
-    sizes: initialSizes,
+    sizes: { ...initialSizes },
     barcode: ''
   });
   const [ingredientModalOpen, setIngredientModalOpen] = React.useState(false);
@@ -389,7 +383,7 @@ const Products = () => {
       const id = `p${Date.now()}`;
       
       // Initialize sizes with proper default values if it's a pizza category
-      let sizes = initialSizes;
+      let sizes = { ...initialSizes };
       if (isPizzaCategory(newProduct.category)) {
         sizes = {
           personal: newProduct.sizes?.personal || 0,
@@ -403,7 +397,7 @@ const Products = () => {
         id,
         image: null,
         barcode: newProduct.barcode || null,
-        sizes: sizes
+        sizes
       } as Product;
       
       await db.add('products', productData);
