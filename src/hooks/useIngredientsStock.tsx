@@ -76,13 +76,15 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
       return ingredient.quantity;
     }
     
-    // Return size-specific quantity if available, otherwise calculate based on the base quantity
+    // Check if we have a specific quantity for this size
     const sizeQuantity = ingredient.sizeQuantities[size];
     if (sizeQuantity !== undefined) {
+      console.log(`Using specific quantity for ${ingredient.name} size ${size}: ${sizeQuantity}g`);
       return sizeQuantity;
     }
     
     // Default multipliers if no specific quantity is set
+    console.log(`No specific quantity for ${ingredient.name} size ${size}, using base quantity: ${ingredient.quantity}g`);
     switch (size) {
       case 'personal': return ingredient.quantity;
       case 'mediana': return Math.round(ingredient.quantity * 1.5);
@@ -215,6 +217,7 @@ export const useIngredientsStock = (lowThreshold = 200, criticalThreshold = 100)
     checkProductIngredients,
     simulateIngredientUsage,
     updateIngredientsStock,
+    getIngredientQuantityForSize,
     isLowStock: (id: string) => {
       const ing = ingredients.find(i => i.id === id);
       return ing && ing.stock <= lowThreshold && ing.stock > criticalThreshold;

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 type Ingredient = {
   id: string;
@@ -68,8 +68,20 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
 
   // Keep selection in sync
   useEffect(() => {
-    setSelectedIng(productIngredients || []);
-  }, [productIngredients, open]);
+    if (productIngredients) {
+      console.log("Sincronizando ingredientes:", productIngredients);
+      setSelectedIng(productIngredients.map(ing => ({
+        ...ing,
+        sizeQuantities: ing.sizeQuantities || (isPizza ? {
+          personal: ing.quantity || 1,
+          mediana: (ing.quantity || 1) * 1.5,
+          familiar: (ing.quantity || 1) * 2
+        } : undefined)
+      })));
+    } else {
+      setSelectedIng([]);
+    }
+  }, [productIngredients, open, isPizza]);
 
   const handleAddOrUpdate = (ingredient: Ingredient) => {
     console.log("Añadiendo ingrediente al producto:", ingredient);
@@ -103,7 +115,31 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
       });
       return;
     }
-    setSelectedIng(selectedIng.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    
+    setSelectedIng(selectedIng.map(i => {
+      if (i.id === id) {
+        const updated = { ...i, quantity: qty };
+        
+        // If it's a pizza, update the size quantities proportionally
+        if (isPizza && i.quantity > 0) {
+          const ratio = qty / i.quantity;
+          const currentSizeQty = i.sizeQuantities || {
+            personal: i.quantity,
+            mediana: i.quantity * 1.5,
+            familiar: i.quantity * 2
+          };
+          
+          updated.sizeQuantities = {
+            personal: currentSizeQty.personal ? currentSizeQty.personal * ratio : qty,
+            mediana: currentSizeQty.mediana ? currentSizeQty.mediana * ratio : qty * 1.5,
+            familiar: currentSizeQty.familiar ? currentSizeQty.familiar * ratio : qty * 2
+          };
+        }
+        
+        return updated;
+      }
+      return i;
+    }));
   };
 
   const handleChangeSizeQty = (id: string, size: string, qty: number) => {
@@ -122,7 +158,11 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
         return { 
           ...i, 
           sizeQuantities: {
-            ...(i.sizeQuantities || {}),
+            ...(i.sizeQuantities || {
+              personal: i.quantity,
+              mediana: i.quantity * 1.5,
+              familiar: i.quantity * 2
+            }),
             [size]: qty
           }
         };
@@ -278,7 +318,7 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
               <TabsContent value="personal" className="mt-0">
                 <ul className="space-y-2">
                   {selectedIng.map(ing => {
-                    const sizeQty = ing.sizeQuantities?.personal || ing.quantity;
+                    const sizeQty = ing.sizeQuantities?.personal ?? ing.quantity;
                     const insufficientStock = isInsufficientStock(ing.id, sizeQty);
                     
                     return (
@@ -302,7 +342,7 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
               <TabsContent value="mediana" className="mt-0">
                 <ul className="space-y-2">
                   {selectedIng.map(ing => {
-                    const sizeQty = ing.sizeQuantities?.mediana || Math.round(ing.quantity * 1.5);
+                    const sizeQty = ing.sizeQuantities?.mediana ?? Math.round(ing.quantity * 1.5);
                     const insufficientStock = isInsufficientStock(ing.id, sizeQty);
                     
                     return (
@@ -326,7 +366,7 @@ export const EditProductIngredientsModal: React.FC<EditProductIngredientsModalPr
               <TabsContent value="familiar" className="mt-0">
                 <ul className="space-y-2">
                   {selectedIng.map(ing => {
-                    const sizeQty = ing.sizeQuantities?.familiar || Math.round(ing.quantity * 2);
+                    const sizeQty = ing.sizeQuantities?.familiar ?? Math.round(ing.quantity * 2);
                     const insufficientStock = isInsufficientStock(ing.id, sizeQty);
                     
                     return (
