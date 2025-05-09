@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { formatDate } from "@/lib/utils"
 import { initDB } from "@/lib/db"
 
 interface OrderReceiptProps {
@@ -125,6 +124,12 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
     return sentToKitchenItems.includes(itemId)
   }
 
+  // Format date in a more compact way for receipts
+  const formatReceiptDate = (date: Date | string | number) => {
+    const d = new Date(date)
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+  }
+
   // If not loaded yet, render a minimal placeholder to avoid blank output
   if (!isLoaded) {
     return (
@@ -150,8 +155,26 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
   // Generate dotted line
   const dottedLine = "·".repeat(settings.printerSize === "80mm" ? 48 : 32)
 
-  // Generate barcode (placeholder)
-  const barcode = "llllllllllllllllllllllllllllllll"
+  // Generate barcode (more realistic)
+  const generateBarcode = () => {
+    // Create a pattern based on order ID
+    const id = order.id.toString()
+    let pattern = ""
+
+    // Create a pattern of thick and thin lines
+    for (let i = 0; i < 30; i++) {
+      const charCode = (id.charCodeAt(i % id.length) || 0) % 4
+      if (charCode === 0) pattern += "█  "
+      else if (charCode === 1) pattern += "██ "
+      else if (charCode === 2) pattern += "███"
+      else pattern += "█ █"
+    }
+
+    return pattern
+  }
+
+  // Generate receipt number (combination of date and order ID)
+  const receiptNumber = `${new Date(order.createdAt).getFullYear()}${(new Date(order.createdAt).getMonth() + 1).toString().padStart(2, "0")}${order.id.slice(-6)}`
 
   return (
     <div
@@ -160,32 +183,44 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
       style={{
         fontFamily: "monospace",
         fontSize: settings.printerSize === "58mm" ? "12px" : "14px",
-        lineHeight: "1.2",
+        lineHeight: "1.3",
+        letterSpacing: "0.02em",
       }}
     >
       {receiptType === "customer" ? (
         <>
           {/* Customer receipt header */}
-          <div className="text-center mb-2">
-            <p className="font-bold text-lg uppercase">{businessName || headerLines[0]}</p>
+          <div className="text-center mb-3">
+            <p className="font-bold text-lg uppercase tracking-wider">{businessName || headerLines[0]}</p>
             {headerLines.slice(1).map((line, index) => (
               <p key={`header-${index}`} className="text-center">
                 {line}
               </p>
             ))}
+            <p className="text-xs mt-1">Tel: 11-2233-4455</p>
           </div>
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="text-center font-bold mb-1">
-            {order.orderType === "mesa"
-              ? `MESA ${order.tableNumber || "Sin asignar"}`
-              : order.orderType === "delivery"
-                ? "DELIVERY"
-                : "PARA LLEVAR"}
+          <div className="flex justify-between text-xs mb-1">
+            <span>RECIBO: #{receiptNumber}</span>
+            <span>CAJA #1</span>
           </div>
 
-          <div className="text-center mb-2">RECIBO #{order.id.slice(-4)}</div>
+          <div className="flex justify-between text-xs mb-2">
+            <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
+            <span>CAJERO: Admin</span>
+          </div>
+
+          <div className="text-center my-2">{dottedLine}</div>
+
+          <div className="text-center font-bold mb-1 uppercase">
+            {order.orderType === "mesa"
+              ? `Mesa ${order.tableNumber || "Sin asignar"}`
+              : order.orderType === "delivery"
+                ? "Delivery"
+                : "Para llevar"}
+          </div>
 
           <div className="text-center my-2">{dottedLine}</div>
 
@@ -195,11 +230,12 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
           </div>
 
           {order.items.map((item: any, index: number) => (
-            <div key={index} className="flex justify-between">
-              <div>
-                {item.quantity}x {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
+            <div key={index} className="flex justify-between py-0.5">
+              <div className="max-w-[70%]">
+                <span className="inline-block min-w-[2ch] mr-1">{item.quantity}x</span>
+                {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
               </div>
-              <div>{formatCurrency(item.price * item.quantity)}</div>
+              <div className="text-right min-w-[30%]">{formatCurrency(item.price * item.quantity)}</div>
             </div>
           ))}
 
@@ -235,31 +271,43 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             </div>
           </div>
 
+          <div className="text-center my-2">{dottedLine}</div>
+
           <div className="mt-2">
-            <div>Tarjeta bancaria</div>
-            <div className="flex justify-between">
+            <div className="font-bold">Tarjeta bancaria</div>
+            <div className="flex justify-between text-xs">
+              <span>Número de tarjeta</span>
+              <span>XXXX-XXXX-XXXX-{order.id.slice(-4)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
               <span>Código de aprobación</span>
               <span>#{order.id.slice(-6)}</span>
             </div>
           </div>
 
-          <div className="text-center mt-4 mb-2 font-bold">¡GRACIAS POR SU COMPRA!</div>
+          <div className="text-center my-2">{dottedLine}</div>
+
+          <div className="text-center mt-3 mb-2 font-bold tracking-wide">¡GRACIAS POR SU COMPRA!</div>
+
+          <div className="text-xs text-center mb-3">
+            {footerLines.map((line, index) => (
+              <p key={`footer-${index}`}>{line}</p>
+            ))}
+          </div>
+
+          <div className="text-center text-xs mb-2">COPIA CLIENTE</div>
 
           <div className="flex justify-center mt-3">
             <div
               className="text-center"
               style={{
                 fontFamily: "monospace",
-                letterSpacing: "-0.5px",
+                letterSpacing: "-1px",
                 fontSize: "16px",
                 lineHeight: "0.8",
               }}
             >
-              {barcode.split("").map((char, i) => (
-                <span key={i} style={{ display: "inline-block", width: "2px" }}>
-                  {char === "l" ? "█" : " "}
-                </span>
-              ))}
+              {generateBarcode()}
             </div>
           </div>
         </>
@@ -267,39 +315,52 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
         <>
           {/* Kitchen receipt */}
           <div className="text-center mb-2">
-            <p className="font-bold text-lg uppercase">{businessName || headerLines[0]}</p>
+            <p className="font-bold text-lg uppercase tracking-wider">{businessName || headerLines[0]}</p>
           </div>
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="text-center font-bold mb-1">COMANDA DE COCINA</div>
+          <div className="text-center font-bold mb-1 uppercase">Comanda de Cocina</div>
 
-          <div className="text-center mb-2">
+          <div className="flex justify-between text-xs mb-2">
+            <span>ORDEN: #{order.id.slice(-4)}</span>
+            <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
+          </div>
+
+          <div className="text-center my-2">{dottedLine}</div>
+
+          <div className="text-center font-bold mb-2 uppercase bg-gray-100 py-1">
             {order.orderType === "mesa"
-              ? `MESA ${order.tableNumber || "Sin asignar"}`
+              ? `Mesa ${order.tableNumber || "Sin asignar"}`
               : order.orderType === "delivery"
-                ? "DELIVERY"
-                : "PARA LLEVAR"}
+                ? "Delivery"
+                : "Para llevar"}
           </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
-
-          <div className="font-bold mb-1">PRODUCTOS:</div>
+          <div className="font-bold mb-1 uppercase">Productos:</div>
 
           {order.items.map((item: any, index: number) => {
             const isSentToKitchen = hasBeenSentToKitchen(item)
 
             return (
-              <div key={index} className={isSentToKitchen ? "line-through" : ""}>
-                {item.quantity}x {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
-                {item.notes && <div className="ml-4 text-xs">Notas: {item.notes}</div>}
+              <div key={index} className={`py-0.5 ${isSentToKitchen ? "line-through text-gray-500" : ""}`}>
+                <div>
+                  <span className="inline-block min-w-[2ch] mr-1 font-bold">{item.quantity}x</span>
+                  {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
+                </div>
+                {item.notes && (
+                  <div className="ml-4 text-xs border-l-2 border-gray-300 pl-1 mt-0.5">Notas: {item.notes}</div>
+                )}
               </div>
             )
           })}
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="text-center text-sm">{formatDate(new Date())}</div>
+          <div className="flex justify-between text-xs">
+            <span>IMPRESO: {formatReceiptDate(new Date())}</span>
+            <span>PREPARACIÓN: INMEDIATA</span>
+          </div>
         </>
       )}
     </div>
