@@ -114,6 +114,18 @@ export function printElement(content: HTMLElement) {
           td { padding: 4px 0; }
           .border-b { border-bottom: 1px solid #eee; }
           img { max-width: 100%; height: auto; }
+          
+          /* Enhanced print styles */
+          .receipt-header { text-align: center; margin-bottom: 8px; }
+          .receipt-title { font-weight: bold; font-size: 14px; margin: 4px 0; }
+          .receipt-divider { border-top: 1px dashed #ccc; margin: 8px 0; }
+          .item-row { display: flex; justify-content: space-between; margin: 6px 0; }
+          .item-name { flex-grow: 1; }
+          .item-price { font-weight: 500; }
+          .totals-section { margin-top: 10px; }
+          .total-line { display: flex; justify-content: space-between; margin: 4px 0; }
+          .grand-total { font-weight: bold; font-size: 13px; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px; }
+          .receipt-footer { text-align: center; font-size: 9px; margin-top: 15px; color: #666; }
         </style>
       </head>
       <body>

@@ -166,6 +166,18 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 font-style: italic;
                 font-size: 0.85em;
               }
+              .receipt-border {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                padding: 12px;
+              }
+              .item-card {
+                padding: 8px;
+                border-radius: 4px;
+                margin: 6px 0;
+                background-color: #f9f9f9;
+              }
             </style>
           </head>
           <body>
@@ -194,7 +206,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
       <div className="hidden">
         <div ref={printRef} className={contentWidthClass}>
           <div className="header">
-            <h2>PRE-CUENTA</h2>
+            <h2 className="text-xl font-bold">PRE-CUENTA</h2>
             <p>Fecha: {dateString} - Hora: {timeString}</p>
             {orderType === "mesa" && <p>Mesa: {activeTable}</p>}
             {orderType === "delivery" && <p>Delivery</p>}
@@ -217,7 +229,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
             const itemTotal = (item.price + extrasTotal) * item.quantity;
             
             return (
-              <div key={index} className={item.sentToKitchen ? "sent-to-kitchen" : ""}>
+              <div key={index} className={`item-card ${item.sentToKitchen ? "sent-to-kitchen" : ""}`}>
                 <div className="item">
                   <span>
                     {item.quantity} x {item.name} {item.size ? `(${item.size})` : ''}
@@ -277,7 +289,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
       
       <button 
         onClick={printPreBill} 
-        className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 px-4 rounded-md shadow"
+        className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 px-4 rounded-md shadow transition-all hover:shadow-lg"
       >
         <Printer className="h-4 w-4" />
         Imprimir Pre-Cuenta
