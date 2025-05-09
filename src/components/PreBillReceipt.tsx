@@ -103,11 +103,12 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 text-align: center;
                 margin-bottom: 15px;
                 padding-bottom: 10px;
-                border-bottom: 1px dashed #ccc;
+                border-bottom: 1px solid #ccc;
               }
               .header h2 {
                 font-size: ${settings.printerSize === "58mm" ? "16px" : "20px"};
                 margin-bottom: 5px;
+                font-weight: bold;
               }
               .divider {
                 border-top: 1px dashed #ccc;
@@ -117,6 +118,8 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 display: flex;
                 justify-content: space-between;
                 margin: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 6px;
               }
               .extras {
                 padding-left: 15px;
@@ -126,7 +129,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
               }
               .total-section {
                 margin-top: 15px;
-                border-top: 1px dashed #ccc;
+                border-top: 1px solid #ccc;
                 padding-top: 10px;
               }
               .total-row {
@@ -147,6 +150,7 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 padding: 10px;
                 border-radius: 5px;
                 margin: 10px 0;
+                border-left: 3px solid #ddd;
               }
               .client-info {
                 margin: 10px 0;
@@ -160,11 +164,12 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 margin-top: 15px;
                 font-style: italic;
                 color: #666;
+                font-weight: bold;
+                font-size: 14px;
               }
               .sent-to-kitchen {
                 color: #28a745;
-                font-style: italic;
-                font-size: 0.85em;
+                font-weight: bold;
               }
               .receipt-border {
                 border: 1px solid #e0e0e0;
@@ -177,6 +182,29 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 border-radius: 4px;
                 margin: 6px 0;
                 background-color: #f9f9f9;
+              }
+              .section-title {
+                background-color: #eee;
+                padding: 5px 8px;
+                font-weight: bold;
+                margin: 10px 0 5px 0;
+                border-radius: 3px;
+              }
+              .quantity {
+                font-weight: bold;
+                margin-right: 5px;
+              }
+              .price-amount {
+                font-weight: bold;
+              }
+              .order-type {
+                background-color: #e0e0e0;
+                padding: 8px;
+                text-align: center;
+                font-weight: bold;
+                margin: 10px 0;
+                text-transform: uppercase;
+                border-radius: 3px;
               }
             </style>
           </head>
@@ -205,12 +233,16 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
     <>
       <div className="hidden">
         <div ref={printRef} className={contentWidthClass}>
+          {/* HEADER SECTION - More prominent */}
           <div className="header">
-            <h2 className="text-xl font-bold">PRE-CUENTA</h2>
-            <p>Fecha: {dateString} - Hora: {timeString}</p>
-            {orderType === "mesa" && <p>Mesa: {activeTable}</p>}
-            {orderType === "delivery" && <p>Delivery</p>}
-            {orderType === "takeaway" && <p>Para llevar</p>}
+            <h2 className="text-xl font-bold uppercase">PRE-CUENTA</h2>
+            <p className="font-medium">Fecha: {dateString} - Hora: {timeString}</p>
+            
+            <div className="order-type">
+              {orderType === "mesa" && <p>Mesa: {activeTable}</p>}
+              {orderType === "delivery" && <p>Delivery</p>}
+              {orderType === "takeaway" && <p>Para llevar</p>}
+            </div>
             
             {selectedCustomer && (
               <div className="client-info">
@@ -223,6 +255,9 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
           
           <div className="divider"></div>
           
+          {/* ITEMS SECTION - Clear section title */}
+          <div className="section-title">DETALLE DE PRODUCTOS</div>
+          
           {allItems.map((item, index) => {
             const extras = item.extras || [];
             const extrasTotal = extras.reduce((sum: number, ext: any) => sum + (ext.price || 0), 0);
@@ -232,10 +267,11 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
               <div key={index} className={`item-card ${item.sentToKitchen ? "sent-to-kitchen" : ""}`}>
                 <div className="item">
                   <span>
-                    {item.quantity} x {item.name} {item.size ? `(${item.size})` : ''}
+                    <span className="quantity">{item.quantity}x</span>
+                    <span className="font-medium">{item.name}</span> {item.size ? `(${item.size})` : ''}
                     {item.sentToKitchen && <span className="sent-to-kitchen"> ✓</span>}
                   </span>
-                  <span>{formatCurrency(itemTotal, false)}</span>
+                  <span className="price-amount">{formatCurrency(itemTotal, false)}</span>
                 </div>
                 {extras && extras.length > 0 && (
                   <div className="extras">
@@ -253,7 +289,10 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
             );
           })}
           
+          {/* TOTALS SECTION - Clear separation */}
           <div className="total-section">
+            <div className="section-title">RESUMEN</div>
+            
             <div className="total-row">
               <span>Subtotal:</span>
               <span>{formatCurrency(subtotal, false)}</span>
@@ -264,11 +303,12 @@ export const PreBillReceipt: React.FC<PreBillReceiptProps> = ({
                 <span>{formatCurrency(taxAmount, false)}</span>
               </div>
             )}
-            <div className="total-row">
+            <div className="total-row" style={{ fontSize: "16px" }}>
               <span>Total:</span>
               <span>{formatCurrency(total, false)}</span>
             </div>
             
+            {/* TIP SECTION - Visually separated */}
             <div className="tip-section">
               <div className="tip-row">
                 <span>Propina sugerida (10%):</span>

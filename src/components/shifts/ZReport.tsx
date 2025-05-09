@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatDate } from "@/lib/utils";
 import type { Order, Shift } from "@/lib/db";
-import { CreditCard, Banknote, ArrowRight, CheckCircle2, Clock, Receipt, FileText, Tag } from "lucide-react";
+import { CreditCard, Banknote, ArrowRight, CheckCircle2, Clock, Receipt, FileText, Tag, User } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface ZReportProps {
@@ -79,6 +79,7 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
         backgroundSize: 'cover'
       }}
     >
+      {/* HEADER SECTION - More prominent */}
       <div className="text-center mb-6 relative">
         <div 
           className="absolute inset-0 opacity-10 rounded-lg" 
@@ -100,35 +101,39 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
         <p className={`${settings.printerSize === "58mm" ? "text-xl" : "text-2xl"} font-bold mb-1`}>
           {headerLines[0] || "Pizza Point"}
         </p>
+        
+        {/* TITLE SECTION - More highlighted */}
         <div className="bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-3 mt-2 shadow-sm border border-gray-200">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Receipt className="h-5 w-5 text-gray-700" />
-            <p className="text-lg font-semibold text-gray-800">Reporte Z - Cierre de Caja</p>
+            <p className="text-lg font-bold text-gray-800">Reporte Z - Cierre de Caja</p>
           </div>
           <p className={`${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} text-gray-600 flex items-center justify-center gap-1`}>
             <User className="h-3.5 w-3.5" />
-            Cajero: {shift.cashierName}
+            <span className="font-medium">Cajero: {shift.cashierName}</span>
           </p>
         </div>
       </div>
 
+      {/* SHIFT PERIOD SECTION - Better organized */}
       <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100 shadow-sm">
-        <div className="flex items-center mb-3 text-blue-800">
+        <div className="flex items-center mb-3 text-blue-800 border-b border-blue-100 pb-1">
           <Clock className={`mr-2 ${settings.printerSize === "58mm" ? "h-4 w-4" : "h-5 w-5"} text-blue-500`} />
-          <span className="font-medium">Periodo del turno</span>
+          <span className="font-bold">Periodo del turno</span>
         </div>
         <div className={`flex justify-between ${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} mb-2 ml-7 bg-white/60 p-2 rounded-md`}>
-          <span className="text-gray-600">Apertura:</span>
-          <span className="font-medium">{formatDate(shift.startTime)}</span>
+          <span className="text-gray-600 font-medium">Apertura:</span>
+          <span className="font-bold">{formatDate(shift.startTime)}</span>
         </div>
         <div className={`flex justify-between ${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} ml-7 bg-white/60 p-2 rounded-md`}>
-          <span className="text-gray-600">Cierre:</span>
-          <span className="font-medium">{formatDate(shift.endTime || new Date())}</span>
+          <span className="text-gray-600 font-medium">Cierre:</span>
+          <span className="font-bold">{formatDate(shift.endTime || new Date())}</span>
         </div>
       </div>
 
+      {/* SALES SUMMARY SECTION - Better organized */}
       <div className="border rounded-lg bg-gradient-to-r from-gray-50 to-white p-4 mb-6 shadow-sm">
-        <h3 className="font-medium text-gray-700 mb-3 pb-2 border-b flex items-center gap-1">
+        <h3 className="font-bold text-gray-700 mb-3 pb-2 border-b flex items-center gap-1">
           <Tag className="h-4 w-4 text-gray-600" />
           Resumen de Ventas
         </h3>
@@ -136,88 +141,71 @@ export const ZReport: React.FC<ZReportProps> = ({ shift, orders }) => {
           <div className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm">
             <div className="flex items-center">
               <Banknote className={`${settings.printerSize === "58mm" ? "h-4 w-4" : "h-5 w-5"} mr-2 text-green-600`} />
-              <span>Ventas en Efectivo:</span>
+              <span className="font-medium">Ventas en Efectivo:</span>
             </div>
-            <span className="font-medium">${totalByPaymentMethod.efectivo.toFixed(2)}</span>
+            <span className="font-bold">${totalByPaymentMethod.efectivo.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm">
             <div className="flex items-center">
               <CreditCard className={`${settings.printerSize === "58mm" ? "h-4 w-4" : "h-5 w-5"} mr-2 text-blue-600`} />
-              <span>Ventas con Tarjeta:</span>
+              <span className="font-medium">Ventas con Tarjeta:</span>
             </div>
-            <span className="font-medium">${totalByPaymentMethod.tarjeta.toFixed(2)}</span>
+            <span className="font-bold">${totalByPaymentMethod.tarjeta.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm">
             <div className="flex items-center">
               <ArrowRight className={`${settings.printerSize === "58mm" ? "h-4 w-4" : "h-5 w-5"} mr-2 text-purple-600`} />
-              <span>Transferencias:</span>
+              <span className="font-medium">Transferencias:</span>
             </div>
-            <span className="font-medium">${totalByPaymentMethod.transferencia.toFixed(2)}</span>
+            <span className="font-bold">${totalByPaymentMethod.transferencia.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
+      {/* TOTALS AND SHIFT DETAILS SECTION - Better organized */}
       <div className="space-y-3 mb-6">
         <div className={`flex justify-between font-bold ${settings.printerSize === "58mm" ? "text-base" : "text-lg"} bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg shadow-sm border-l-4 border-orange-500`}>
           <span>Total Ventas:</span>
-          <span>${totalByPaymentMethod.total.toFixed(2)}</span>
+          <span className="text-xl">${totalByPaymentMethod.total.toFixed(2)}</span>
         </div>
         
         <div className="p-4 rounded-lg border border-gray-200 shadow-sm bg-white">
+          <div className="font-bold mb-2 pb-1 border-b border-gray-100">Detalles de Caja</div>
           <div className="flex justify-between mb-2 items-center">
-            <span className="text-gray-600 flex items-center gap-1">
+            <span className="text-gray-600 flex items-center gap-1 font-medium">
               <FileText className="h-3.5 w-3.5" />
               Fondo Inicial:
             </span>
-            <span className="font-medium">${shift.startAmount.toFixed(2)}</span>
+            <span className="font-bold">${shift.startAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 flex items-center gap-1">
+            <span className="text-gray-600 flex items-center gap-1 font-medium">
               <FileText className="h-3.5 w-3.5" />
               Monto Final:
             </span>
-            <span className="font-medium">${shift.endAmount?.toFixed(2)}</span>
+            <span className="font-bold">${shift.endAmount?.toFixed(2)}</span>
           </div>
         </div>
         
         {shift.note && (
           <div className="p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200 shadow-sm">
-            <span className="font-bold block mb-1 flex items-center gap-1">
+            <span className="font-bold block mb-1 flex items-center gap-1 border-b border-yellow-100 pb-1">
               <FileText className="h-3.5 w-3.5" />
               Nota: 
             </span>
-            <span className="text-gray-700">{shift.note}</span>
+            <span className="text-gray-700 italic">{shift.note}</span>
           </div>
         )}
       </div>
 
+      {/* FOOTER SECTION */}
       <div className={`text-center ${settings.printerSize === "58mm" ? "text-xs" : "text-sm"} text-gray-500 mt-6 pt-4 border-t bg-white/80 p-3 rounded-md`}>
         <div className="flex items-center justify-center mb-1 text-xs">
           <CheckCircle2 className="h-3 w-3 mr-1 text-gray-400" />
           <span>Documento no válido como factura</span>
         </div>
-        <p className="text-xs">{new Date().toLocaleString()}</p>
+        <p className="text-xs font-medium">{new Date().toLocaleString()}</p>
       </div>
     </div>
   );
 };
-
-function User(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  )
-}

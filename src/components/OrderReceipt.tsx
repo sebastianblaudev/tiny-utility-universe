@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -189,8 +190,8 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
     >
       {receiptType === "customer" ? (
         <>
-          {/* Customer receipt header */}
-          <div className="text-center mb-3">
+          {/* Customer receipt header - IMPROVED HIERARCHY */}
+          <div className="text-center mb-3 border-b-2 border-gray-300 pb-2">
             <p className="font-bold text-lg uppercase tracking-wider">{businessName || headerLines[0]}</p>
             {headerLines.slice(1).map((line, index) => (
               <p key={`header-${index}`} className="text-center">
@@ -200,21 +201,20 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             <p className="text-xs mt-1">Tel: 11-2233-4455</p>
           </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
+          {/* RECEIPT INFO SECTION - Better grouped */}
+          <div className="bg-gray-100 rounded-md p-2 mb-3">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="font-bold">RECIBO: #{receiptNumber}</span>
+              <span>CAJA #1</span>
+            </div>
 
-          <div className="flex justify-between text-xs mb-1">
-            <span>RECIBO: #{receiptNumber}</span>
-            <span>CAJA #1</span>
+            <div className="flex justify-between text-xs">
+              <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
+              <span>CAJERO: Admin</span>
+            </div>
           </div>
 
-          <div className="flex justify-between text-xs mb-2">
-            <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
-            <span>CAJERO: Admin</span>
-          </div>
-
-          <div className="text-center my-2">{dottedLine}</div>
-
-          <div className="text-center font-bold mb-1 uppercase">
+          <div className="text-center my-2 font-bold bg-gray-200 py-1 rounded-md uppercase">
             {order.orderType === "mesa"
               ? `Mesa ${order.tableNumber || "Sin asignar"}`
               : order.orderType === "delivery"
@@ -224,46 +224,54 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="flex justify-between mb-1">
-            <span className="font-bold">Descripción</span>
-            <span className="font-bold">Precio</span>
-          </div>
-
-          {order.items.map((item: any, index: number) => (
-            <div key={index} className="flex justify-between py-0.5">
-              <div className="max-w-[70%]">
-                <span className="inline-block min-w-[2ch] mr-1">{item.quantity}x</span>
-                {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
-              </div>
-              <div className="text-right min-w-[30%]">{formatCurrency(item.price * item.quantity)}</div>
+          {/* ITEMS SECTION - Better formatted */}
+          <div className="mb-3">
+            <div className="flex justify-between mb-1 font-bold border-b border-gray-300 pb-1">
+              <span>Descripción</span>
+              <span>Precio</span>
             </div>
-          ))}
+
+            {order.items.map((item: any, index: number) => (
+              <div key={index} className="flex justify-between py-1 border-b border-gray-100">
+                <div className="max-w-[70%]">
+                  <span className="inline-block min-w-[2ch] mr-1 font-bold">{item.quantity}x</span>
+                  {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
+                </div>
+                <div className="text-right min-w-[30%] font-medium">{formatCurrency(item.price * item.quantity)}</div>
+              </div>
+            ))}
+          </div>
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="flex justify-between font-bold">
-            <span>Total</span>
-            <span>{formatCurrency(total)}</span>
+          {/* TOTALS SECTION - Improved hierarchy */}
+          <div className="space-y-1 bg-gray-100 p-2 rounded-md mb-3">
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+
+            {order.tip > 0 && (
+              <div className="flex justify-between">
+                <span>Propina</span>
+                <span>{formatCurrency(order.tip)}</span>
+              </div>
+            )}
+
+            {taxEnabled && taxPercentage > 0 && (
+              <div className="flex justify-between">
+                <span>IVA ({taxPercentage}%)</span>
+                <span>{formatCurrency(taxAmount)}</span>
+              </div>
+            )}
           </div>
 
-          {order.tip > 0 && (
-            <div className="flex justify-between">
-              <span>Propina</span>
-              <span>{formatCurrency(order.tip)}</span>
-            </div>
-          )}
-
-          {taxEnabled && taxPercentage > 0 && (
-            <div className="flex justify-between">
-              <span>IVA ({taxPercentage}%)</span>
-              <span>{formatCurrency(taxAmount)}</span>
-            </div>
-          )}
-
-          <div className="mt-2">
+          {/* PAYMENT SECTION - Better grouped */}
+          <div className="border border-gray-200 rounded-md p-2 mb-3">
+            <div className="font-bold border-b border-gray-200 pb-1 mb-1">Detalles de pago</div>
             <div className="flex justify-between">
               <span>Pago</span>
-              <span>{formatCurrency(total + (order.tip || 0))}</span>
+              <span className="font-bold">{formatCurrency(total + (order.tip || 0))}</span>
             </div>
             <div className="flex justify-between">
               <span>Cambio</span>
@@ -271,10 +279,9 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
             </div>
           </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
-
-          <div className="mt-2">
-            <div className="font-bold">Tarjeta bancaria</div>
+          {/* CARD SECTION - Better organized with clear titles */}
+          <div className="mt-2 bg-gray-50 p-2 rounded-md border-l-4 border-gray-300 mb-3">
+            <div className="font-bold border-b border-gray-200 pb-1 mb-1">Tarjeta bancaria</div>
             <div className="flex justify-between text-xs">
               <span>Número de tarjeta</span>
               <span>XXXX-XXXX-XXXX-{order.id.slice(-4)}</span>
@@ -287,15 +294,16 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
 
           <div className="text-center my-2">{dottedLine}</div>
 
-          <div className="text-center mt-3 mb-2 font-bold tracking-wide">¡GRACIAS POR SU COMPRA!</div>
+          {/* FOOTER SECTION - More emphasis */}
+          <div className="text-center mt-3 mb-2 font-bold text-lg tracking-wide uppercase">¡GRACIAS POR SU COMPRA!</div>
 
-          <div className="text-xs text-center mb-3">
+          <div className="text-xs text-center mb-3 bg-gray-50 p-2 rounded-md">
             {footerLines.map((line, index) => (
               <p key={`footer-${index}`}>{line}</p>
             ))}
           </div>
 
-          <div className="text-center text-xs mb-2">COPIA CLIENTE</div>
+          <div className="text-center text-xs mb-2 font-bold">COPIA CLIENTE</div>
 
           <div className="flex justify-center mt-3">
             <div
@@ -313,23 +321,21 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
         </>
       ) : (
         <>
-          {/* Kitchen receipt */}
-          <div className="text-center mb-2">
+          {/* Kitchen receipt - IMPROVED HIERARCHY */}
+          <div className="text-center mb-2 border-b-2 border-gray-300 pb-2">
             <p className="font-bold text-lg uppercase tracking-wider">{businessName || headerLines[0]}</p>
           </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
+          <div className="bg-gray-100 rounded-md p-2 mb-3 text-center">
+            <div className="font-bold text-lg mb-1 uppercase">Comanda de Cocina</div>
 
-          <div className="text-center font-bold mb-1 uppercase">Comanda de Cocina</div>
-
-          <div className="flex justify-between text-xs mb-2">
-            <span>ORDEN: #{order.id.slice(-4)}</span>
-            <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
+            <div className="flex justify-between text-xs">
+              <span className="font-bold">ORDEN: #{order.id.slice(-4)}</span>
+              <span>FECHA: {formatReceiptDate(order.createdAt)}</span>
+            </div>
           </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
-
-          <div className="text-center font-bold mb-2 uppercase bg-gray-100 py-1">
+          <div className="text-center font-bold mb-3 uppercase bg-gray-200 p-2 rounded-md border-l-4 border-gray-500">
             {order.orderType === "mesa"
               ? `Mesa ${order.tableNumber || "Sin asignar"}`
               : order.orderType === "delivery"
@@ -337,29 +343,31 @@ export const OrderReceipt: React.FC<OrderReceiptProps> = ({ order, receiptType }
                 : "Para llevar"}
           </div>
 
-          <div className="font-bold mb-1 uppercase">Productos:</div>
+          <div className="font-bold mb-2 uppercase bg-gray-100 p-1 rounded-md">Productos:</div>
 
-          {order.items.map((item: any, index: number) => {
-            const isSentToKitchen = hasBeenSentToKitchen(item)
+          <div className="border rounded-md p-2 mb-3">
+            {order.items.map((item: any, index: number) => {
+              const isSentToKitchen = hasBeenSentToKitchen(item)
 
-            return (
-              <div key={index} className={`py-0.5 ${isSentToKitchen ? "line-through text-gray-500" : ""}`}>
-                <div>
-                  <span className="inline-block min-w-[2ch] mr-1 font-bold">{item.quantity}x</span>
-                  {item.name} {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
+              return (
+                <div key={index} className={`py-1 border-b border-gray-100 ${isSentToKitchen ? "line-through text-gray-500" : ""}`}>
+                  <div>
+                    <span className="inline-block min-w-[2ch] mr-1 font-bold">{item.quantity}x</span>
+                    <span className="font-medium">{item.name}</span> {item.size ? `(${getSizeAbbreviation(item.size)})` : ""}
+                  </div>
+                  {item.notes && (
+                    <div className="ml-4 text-xs border-l-2 border-gray-300 pl-1 mt-0.5 italic">Notas: {item.notes}</div>
+                  )}
                 </div>
-                {item.notes && (
-                  <div className="ml-4 text-xs border-l-2 border-gray-300 pl-1 mt-0.5">Notas: {item.notes}</div>
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
 
-          <div className="text-center my-2">{dottedLine}</div>
-
-          <div className="flex justify-between text-xs">
-            <span>IMPRESO: {formatReceiptDate(new Date())}</span>
-            <span>PREPARACIÓN: INMEDIATA</span>
+          <div className="bg-gray-100 rounded-md p-2">
+            <div className="flex justify-between text-xs">
+              <span className="font-bold">IMPRESO: {formatReceiptDate(new Date())}</span>
+              <span>PREPARACIÓN: INMEDIATA</span>
+            </div>
           </div>
         </>
       )}
