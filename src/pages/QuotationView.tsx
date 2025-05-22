@@ -1,13 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,9 +12,12 @@ import { getQuotationById, getCompanyInfo, saveQuotation, type Quotation, type C
 import { exportQuotationToPDF, shareQuotationPDF, shareQuotationByEmail } from "@/lib/pdf-service";
 import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck, Mail } from "lucide-react";
 import { formatCLP, formatDate } from "@/lib/utils";
-
 const QuotationView = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -31,7 +27,6 @@ const QuotationView = () => {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<Quotation["status"]>("draft");
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,7 +34,6 @@ const QuotationView = () => {
           const quotationData = await getQuotationById(id);
           setQuotation(quotationData);
           setSelectedStatus(quotationData?.status || "draft");
-          
           const companyData = await getCompanyInfo();
           setCompany(companyData);
         }
@@ -50,24 +44,20 @@ const QuotationView = () => {
         setLoading(false);
       }
     };
-    
     fetchData();
   }, [id]);
-
   const handleExportPDF = async () => {
     try {
       if (!quotation) return;
-      
       setPdfLoading(true);
       const pdfBlob = await exportQuotationToPDF(quotation, company);
-      
+
       // Crear un enlace para descargar el PDF
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `Cotizacion_${quotation.id}.pdf`;
       link.click();
-      
       toast.success("PDF exportado correctamente");
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -77,15 +67,13 @@ const QuotationView = () => {
       setPdfLoading(false);
     }
   };
-
   const handlePrint = async () => {
     try {
       if (!quotation) return;
-      
       setPdfLoading(true);
       const pdfBlob = await exportQuotationToPDF(quotation, company);
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      
+
       // Abrir en una nueva ventana e imprimir
       const printWindow = window.open(pdfUrl, '_blank');
       if (printWindow) {
@@ -104,16 +92,13 @@ const QuotationView = () => {
       setPdfLoading(false);
     }
   };
-
   const shareViaWhatsApp = async () => {
     try {
       if (!quotation) return;
-      
       setPdfLoading(true);
-      
+
       // Usar la función para compartir PDF via WhatsApp
       await shareQuotationPDF(quotation, company);
-      
       toast.success("Cotización compartida correctamente");
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
@@ -123,16 +108,13 @@ const QuotationView = () => {
       setShowShareDialog(false);
     }
   };
-
   const shareViaEmail = async () => {
     try {
       if (!quotation) return;
-      
       setPdfLoading(true);
-      
+
       // Usar la nueva función para compartir PDF por email
       await shareQuotationByEmail(quotation, company);
-      
       toast.success("Preparando email con cotización adjunta");
     } catch (error) {
       console.error("Error sharing via email:", error);
@@ -142,23 +124,19 @@ const QuotationView = () => {
       setShowShareDialog(false);
     }
   };
-
   const handleStatusChange = async () => {
     try {
       if (!quotation || !id) return;
-      
       setUpdatingStatus(true);
-      
+
       // Update the quotation status
       const updatedQuotation: Quotation = {
         ...quotation,
         status: selectedStatus
       };
-      
       await saveQuotation(updatedQuotation);
       setQuotation(updatedQuotation);
       setShowStatusDialog(false);
-      
       const statusLabels = {
         draft: "borrador",
         created: "creada",
@@ -166,7 +144,6 @@ const QuotationView = () => {
         accepted: "aceptada",
         rejected: "rechazada"
       };
-      
       toast.success(`Estado actualizado a ${statusLabels[selectedStatus]}`);
     } catch (error) {
       console.error("Error updating status:", error);
@@ -175,50 +152,57 @@ const QuotationView = () => {
       setUpdatingStatus(false);
     }
   };
-
   const getStatusColor = (status: Quotation["status"]) => {
     switch (status) {
-      case "accepted": return "bg-green-600";
-      case "rejected": return "bg-red-600";
-      case "sent": return "bg-blue-600";
-      case "created": return "bg-gray-500";
-      default: return "bg-gray-400";
+      case "accepted":
+        return "bg-green-600";
+      case "rejected":
+        return "bg-red-600";
+      case "sent":
+        return "bg-blue-600";
+      case "created":
+        return "bg-gray-500";
+      default:
+        return "bg-gray-400";
     }
   };
-
   const getStatusIcon = (status: Quotation["status"]) => {
     switch (status) {
-      case "accepted": return <Check className="h-4 w-4" />;
-      case "rejected": return <X className="h-4 w-4" />;
-      case "sent": return <Send className="h-4 w-4" />;
-      case "created": return <FileCheck className="h-4 w-4" />;
-      default: return <Pencil className="h-4 w-4" />;
+      case "accepted":
+        return <Check className="h-4 w-4" />;
+      case "rejected":
+        return <X className="h-4 w-4" />;
+      case "sent":
+        return <Send className="h-4 w-4" />;
+      case "created":
+        return <FileCheck className="h-4 w-4" />;
+      default:
+        return <Pencil className="h-4 w-4" />;
     }
   };
-
   const getStatusLabel = (status: Quotation["status"]) => {
     switch (status) {
-      case "accepted": return "Aceptada";
-      case "rejected": return "Rechazada";
-      case "sent": return "Enviada";
-      case "created": return "Creada";
-      default: return "Borrador";
+      case "accepted":
+        return "Aceptada";
+      case "rejected":
+        return "Rechazada";
+      case "sent":
+        return "Enviada";
+      case "created":
+        return "Creada";
+      default:
+        return "Borrador";
     }
   };
-
   if (loading) {
-    return (
-      <div className="container mx-auto py-8 px-4">
+    return <div className="container mx-auto py-8 px-4">
         <div className="text-center py-12">
           <p>Cargando cotización...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!quotation) {
-    return (
-      <div className="container mx-auto py-8 px-4">
+    return <div className="container mx-auto py-8 px-4">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Cotización no encontrada</h1>
           <p className="mb-6">La cotización que buscas no existe o ha sido eliminada.</p>
@@ -226,12 +210,9 @@ const QuotationView = () => {
             <Link to="/quotations">Volver a la lista de cotizaciones</Link>
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container mx-auto py-8 px-4">
+  return <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div className="flex items-center">
           <Button variant="outline" size="icon" asChild className="mr-4">
@@ -249,32 +230,19 @@ const QuotationView = () => {
           </div>
         </div>
         <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportPDF}
-            disabled={pdfLoading}
-          >
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={pdfLoading}>
             <FileText className="h-4 w-4 mr-2" />
             Exportar PDF
           </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handlePrint}
-            disabled={pdfLoading}
-          >
+          <Button variant="outline" size="sm" onClick={handlePrint} disabled={pdfLoading}>
             <Printer className="h-4 w-4 mr-2" />
             Imprimir
           </Button>
           
           <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Share className="h-4 w-4 mr-2" />
-                Compartir
-              </Button>
+              
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
@@ -285,31 +253,17 @@ const QuotationView = () => {
                   Seleccione una opción para compartir la cotización {quotation?.id} para {quotation?.clientName}
                 </p>
                 <div className="flex justify-center flex-wrap gap-4">
-                  <Button 
-                    onClick={handleExportPDF} 
-                    className="flex flex-col items-center h-auto py-4 px-6"
-                    disabled={pdfLoading}
-                  >
+                  <Button onClick={handleExportPDF} className="flex flex-col items-center h-auto py-4 px-6" disabled={pdfLoading}>
                     <FileText className="h-8 w-8 mb-2" />
                     <span>Exportar PDF</span>
                   </Button>
                   
-                  <Button 
-                    onClick={shareViaWhatsApp} 
-                    variant="default" 
-                    className="flex flex-col items-center h-auto py-4 px-6 bg-green-600 hover:bg-green-700"
-                    disabled={pdfLoading}
-                  >
+                  <Button onClick={shareViaWhatsApp} variant="default" className="flex flex-col items-center h-auto py-4 px-6 bg-green-600 hover:bg-green-700" disabled={pdfLoading}>
                     <SendHorizontal className="h-8 w-8 mb-2" />
                     <span>WhatsApp</span>
                   </Button>
                   
-                  <Button 
-                    onClick={shareViaEmail} 
-                    variant="default" 
-                    className="flex flex-col items-center h-auto py-4 px-6 bg-blue-600 hover:bg-blue-700"
-                    disabled={pdfLoading}
-                  >
+                  <Button onClick={shareViaEmail} variant="default" className="flex flex-col items-center h-auto py-4 px-6 bg-blue-600 hover:bg-blue-700" disabled={pdfLoading}>
                     <Mail className="h-8 w-8 mb-2" />
                     <span>Email</span>
                   </Button>
@@ -321,11 +275,7 @@ const QuotationView = () => {
           {/* Status change dialog */}
           <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
             <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className={`${getStatusColor(quotation?.status || "draft")} text-white hover:opacity-90`}
-              >
+              <Button variant="outline" size="sm" className={`${getStatusColor(quotation?.status || "draft")} text-white hover:opacity-90`}>
                 {getStatusIcon(quotation?.status || "draft")}
                 <span>Cambiar estado</span>
               </Button>
@@ -339,11 +289,7 @@ const QuotationView = () => {
                   Seleccione el nuevo estado para la cotización {quotation?.id}
                 </p>
                 
-                <RadioGroup 
-                  value={selectedStatus} 
-                  onValueChange={(value) => setSelectedStatus(value as Quotation["status"])}
-                  className="grid grid-cols-1 gap-4"
-                >
+                <RadioGroup value={selectedStatus} onValueChange={value => setSelectedStatus(value as Quotation["status"])} className="grid grid-cols-1 gap-4">
                   <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer">
                     <RadioGroupItem value="draft" id="draft" className="text-gray-400" />
                     <div className="flex items-center ml-2 cursor-pointer w-full" onClick={() => setSelectedStatus("draft")}>
@@ -410,11 +356,7 @@ const QuotationView = () => {
                   </div>
                 </RadioGroup>
 
-                <Button 
-                  onClick={handleStatusChange} 
-                  className={`${getStatusColor(selectedStatus)} text-white hover:opacity-90`}
-                  disabled={updatingStatus || selectedStatus === quotation?.status}
-                >
+                <Button onClick={handleStatusChange} className={`${getStatusColor(selectedStatus)} text-white hover:opacity-90`} disabled={updatingStatus || selectedStatus === quotation?.status}>
                   {updatingStatus ? 'Actualizando...' : 'Actualizar estado'}
                 </Button>
               </div>
@@ -435,12 +377,7 @@ const QuotationView = () => {
             <div className="mt-4 md:mt-0 px-4 py-2 bg-muted rounded-md flex items-center gap-2">
               <div>
                 <p className="text-sm">Estado:</p>
-                <p className={`font-semibold capitalize ${
-                  quotation.status === 'accepted' ? 'text-green-600' : 
-                  quotation.status === 'rejected' ? 'text-red-600' : 
-                  quotation.status === 'sent' ? 'text-blue-600' : 
-                  'text-gray-600'
-                }`}>
+                <p className={`font-semibold capitalize ${quotation.status === 'accepted' ? 'text-green-600' : quotation.status === 'rejected' ? 'text-red-600' : quotation.status === 'sent' ? 'text-blue-600' : 'text-gray-600'}`}>
                   {getStatusLabel(quotation.status)}
                 </p>
               </div>
@@ -464,17 +401,13 @@ const QuotationView = () => {
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Información de la Empresa</h3>
               <div className="bg-muted p-4 rounded-md">
-                {company ? (
-                  <>
+                {company ? <>
                     <p className="font-semibold">{company.name}</p>
                     <p>RUT: {company.rut}</p>
                     <p>Dirección: {company.address}</p>
                     <p>Email: {company.email}</p>
                     <p>Teléfono: {company.phone}</p>
-                  </>
-                ) : (
-                  <p>Información de empresa no configurada</p>
-                )}
+                  </> : <p>Información de empresa no configurada</p>}
               </div>
             </div>
           </div>
@@ -494,14 +427,11 @@ const QuotationView = () => {
                 </tr>
               </thead>
               <tbody>
-                {quotation.items.map((item, index) => (
-                  <tr key={item.id || index} className="border-b border-border">
+                {quotation.items.map((item, index) => <tr key={item.id || index} className="border-b border-border">
                     <td className="py-3 px-3">
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground">{item.description}</p>
-                        )}
+                        {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
                       </div>
                     </td>
                     <td className="py-3 px-3 text-right">{formatCLP(item.unitPrice)}</td>
@@ -510,8 +440,7 @@ const QuotationView = () => {
                     <td className="py-3 px-3 text-right font-medium">
                       {formatCLP(item.unitPrice * item.quantity * (1 - item.discount / 100))}
                     </td>
-                  </tr>
-                ))}
+                  </tr>)}
               </tbody>
             </table>
           </div>
@@ -522,12 +451,10 @@ const QuotationView = () => {
                 <span>Subtotal:</span>
                 <span>{formatCLP(quotation.subtotal)}</span>
               </div>
-              {quotation.discount > 0 && (
-                <div className="flex justify-between py-2 text-red-600">
+              {quotation.discount > 0 && <div className="flex justify-between py-2 text-red-600">
                   <span>Descuento:</span>
                   <span>-{formatCLP(quotation.discount)}</span>
-                </div>
-              )}
+                </div>}
               <div className="flex justify-between py-2">
                 <span>IVA (19%):</span>
                 <span>{formatCLP(quotation.tax)}</span>
@@ -540,12 +467,10 @@ const QuotationView = () => {
             </div>
           </div>
 
-          {quotation.notes && (
-            <div className="mt-6 p-4 bg-muted rounded-md">
+          {quotation.notes && <div className="mt-6 p-4 bg-muted rounded-md">
               <h3 className="font-semibold mb-2">Notas</h3>
               <p>{quotation.notes}</p>
-            </div>
-          )}
+            </div>}
           
           <div className="mt-6 p-4 bg-muted/50 rounded-md">
             <p className="text-sm text-muted-foreground">
@@ -554,8 +479,6 @@ const QuotationView = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default QuotationView;
