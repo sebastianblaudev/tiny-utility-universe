@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
@@ -15,8 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getQuotationById, getCompanyInfo, saveQuotation, type Quotation, type Company } from "@/lib/db-service";
-import { exportQuotationToPDF, shareQuotationPDF } from "@/lib/pdf-service";
-import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck } from "lucide-react";
+import { exportQuotationToPDF, shareQuotationPDF, shareQuotationByEmail } from "@/lib/pdf-service";
+import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck, Mail } from "lucide-react";
 import { formatCLP, formatDate } from "@/lib/utils";
 
 const QuotationView = () => {
@@ -110,13 +111,32 @@ const QuotationView = () => {
       
       setPdfLoading(true);
       
-      // Usar la nueva función para compartir PDF via WhatsApp
+      // Usar la función para compartir PDF via WhatsApp
       await shareQuotationPDF(quotation, company);
       
       toast.success("Cotización compartida correctamente");
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
       toast.error("Error al compartir la cotización");
+    } finally {
+      setPdfLoading(false);
+      setShowShareDialog(false);
+    }
+  };
+
+  const shareViaEmail = async () => {
+    try {
+      if (!quotation) return;
+      
+      setPdfLoading(true);
+      
+      // Usar la nueva función para compartir PDF por email
+      await shareQuotationByEmail(quotation, company);
+      
+      toast.success("Preparando email con cotización adjunta");
+    } catch (error) {
+      console.error("Error sharing via email:", error);
+      toast.error("Error al preparar el email");
     } finally {
       setPdfLoading(false);
       setShowShareDialog(false);
@@ -264,7 +284,7 @@ const QuotationView = () => {
                 <p className="text-sm text-muted-foreground">
                   Seleccione una opción para compartir la cotización {quotation?.id} para {quotation?.clientName}
                 </p>
-                <div className="flex justify-center space-x-4">
+                <div className="flex justify-center flex-wrap gap-4">
                   <Button 
                     onClick={handleExportPDF} 
                     className="flex flex-col items-center h-auto py-4 px-6"
@@ -282,6 +302,16 @@ const QuotationView = () => {
                   >
                     <SendHorizontal className="h-8 w-8 mb-2" />
                     <span>WhatsApp</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={shareViaEmail} 
+                    variant="default" 
+                    className="flex flex-col items-center h-auto py-4 px-6 bg-blue-600 hover:bg-blue-700"
+                    disabled={pdfLoading}
+                  >
+                    <Mail className="h-8 w-8 mb-2" />
+                    <span>Email</span>
                   </Button>
                 </div>
               </div>

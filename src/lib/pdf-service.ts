@@ -1,4 +1,3 @@
-
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Quotation, Company, type QuotationItem } from "./db-service";
@@ -206,7 +205,7 @@ export const exportQuotationToPDF = async (
   return doc.output('blob');
 };
 
-// Nueva función auxiliar para compartir PDF via WhatsApp
+// Función para compartir PDF via WhatsApp
 export const shareQuotationPDF = async (
   quotation: Quotation,
   company: Company | null
@@ -239,6 +238,55 @@ export const shareQuotationPDF = async (
     window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
   } catch (error) {
     console.error("Error al compartir PDF via WhatsApp:", error);
+    throw error;
+  }
+};
+
+// Nueva función para compartir PDF por correo electrónico
+export const shareQuotationByEmail = async (
+  quotation: Quotation,
+  company: Company | null
+): Promise<void> => {
+  try {
+    // Generar el PDF
+    const pdfBlob = await exportQuotationToPDF(quotation, company);
+    
+    // Crear un URL para el blob
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    // Construir el asunto del correo
+    const subject = encodeURIComponent(`Cotización ${quotation.id} - ${company?.name || 'CotiPro'}`);
+    
+    // Construir el cuerpo del correo
+    const bodyText = `Estimado/a ${quotation.clientName},\n\n` +
+      `Adjunto encontrará la cotización ${quotation.id} por un total de ${formatCLP(quotation.total)}.\n` +
+      `Esta cotización es válida hasta el ${formatDate(quotation.validUntil)}.\n\n` +
+      `Atentamente,\n` +
+      `${company?.name || 'CotiPro'}`;
+    const body = encodeURIComponent(bodyText);
+    
+    // Preparar el destinatario si existe
+    const to = quotation.clientEmail ? encodeURIComponent(quotation.clientEmail) : '';
+    
+    // Crear un enlace de descarga temporal para el PDF
+    const link = document.createElement('a');
+    document.body.appendChild(link); // Necesario para Firefox
+    link.href = pdfUrl;
+    link.download = `Cotizacion_${quotation.id}.pdf`;
+    
+    // Primero descargar el PDF (ya que no podemos adjuntarlo directamente)
+    link.click();
+    
+    // Luego abrir el cliente de correo con los campos prellenados
+    setTimeout(() => {
+      window.open(`mailto:${to}?subject=${subject}&body=${body}`, '_blank');
+      // Liberar el URL object
+      URL.revokeObjectURL(pdfUrl);
+      document.body.removeChild(link);
+    }, 100);
+    
+  } catch (error) {
+    console.error("Error al compartir PDF por correo:", error);
     throw error;
   }
 };
