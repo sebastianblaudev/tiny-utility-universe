@@ -1,3 +1,4 @@
+
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Quotation, Company, type QuotationItem } from "./db-service";
@@ -203,4 +204,41 @@ export const exportQuotationToPDF = async (
 
   // Retornar como Blob para descarga o compartir
   return doc.output('blob');
+};
+
+// Nueva función auxiliar para compartir PDF via WhatsApp
+export const shareQuotationPDF = async (
+  quotation: Quotation,
+  company: Company | null
+): Promise<void> => {
+  try {
+    // Generar el PDF
+    const pdfBlob = await exportQuotationToPDF(quotation, company);
+    
+    // Crear un archivo a partir del blob
+    const pdfFile = new File([pdfBlob], `Cotizacion_${quotation.id}.pdf`, { 
+      type: 'application/pdf' 
+    });
+    
+    // Preparar mensaje para WhatsApp
+    const messageText = `Cotización ${quotation.id} para ${quotation.clientName}. Total: ${formatCLP(quotation.total)}`;
+    
+    // Verificar si podemos compartir archivos
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      // Usar la API Web Share para compartir el PDF y texto
+      await navigator.share({
+        files: [pdfFile],
+        title: `Cotización ${quotation.id}`,
+        text: messageText
+      });
+      return;
+    }
+    
+    // Alternativa para navegadores que no soportan compartir archivos
+    const encodedMessage = encodeURIComponent(messageText);
+    window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+  } catch (error) {
+    console.error("Error al compartir PDF via WhatsApp:", error);
+    throw error;
+  }
 };

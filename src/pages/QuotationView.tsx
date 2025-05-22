@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
@@ -16,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getQuotationById, getCompanyInfo, saveQuotation, type Quotation, type Company } from "@/lib/db-service";
-import { exportQuotationToPDF } from "@/lib/pdf-service";
+import { exportQuotationToPDF, shareQuotationPDF } from "@/lib/pdf-service";
 import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck } from "lucide-react";
 import { formatCLP, formatDate } from "@/lib/utils";
 
@@ -65,7 +64,7 @@ const QuotationView = () => {
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${quotation.id}.pdf`;
+      link.download = `Cotizacion_${quotation.id}.pdf`;
       link.click();
       
       toast.success("PDF exportado correctamente");
@@ -110,27 +109,14 @@ const QuotationView = () => {
       if (!quotation) return;
       
       setPdfLoading(true);
-      const pdfBlob = await exportQuotationToPDF(quotation, company);
-      const pdfFile = new File([pdfBlob], `${quotation.id}.pdf`, { type: 'application/pdf' });
       
-      // Revisar si el navegador tiene la API Web Share disponible y soporta compartir archivos
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({
-          files: [pdfFile],
-          title: `Cotización ${quotation.id}`,
-          text: `Cotización para ${quotation.clientName}`
-        });
-        toast.success("Compartido correctamente");
-      } else {
-        // Alternativa: Abrir WhatsApp Web con un mensaje
-        const message = `Cotización ${quotation.id} para ${quotation.clientName}. Total: ${formatCLP(quotation.total)}`;
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
-        toast.info("Abriendo WhatsApp Web. Necesitarás adjuntar el PDF manualmente.");
-      }
+      // Usar la nueva función para compartir PDF via WhatsApp
+      await shareQuotationPDF(quotation, company);
+      
+      toast.success("Cotización compartida correctamente");
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
-      toast.error("Error al compartir por WhatsApp");
+      toast.error("Error al compartir la cotización");
     } finally {
       setPdfLoading(false);
       setShowShareDialog(false);
