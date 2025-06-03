@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,19 @@ const LicenseModal = ({ isOpen, onClose }: LicenseModalProps) => {
         <div className="space-y-4 py-4">
           <div className="text-center">
             <div className="mb-2">
-              <Badge variant="default" className="bg-green-500 text-white text-lg px-4 py-1">
-                Solo $9.900
-              </Badge>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Badge variant="destructive" className="bg-red-500 text-white text-sm px-3 py-1">
+                  90% DESCUENTO
+                </Badge>
+              </div>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <span className="text-lg text-muted-foreground line-through">
+                  $109.000
+                </span>
+                <Badge variant="default" className="bg-green-500 text-white text-xl px-4 py-1">
+                  Solo $10.900
+                </Badge>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               Pago único - Licencia permanente
@@ -66,7 +77,7 @@ const LicenseModal = ({ isOpen, onClose }: LicenseModalProps) => {
             onClick={handlePurchase}
             className="w-full bg-gradient-to-r from-chile-blue to-chile-blue/90 hover:from-chile-blue/90 hover:to-chile-blue"
           >
-            <span>Activar Licencia - $9.900</span>
+            <span>Activar Licencia - $10.900</span>
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
           
