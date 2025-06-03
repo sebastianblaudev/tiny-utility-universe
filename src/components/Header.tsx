@@ -8,10 +8,23 @@ import {
   PackageSearch, 
   Home, 
   Shield,
-  Save
+  Save,
+  LogOut,
+  User
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const Header: React.FC = () => {
+  const { signOut, profile } = useAuth();
+
   return (
     <header className="bg-white border-b sticky top-0 z-10 shadow-md">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -51,9 +64,27 @@ const Header: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="text-sm bg-gradient-to-r from-chile-blue to-chile-red text-white font-medium py-1.5 px-4 rounded-full shadow-sm">
-            Bienvenido
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="bg-gradient-to-r from-chile-blue to-chile-red text-white font-medium py-1.5 px-4 rounded-full shadow-sm hover:from-chile-blue/90 hover:to-chile-red/90"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Bienvenido
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem disabled className="text-sm text-muted-foreground">
+                {profile?.full_name || "Usuario"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
+                <LogOut className="h-4 w-4 mr-2" />
+                Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
