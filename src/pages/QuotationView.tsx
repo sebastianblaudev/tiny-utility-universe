@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getQuotationById, getCompanyInfo, saveQuotation, type Quotation, type Company } from "@/lib/db-service";
 import { exportQuotationToPDF, shareQuotationPDF, shareQuotationByEmail } from "@/lib/pdf-service";
+import { generateModernQuotationPDF } from "@/lib/modern-pdf-service";
 import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck, Mail, Edit, Copy } from "lucide-react";
 import { formatCLP, formatDate } from "@/lib/utils";
 
@@ -53,15 +55,30 @@ const QuotationView = () => {
     try {
       if (!quotation) return;
       setPdfLoading(true);
-      const pdfBlob = await exportQuotationToPDF(quotation, company);
-
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Cotizacion_${quotation.id}.pdf`;
-      link.click();
+      
+      // Usar el nuevo servicio de PDF moderno
+      const quotationData = {
+        quotationNumber: quotation.id,
+        clientName: quotation.clientName,
+        clientEmail: quotation.clientEmail || '',
+        clientPhone: quotation.clientPhone || '',
+        clientAddress: '', // No tenemos este campo en el modelo actual
+        date: formatDate(quotation.date),
+        validUntil: formatDate(quotation.validUntil),
+        items: quotation.items.map(item => ({
+          description: item.description ? `${item.name}\n${item.description}` : item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.unitPrice * item.quantity * (1 - item.discount / 100)
+        })),
+        subtotal: quotation.subtotal,
+        tax: quotation.tax,
+        total: quotation.total,
+        notes: quotation.notes
+      };
+      
+      await generateModernQuotationPDF(quotationData);
       toast.success("PDF exportado correctamente");
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error exporting PDF:", error);
       toast.error("Error al exportar el PDF");
@@ -74,6 +91,8 @@ const QuotationView = () => {
     try {
       if (!quotation) return;
       setPdfLoading(true);
+      
+      // Usar el servicio original para imprimir (ya que necesitamos el blob)
       const pdfBlob = await exportQuotationToPDF(quotation, company);
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
