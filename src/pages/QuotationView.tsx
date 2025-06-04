@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getQuotationById, getCompanyInfo, saveQuotation, type Quotation, type Company } from "@/lib/db-service";
 import { exportQuotationToPDF, shareQuotationPDF, shareQuotationByEmail } from "@/lib/pdf-service";
-import { generateModernQuotationPDF } from "@/lib/modern-pdf-service";
-import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck, Mail, Edit, Copy } from "lucide-react";
+import { generateModernQuotationPDF, loadThemeConfig } from "@/lib/modern-pdf-service";
+import { ArrowLeft, Printer, FileText, Share, Send, SendHorizontal, Check, X, Pencil, FileCheck, Mail, Edit, Copy, Settings } from "lucide-react";
 import { formatCLP, formatDate } from "@/lib/utils";
+import PDFStyleSettings from "@/components/PDFStyleSettings";
 
 const QuotationView = () => {
   const {
@@ -30,6 +30,7 @@ const QuotationView = () => {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<Quotation["status"]>("draft");
+  const [showPdfSettings, setShowPdfSettings] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +57,8 @@ const QuotationView = () => {
       if (!quotation) return;
       setPdfLoading(true);
       
-      // Usar el nuevo servicio de PDF moderno
+      // Usar el servicio de PDF moderno con la configuración guardada
+      const themeConfig = loadThemeConfig();
       const quotationData = {
         quotationNumber: quotation.id,
         clientName: quotation.clientName,
@@ -280,6 +282,22 @@ const QuotationView = () => {
               Duplicar
             </Link>
           </Button>
+
+          {/* Agregar diálogo para personalizar PDF */}
+          <Dialog open={showPdfSettings} onOpenChange={setShowPdfSettings}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Estilo PDF
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Personalizar Estilo de PDF</DialogTitle>
+              </DialogHeader>
+              <PDFStyleSettings />
+            </DialogContent>
+          </Dialog>
 
           <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={pdfLoading}>
             <FileText className="h-4 w-4 mr-2" />
