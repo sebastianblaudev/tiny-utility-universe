@@ -61,45 +61,44 @@ export const loadThemeConfig = (): PDFThemeConfig => {
   return defaultConfig;
 };
 
-// Obtiene los colores según el esquema seleccionado
+// Obtiene los colores según el esquema seleccionado - diseño plano
 const getColorScheme = (scheme: PDFThemeConfig['colorScheme']) => {
   const schemes = {
     blue: {
-      primary: [41, 87, 141] as [number, number, number],     // Azul corporativo
-      accent: [52, 152, 219] as [number, number, number],     // Azul claro
-      success: [46, 204, 113] as [number, number, number],    // Verde
+      primary: [31, 81, 135] as [number, number, number],     // Azul oscuro
+      secondary: [69, 90, 100] as [number, number, number],   // Gris azulado
+      text: [33, 37, 41] as [number, number, number],         // Gris oscuro
     },
     green: {
-      primary: [39, 174, 96] as [number, number, number],     // Verde principal
-      accent: [46, 204, 113] as [number, number, number],     // Verde claro
-      success: [39, 174, 96] as [number, number, number],     // Verde igual al primario
+      primary: [27, 94, 32] as [number, number, number],      // Verde oscuro
+      secondary: [69, 90, 100] as [number, number, number],   // Gris azulado
+      text: [33, 37, 41] as [number, number, number],         // Gris oscuro
     },
     purple: {
-      primary: [142, 68, 173] as [number, number, number],    // Púrpura
-      accent: [155, 89, 182] as [number, number, number],     // Lila
-      success: [46, 204, 113] as [number, number, number],    // Verde
+      primary: [74, 20, 140] as [number, number, number],     // Púrpura oscuro
+      secondary: [69, 90, 100] as [number, number, number],   // Gris azulado
+      text: [33, 37, 41] as [number, number, number],         // Gris oscuro
     },
     orange: {
-      primary: [211, 84, 0] as [number, number, number],      // Naranja oscuro
-      accent: [230, 126, 34] as [number, number, number],     // Naranja claro
-      success: [46, 204, 113] as [number, number, number],    // Verde
+      primary: [191, 54, 12] as [number, number, number],     // Naranja oscuro
+      secondary: [69, 90, 100] as [number, number, number],   // Gris azulado
+      text: [33, 37, 41] as [number, number, number],         // Gris oscuro
     },
     gray: {
-      primary: [44, 62, 80] as [number, number, number],      // Gris oscuro
-      accent: [127, 140, 141] as [number, number, number],    // Gris medio
-      success: [44, 62, 80] as [number, number, number],      // Gris oscuro
+      primary: [55, 71, 79] as [number, number, number],      // Gris oscuro
+      secondary: [69, 90, 100] as [number, number, number],   // Gris azulado
+      text: [33, 37, 41] as [number, number, number],         // Gris oscuro
     }
   };
 
   return {
     primary: schemes[scheme].primary,
-    accent: schemes[scheme].accent,
-    success: schemes[scheme].success,
-    dark: [44, 62, 80] as [number, number, number],         // Gris oscuro
-    medium: [127, 140, 141] as [number, number, number],    // Gris medio
-    light: [236, 240, 241] as [number, number, number],     // Gris claro
-    white: [255, 255, 255] as [number, number, number],     // Blanco
-    divider: [189, 195, 199] as [number, number, number]    // Divisor
+    secondary: schemes[scheme].secondary,
+    text: schemes[scheme].text,
+    lightGray: [248, 249, 250] as [number, number, number],   // Gris muy claro
+    mediumGray: [108, 117, 125] as [number, number, number],  // Gris medio
+    border: [206, 212, 218] as [number, number, number],      // Borde gris
+    white: [255, 255, 255] as [number, number, number],       // Blanco
   };
 };
 
@@ -124,67 +123,61 @@ export const generateModernQuotationPDF = async (data: QuotationData, customConf
   const margin = 20;
   let currentY = 20;
 
-  // ========== HEADER SUPERIOR ==========
-  // Fondo degradado simulado con rectángulos de diferentes tonos
-  const headerHeight = 45;
+  // ========== HEADER SUPERIOR - DISEÑO PLANO ==========
+  const headerHeight = 40;
+  
+  // Fondo sólido sin gradientes
   doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
   doc.rect(0, 0, pageWidth, headerHeight, 'F');
-  
-  // Agregar un efecto de gradiente con múltiples rectángulos
-  for (let i = 0; i < 15; i++) {
-    const lightness = Math.floor(colors.primary[0] + (i * 3));
-    doc.setFillColor(lightness, colors.primary[1] + (i * 2), colors.primary[2] + (i * 2));
-    doc.rect(0, headerHeight - 15 + i, pageWidth, 1, 'F');
-  }
 
   // Logo y datos de empresa (lado izquierdo)
   if (config.showLogo && company?.logo) {
     try {
-      doc.addImage(company.logo, 'JPEG', margin, 12, 30, 22);
+      doc.addImage(company.logo, 'JPEG', margin, 8, 25, 18);
       
       // Información de empresa junto al logo
       doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.setFont(config.fontFamily, 'bold');
-      doc.text(company.name || 'Empresa', margin + 35, 20);
+      doc.text(company.name || 'Empresa', margin + 30, 16);
       
       doc.setFontSize(8);
       doc.setFont(config.fontFamily, 'normal');
-      let infoY = 25;
+      let infoY = 20;
       if (company.rut) {
-        doc.text(`RUT: ${company.rut}`, margin + 35, infoY);
-        infoY += 3.5;
+        doc.text(`RUT: ${company.rut}`, margin + 30, infoY);
+        infoY += 3;
       }
       if (company.phone) {
-        doc.text(`Tel: ${company.phone}`, margin + 35, infoY);
-        infoY += 3.5;
+        doc.text(`Tel: ${company.phone}`, margin + 30, infoY);
+        infoY += 3;
       }
       if (company.email) {
-        doc.text(company.email, margin + 35, infoY);
+        doc.text(company.email, margin + 30, infoY);
       }
       
     } catch (error) {
       console.error('Error adding logo:', error);
       // Fallback sin logo
       doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-      doc.setFontSize(16);
+      doc.setFontSize(14);
       doc.setFont(config.fontFamily, 'bold');
-      doc.text(company?.name || 'EMPRESA', margin, 25);
+      doc.text(company?.name || 'EMPRESA', margin, 20);
     }
   } else {
     // Sin logo
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont(config.fontFamily, 'bold');
-    doc.text(company?.name || 'EMPRESA', margin, 25);
+    doc.text(company?.name || 'EMPRESA', margin, 20);
     
     if (company) {
       doc.setFontSize(8);
       doc.setFont(config.fontFamily, 'normal');
-      let infoY = 30;
+      let infoY = 25;
       if (company.rut) {
         doc.text(`RUT: ${company.rut}`, margin, infoY);
-        infoY += 4;
+        infoY += 3;
       }
       if (company.phone) {
         doc.text(`Tel: ${company.phone}`, margin, infoY);
@@ -194,100 +187,94 @@ export const generateModernQuotationPDF = async (data: QuotationData, customConf
 
   // Información de cotización (lado derecho)
   doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont(config.fontFamily, 'bold');
-  doc.text('COTIZACIÓN', pageWidth - margin, 18, { align: 'right' });
+  doc.text('COTIZACIÓN', pageWidth - margin, 15, { align: 'right' });
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont(config.fontFamily, 'normal');
-  doc.text(`N° ${data.quotationNumber}`, pageWidth - margin, 24, { align: 'right' });
+  doc.text(`N° ${data.quotationNumber}`, pageWidth - margin, 20, { align: 'right' });
   
-  doc.setFontSize(8);
-  doc.text(`Fecha: ${data.date}`, pageWidth - margin, 30, { align: 'right' });
-  doc.text(`Válido hasta: ${data.validUntil}`, pageWidth - margin, 35, { align: 'right' });
+  doc.setFontSize(7);
+  doc.text(`Fecha: ${data.date}`, pageWidth - margin, 25, { align: 'right' });
+  doc.text(`Válido hasta: ${data.validUntil}`, pageWidth - margin, 29, { align: 'right' });
 
-  currentY = headerHeight + 25;
+  currentY = headerHeight + 20;
 
-  // ========== TÍTULO PRINCIPAL ==========
+  // ========== TÍTULO PRINCIPAL - LIMPIO ==========
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.setFontSize(24);
+  doc.setFontSize(18);
   doc.setFont(config.fontFamily, 'bold');
   doc.text('PROPUESTA COMERCIAL', pageWidth / 2, currentY, { align: 'center' });
   
-  // Línea decorativa
-  doc.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-  doc.setLineWidth(2);
-  doc.line(margin, currentY + 5, pageWidth - margin, currentY + 5);
+  // Línea simple
+  doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+  doc.setLineWidth(0.5);
+  doc.line(margin, currentY + 3, pageWidth - margin, currentY + 3);
 
-  currentY += 20;
+  currentY += 15;
 
-  // ========== INFORMACIÓN DEL CLIENTE ==========
+  // ========== INFORMACIÓN DEL CLIENTE - DISEÑO PLANO ==========
   if (config.showClientCard) {
-    // Card con sombra simulada (rectángulos desplazados)
     const clientCardY = currentY;
-    const clientCardHeight = 35;
+    const clientCardHeight = 30;
     
-    // Sombra simulada con rectángulos grises
-    doc.setFillColor(200, 200, 200);
-    doc.roundedRect(margin + 2, clientCardY + 2, pageWidth - 2 * margin, clientCardHeight, 3, 3, 'F');
-    
-    // Card principal
-    doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
+    // Card simple sin sombras
+    doc.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+    doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
     doc.setLineWidth(0.5);
-    doc.roundedRect(margin, clientCardY, pageWidth - 2 * margin, clientCardHeight, 3, 3, 'FD');
+    doc.rect(margin, clientCardY, pageWidth - 2 * margin, clientCardHeight, 'FD');
     
-    // Barra superior del card
-    doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-    doc.roundedRect(margin, clientCardY, pageWidth - 2 * margin, 8, 3, 3, 'F');
-    doc.rect(margin, clientCardY + 4, pageWidth - 2 * margin, 4, 'F');
+    // Barra superior simple
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(margin, clientCardY, pageWidth - 2 * margin, 6, 'F');
     
     // Título del cliente
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFontSize(10);
+    doc.setFontSize(8);
     doc.setFont(config.fontFamily, 'bold');
-    doc.text('INFORMACIÓN DEL CLIENTE', margin + 8, clientCardY + 6);
+    doc.text('INFORMACIÓN DEL CLIENTE', margin + 5, clientCardY + 4);
     
     // Datos del cliente
-    doc.setTextColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-    doc.setFontSize(12);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    doc.setFontSize(11);
     doc.setFont(config.fontFamily, 'bold');
-    doc.text(data.clientName, margin + 8, clientCardY + 16);
+    doc.text(data.clientName, margin + 5, clientCardY + 13);
     
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont(config.fontFamily, 'normal');
-    doc.setTextColor(colors.medium[0], colors.medium[1], colors.medium[2]);
+    doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
     
-    let clientY = clientCardY + 22;
+    let clientY = clientCardY + 18;
     if (data.clientEmail) {
-      doc.text(`✉ ${data.clientEmail}`, margin + 8, clientY);
-      clientY += 4;
+      doc.text(`Email: ${data.clientEmail}`, margin + 5, clientY);
+      clientY += 3;
     }
     if (data.clientPhone) {
-      doc.text(`📞 ${data.clientPhone}`, margin + 8, clientY);
-      clientY += 4;
+      doc.text(`Teléfono: ${data.clientPhone}`, margin + 5, clientY);
+      clientY += 3;
     }
     if (data.clientAddress) {
-      doc.text(`📍 ${data.clientAddress}`, margin + 8, clientY);
+      doc.text(`Dirección: ${data.clientAddress}`, margin + 5, clientY);
     }
 
-    currentY = clientCardY + clientCardHeight + 15;
+    currentY = clientCardY + clientCardHeight + 12;
   } else {
     // Si no se muestra la tarjeta, solo mostrar información básica
-    doc.setTextColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-    doc.setFontSize(12);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    doc.setFontSize(11);
     doc.setFont(config.fontFamily, 'bold');
     doc.text(`Cliente: ${data.clientName}`, margin, currentY);
-    currentY += 10;
+    currentY += 8;
   }
 
-  // ========== TABLA DE PRODUCTOS ==========
+  // ========== TABLA DE PRODUCTOS - DISEÑO LIMPIO ==========
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.setFont(config.fontFamily, 'bold');
   doc.text('DETALLE DE PRODUCTOS Y SERVICIOS', margin, currentY);
   
-  currentY += 8;
+  currentY += 6;
 
   const tableData = data.items.map(item => [
     item.description,
@@ -304,17 +291,18 @@ export const generateModernQuotationPDF = async (data: QuotationData, customConf
     headStyles: {
       fillColor: colors.primary,
       textColor: colors.white,
-      fontSize: 10,
+      fontSize: 9,
       fontStyle: 'bold',
-      cellPadding: { top: 8, bottom: 8, left: 8, right: 8 },
-      halign: 'left'
+      cellPadding: { top: 6, bottom: 6, left: 6, right: 6 },
+      halign: 'left',
+      lineWidth: 0
     },
     bodyStyles: {
-      fontSize: 9,
-      cellPadding: { top: 6, bottom: 6, left: 8, right: 8 },
-      textColor: colors.dark,
-      lineColor: colors.divider,
-      lineWidth: 0.1
+      fontSize: 8,
+      cellPadding: { top: 5, bottom: 5, left: 6, right: 6 },
+      textColor: colors.text,
+      lineColor: colors.border,
+      lineWidth: 0.2
     },
     columnStyles: {
       0: { 
@@ -337,110 +325,104 @@ export const generateModernQuotationPDF = async (data: QuotationData, customConf
       }
     },
     alternateRowStyles: {
-      fillColor: [249, 249, 249] as [number, number, number]
+      fillColor: colors.lightGray
     },
     margin: { left: margin, right: margin }
   });
 
-  // ========== RESUMEN FINANCIERO ==========
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  // ========== RESUMEN FINANCIERO - DISEÑO PLANO ==========
+  const finalY = (doc as any).lastAutoTable.finalY + 12;
   
-  // Card de totales
-  const totalsX = pageWidth - margin - 70;
-  const totalsWidth = 70;
-  const totalsHeight = 45;
+  // Card de totales simple
+  const totalsX = pageWidth - margin - 65;
+  const totalsWidth = 65;
+  const totalsHeight = 35;
   
-  // Sombra del card simulada
-  doc.setFillColor(200, 200, 200);
-  doc.roundedRect(totalsX + 2, finalY + 2, totalsWidth, totalsHeight, 4, 4, 'F');
-  
-  // Card principal
+  // Card principal sin sombras
   doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
+  doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
   doc.setLineWidth(0.5);
-  doc.roundedRect(totalsX, finalY, totalsWidth, totalsHeight, 4, 4, 'FD');
+  doc.rect(totalsX, finalY, totalsWidth, totalsHeight, 'FD');
   
-  // Barra superior
-  doc.setFillColor(colors.success[0], colors.success[1], colors.success[2]);
-  doc.roundedRect(totalsX, finalY, totalsWidth, 8, 4, 4, 'F');
-  doc.rect(totalsX, finalY + 4, totalsWidth, 4, 'F');
+  // Barra superior simple
+  doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+  doc.rect(totalsX, finalY, totalsWidth, 6, 'F');
   
   // Título
   doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setFont(config.fontFamily, 'bold');
-  doc.text('RESUMEN', totalsX + totalsWidth/2, finalY + 6, { align: 'center' });
+  doc.text('RESUMEN', totalsX + totalsWidth/2, finalY + 4, { align: 'center' });
   
   // Líneas de totales
-  doc.setTextColor(colors.medium[0], colors.medium[1], colors.medium[2]);
-  doc.setFontSize(9);
+  doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+  doc.setFontSize(8);
   doc.setFont(config.fontFamily, 'normal');
   
-  let totalsY = finalY + 16;
-  doc.text('Subtotal:', totalsX + 5, totalsY);
-  doc.text(`$${data.subtotal.toLocaleString('es-CL')}`, totalsX + totalsWidth - 5, totalsY, { align: 'right' });
+  let totalsY = finalY + 12;
+  doc.text('Subtotal:', totalsX + 4, totalsY);
+  doc.text(`$${data.subtotal.toLocaleString('es-CL')}`, totalsX + totalsWidth - 4, totalsY, { align: 'right' });
   
-  totalsY += 5;
-  doc.text('IVA (19%):', totalsX + 5, totalsY);
-  doc.text(`$${data.tax.toLocaleString('es-CL')}`, totalsX + totalsWidth - 5, totalsY, { align: 'right' });
+  totalsY += 4;
+  doc.text('IVA (19%):', totalsX + 4, totalsY);
+  doc.text(`$${data.tax.toLocaleString('es-CL')}`, totalsX + totalsWidth - 4, totalsY, { align: 'right' });
   
-  // Línea divisoria
-  totalsY += 3;
-  doc.setDrawColor(colors.divider[0], colors.divider[1], colors.divider[2]);
-  doc.setLineWidth(0.5);
-  doc.line(totalsX + 5, totalsY, totalsX + totalsWidth - 5, totalsY);
+  // Línea divisoria simple
+  totalsY += 2;
+  doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+  doc.setLineWidth(0.3);
+  doc.line(totalsX + 4, totalsY, totalsX + totalsWidth - 4, totalsY);
   
   // Total final
-  totalsY += 6;
+  totalsY += 5;
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont(config.fontFamily, 'bold');
-  doc.text('TOTAL:', totalsX + 5, totalsY);
-  doc.text(`$${data.total.toLocaleString('es-CL')}`, totalsX + totalsWidth - 5, totalsY, { align: 'right' });
+  doc.text('TOTAL:', totalsX + 4, totalsY);
+  doc.text(`$${data.total.toLocaleString('es-CL')}`, totalsX + totalsWidth - 4, totalsY, { align: 'right' });
 
-  // ========== OBSERVACIONES ==========
+  // ========== OBSERVACIONES - DISEÑO SIMPLE ==========
   if (config.showNotes && data.notes && data.notes.trim()) {
-    const notesY = finalY + totalsHeight + 15;
+    const notesY = finalY + totalsHeight + 12;
     
-    // Card de notas
-    doc.setFillColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.setDrawColor(colors.divider[0], colors.divider[1], colors.divider[2]);
+    // Card de notas simple
+    doc.setFillColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+    doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
     doc.setLineWidth(0.5);
-    doc.roundedRect(margin, notesY, pageWidth - 2 * margin, 30, 3, 3, 'FD');
+    doc.rect(margin, notesY, pageWidth - 2 * margin, 25, 'FD');
     
     // Título
     doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont(config.fontFamily, 'bold');
-    doc.text('OBSERVACIONES', margin + 8, notesY + 10);
+    doc.text('OBSERVACIONES', margin + 5, notesY + 8);
     
     // Contenido
-    doc.setTextColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-    doc.setFontSize(9);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    doc.setFontSize(8);
     doc.setFont(config.fontFamily, 'normal');
-    const splitNotes = doc.splitTextToSize(data.notes, pageWidth - 2 * margin - 16);
-    doc.text(splitNotes, margin + 8, notesY + 18);
+    const splitNotes = doc.splitTextToSize(data.notes, pageWidth - 2 * margin - 10);
+    doc.text(splitNotes, margin + 5, notesY + 14);
   }
 
-  // ========== FOOTER ==========
-  const footerY = pageHeight - 25;
+  // ========== FOOTER SIMPLE ==========
+  const footerY = pageHeight - 20;
   
-  // Línea decorativa
-  doc.setDrawColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-  doc.setLineWidth(1);
+  // Línea simple
+  doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+  doc.setLineWidth(0.3);
   doc.line(margin, footerY, pageWidth - margin, footerY);
   
   // Texto del footer
-  doc.setTextColor(colors.medium[0], colors.medium[1], colors.medium[2]);
-  doc.setFontSize(8);
-  doc.setFont(config.fontFamily, 'italic');
-  doc.text('Esta cotización es válida por el período indicado. Precios incluyen IVA.', pageWidth / 2, footerY + 8, { align: 'center' });
+  doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+  doc.setFontSize(7);
+  doc.setFont(config.fontFamily, 'normal');
+  doc.text('Esta cotización es válida por el período indicado. Precios incluyen IVA.', pageWidth / 2, footerY + 6, { align: 'center' });
   
   // Información adicional
-  doc.setFontSize(7);
-  doc.text('Documento generado electrónicamente', pageWidth / 2, footerY + 13, { align: 'center' });
+  doc.setFontSize(6);
+  doc.text('Documento generado electrónicamente', pageWidth / 2, footerY + 10, { align: 'center' });
 
   // Guardar el PDF
   doc.save(`cotizacion-${data.quotationNumber}.pdf`);
 };
-
