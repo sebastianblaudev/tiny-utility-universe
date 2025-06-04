@@ -49,15 +49,17 @@ export const generateModernQuotationPDF = async (data: QuotationData): Promise<v
   let currentY = 20;
 
   // ========== HEADER SUPERIOR ==========
-  // Fondo degradado simulado con rectángulos
+  // Fondo degradado simulado con rectángulos de diferentes tonos
   const headerHeight = 45;
-  for (let i = 0; i < headerHeight; i++) {
-    const opacity = 1 - (i / headerHeight) * 0.3;
-    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.setGlobalAlpha(opacity);
-    doc.rect(0, i, pageWidth, 1, 'F');
+  doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+  doc.rect(0, 0, pageWidth, headerHeight, 'F');
+  
+  // Agregar un efecto de gradiente con múltiples rectángulos
+  for (let i = 0; i < 15; i++) {
+    const lightness = Math.floor(colors.primary[0] + (i * 3));
+    doc.setFillColor(lightness, colors.primary[1] + (i * 2), colors.primary[2] + (i * 2));
+    doc.rect(0, headerHeight - 15 + i, pageWidth, 1, 'F');
   }
-  doc.setGlobalAlpha(1);
 
   // Logo y datos de empresa (lado izquierdo)
   if (company?.logo) {
@@ -144,15 +146,13 @@ export const generateModernQuotationPDF = async (data: QuotationData): Promise<v
   currentY += 20;
 
   // ========== INFORMACIÓN DEL CLIENTE ==========
-  // Card con sombra simulada
+  // Card con sombra simulada (rectángulos desplazados)
   const clientCardY = currentY;
   const clientCardHeight = 35;
   
-  // Sombra
-  doc.setFillColor(0, 0, 0);
-  doc.setGlobalAlpha(0.1);
-  doc.roundedRect(margin + 1, clientCardY + 1, pageWidth - 2 * margin, clientCardHeight, 3, 3, 'F');
-  doc.setGlobalAlpha(1);
+  // Sombra simulada con rectángulos grises
+  doc.setFillColor(200, 200, 200);
+  doc.roundedRect(margin + 2, clientCardY + 2, pageWidth - 2 * margin, clientCardHeight, 3, 3, 'F');
   
   // Card principal
   doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
@@ -265,11 +265,9 @@ export const generateModernQuotationPDF = async (data: QuotationData): Promise<v
   const totalsWidth = 70;
   const totalsHeight = 45;
   
-  // Sombra del card
-  doc.setFillColor(0, 0, 0);
-  doc.setGlobalAlpha(0.1);
-  doc.roundedRect(totalsX + 1, finalY + 1, totalsWidth, totalsHeight, 4, 4, 'F');
-  doc.setGlobalAlpha(1);
+  // Sombra del card simulada
+  doc.setFillColor(200, 200, 200);
+  doc.roundedRect(totalsX + 2, finalY + 2, totalsWidth, totalsHeight, 4, 4, 'F');
   
   // Card principal
   doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
