@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useBarber } from "@/contexts/BarberContext";
 import { Service, Product, Category, SaleItem, Sale, PaymentMethod, SplitPayment, Discount, Promotion, Tip } from "@/types";
@@ -54,6 +55,7 @@ import {
   ShoppingCart,
   Clock,
   User,
+  Sparkles,
 } from "lucide-react";
 import ServiceCardItem from "@/components/pos/ServiceCardItem";
 import ProductCardItem from "@/components/pos/ProductCardItem";
@@ -574,21 +576,28 @@ const POSPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Layout móvil */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Layout móvil mejorado */}
       <div className="md:hidden">
-        {/* Header móvil con navegación entre vistas */}
-        <div className="bg-white border-b border-gray-200 p-3 sticky top-0 z-10">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-semibold text-gray-900">POS</h1>
+        {/* Header móvil con gradiente elegante */}
+        <div className="bg-gradient-to-r from-white via-slate-50 to-white backdrop-blur-sm border-b border-slate-200/50 p-4 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl shadow-lg">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                POS Elegante
+              </h1>
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSalesHistoryOpen(true)}
-                className="h-8 px-2 text-xs"
+                className="h-9 px-3 text-xs rounded-xl bg-white/50 hover:bg-white/80 shadow-sm border border-slate-200/50"
               >
-                <List className="h-4 w-4 mr-1" />
+                <List className="h-4 w-4 mr-1.5" />
                 Historial
               </Button>
               
@@ -596,9 +605,9 @@ const POSPage = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setManagePromotionsOpen(true)}
-                className="h-8 px-2 text-xs"
+                className="h-9 px-3 text-xs rounded-xl bg-white/50 hover:bg-white/80 shadow-sm border border-slate-200/50"
               >
-                <Tag className="h-4 w-4 mr-1" />
+                <Tag className="h-4 w-4 mr-1.5" />
                 Promo
               </Button>
               
@@ -607,7 +616,7 @@ const POSPage = () => {
                   variant="ghost" 
                   size="sm"
                   onClick={() => setPrintReceiptOpen(true)}
-                  className="h-8 px-2 text-xs"
+                  className="h-9 px-3 text-xs rounded-xl bg-white/50 hover:bg-white/80 shadow-sm border border-slate-200/50"
                 >
                   <Printer className="h-4 w-4" />
                 </Button>
@@ -615,27 +624,35 @@ const POSPage = () => {
             </div>
           </div>
           
-          {/* Tabs de navegación móvil */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          {/* Tabs de navegación móvil con gradiente */}
+          <div className="flex bg-gradient-to-r from-slate-100 to-slate-50 rounded-2xl p-1.5 shadow-inner">
             <Button
               variant={mobileView === 'products' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setMobileView('products')}
-              className="flex-1 text-xs h-8"
+              className={`flex-1 text-xs h-10 rounded-xl font-medium ${
+                mobileView === 'products' 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                  : 'text-slate-600 hover:bg-white/60'
+              }`}
             >
-              <Package className="h-3 w-3 mr-1" />
+              <Package className="h-4 w-4 mr-1.5" />
               Productos
             </Button>
             <Button
               variant={mobileView === 'cart' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setMobileView('cart')}
-              className="flex-1 text-xs h-8 relative"
+              className={`flex-1 text-xs h-10 rounded-xl font-medium relative ${
+                mobileView === 'cart' 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                  : 'text-slate-600 hover:bg-white/60'
+              }`}
             >
-              <ShoppingCart className="h-3 w-3 mr-1" />
+              <ShoppingCart className="h-4 w-4 mr-1.5" />
               Carrito
               {cartItems.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs px-1 py-0 h-4 min-w-4">
+                <Badge variant="secondary" className="ml-2 text-xs px-2 py-0.5 h-5 min-w-5 bg-white/20 text-white border-0">
                   {cartItems.length}
                 </Badge>
               )}
@@ -643,29 +660,29 @@ const POSPage = () => {
           </div>
         </div>
 
-        {/* Contenido móvil */}
+        {/* Contenido móvil mejorado */}
         <div className="p-4">
           {mobileView === 'products' ? (
-            <Card className="border-2 border-gray-200">
-              <CardContent className="p-4">
-                {/* Barra de búsqueda móvil */}
-                <div className="space-y-3 mb-4">
+            <Card className="border-0 shadow-xl bg-white/70 backdrop-blur-sm rounded-2xl overflow-hidden">
+              <CardContent className="p-6">
+                {/* Barra de búsqueda móvil elegante */}
+                <div className="space-y-4 mb-6">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input
-                      placeholder="Buscar..."
-                      className="pl-10 h-10 text-base"
+                      placeholder="Buscar productos o servicios..."
+                      className="pl-12 h-12 text-base rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner focus:shadow-lg transition-all duration-200"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="flex-1 h-10">
+                      <SelectTrigger className="flex-1 h-12 rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner">
                         <SelectValue placeholder="Categoría" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl border-0 shadow-xl">
                         <SelectItem value="all">Todas</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
@@ -678,7 +695,7 @@ const POSPage = () => {
                     <div className="relative flex-1">
                       <Input
                         placeholder="Código de barras..."
-                        className="h-10 text-sm"
+                        className="h-12 text-sm rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner"
                         value={barcodeInput}
                         onChange={handleBarcodeInput}
                         onKeyDown={handleBarcodeKeyDown}
@@ -687,24 +704,26 @@ const POSPage = () => {
                   </div>
                 </div>
 
-                {/* Tabs de servicios y productos móvil */}
-                <Tabs defaultValue="services" className="h-[calc(100vh-200px)]">
-                  <TabsList className="grid w-full grid-cols-2 mb-4 h-10">
-                    <TabsTrigger value="services" className="text-sm">
+                {/* Tabs de servicios y productos móvil elegantes */}
+                <Tabs defaultValue="services" className="h-[calc(100vh-280px)]">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 h-12 bg-gradient-to-r from-slate-100 to-slate-50 rounded-2xl p-1 shadow-inner">
+                    <TabsTrigger value="services" className="text-sm rounded-xl font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
                       <Scissors className="mr-2 h-4 w-4" />
                       Servicios
                     </TabsTrigger>
-                    <TabsTrigger value="products" className="text-sm">
+                    <TabsTrigger value="products" className="text-sm rounded-xl font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
                       <Package className="mr-2 h-4 w-4" />
                       Productos
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="services" className="h-[calc(100%-60px)] overflow-y-auto">
-                    <div className="grid grid-cols-1 gap-3 pb-4">
+                  <TabsContent value="services" className="h-[calc(100%-80px)] overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-4 pb-4">
                       {filteredServices.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                          <Scissors className="h-12 w-12 mb-4 opacity-30" />
+                        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                          <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-4 rounded-2xl mb-4">
+                            <Scissors className="h-12 w-12 opacity-30" />
+                          </div>
                           <p className="text-lg font-medium">No se encontraron servicios</p>
                         </div>
                       ) : (
@@ -721,11 +740,13 @@ const POSPage = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="products" className="h-[calc(100%-60px)] overflow-y-auto">
-                    <div className="grid grid-cols-1 gap-3 pb-4">
+                  <TabsContent value="products" className="h-[calc(100%-80px)] overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-4 pb-4">
                       {filteredProducts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                          <Package className="h-12 w-12 mb-4 opacity-30" />
+                        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                          <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-4 rounded-2xl mb-4">
+                            <Package className="h-12 w-12 opacity-30" />
+                          </div>
                           <p className="text-lg font-medium">No se encontraron productos</p>
                         </div>
                       ) : (
@@ -744,28 +765,33 @@ const POSPage = () => {
               </CardContent>
             </Card>
           ) : (
-            /* Vista del carrito móvil */
-            <Card className="border-2 border-gray-200">
-              <CardContent className="p-4">
+            /* Vista del carrito móvil elegante */
+            <Card className="border-0 shadow-xl bg-white/70 backdrop-blur-sm rounded-2xl overflow-hidden">
+              <CardContent className="p-6">
                 {cartItems.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                    <ShoppingCart className="h-16 w-16 mb-4 opacity-20" />
-                    <p className="text-lg font-medium mb-2">Carrito vacío</p>
-                    <p className="text-sm text-center mb-4">Selecciona servicios o productos</p>
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                    <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-6 rounded-3xl mb-6 shadow-inner">
+                      <ShoppingCart className="h-16 w-16 opacity-20" />
+                    </div>
+                    <p className="text-xl font-semibold mb-3">Carrito vacío</p>
+                    <p className="text-sm text-center mb-6">Selecciona servicios o productos para comenzar</p>
                     <Button 
                       onClick={() => setMobileView('products')}
-                      variant="outline"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-2xl shadow-lg"
                     >
                       Ver productos
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Header del carrito */}
+                  <div className="space-y-6">
+                    {/* Header del carrito elegante */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-semibold text-gray-900">Carrito</h2>
-                        <Badge variant="secondary">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl">
+                          <ShoppingCart className="h-5 w-5 text-white" />
+                        </div>
+                        <h2 className="font-bold text-slate-800">Mi Carrito</h2>
+                        <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
                           {cartItems.length}
                         </Badge>
                       </div>
@@ -774,44 +800,43 @@ const POSPage = () => {
                         variant="ghost"
                         size="sm"
                         onClick={clearCart}
-                        className="text-gray-500 hover:text-red-600"
+                        className="text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4 mr-1" />
                         Limpiar
                       </Button>
                     </div>
 
-                    {/* Items del carrito */}
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {/* Items del carrito elegantes */}
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
                       {cartItems.map((item) => (
-                        <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-medium text-gray-900 flex-1 text-sm">{item.name}</h3>
+                        <div key={item.id} className="bg-gradient-to-r from-white to-slate-50 border border-slate-200/50 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-semibold text-slate-800 flex-1 text-sm">{item.name}</h3>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeFromCart(item.id)}
-                              className="text-gray-400 hover:text-red-600 ml-2 h-6 w-6 p-0"
+                              className="text-slate-400 hover:text-red-600 hover:bg-red-50 ml-3 h-7 w-7 p-0 rounded-xl"
                             >
                               <Trash className="h-3 w-3" />
                             </Button>
                           </div>
                           
-                          <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                          <div className="flex items-center justify-between text-xs text-slate-600 mb-3">
                             <span>${item.price.toFixed(2)} × {item.quantity}</span>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-bold text-slate-800 text-sm">
                               ${(item.price * item.quantity).toFixed(2)}
                             </span>
                           </div>
 
                           {item.serviceId && (
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <Badge 
-                                variant="outline" 
-                                className={`text-xs ${
+                                className={`text-xs border-0 ${
                                   item.barberId 
-                                    ? "bg-green-50 text-green-700 border-green-200" 
-                                    : "bg-orange-50 text-orange-700 border-orange-200"
+                                    ? "bg-gradient-to-r from-green-100 to-emerald-50 text-green-700" 
+                                    : "bg-gradient-to-r from-orange-100 to-amber-50 text-orange-700"
                                 }`}
                               >
                                 <User className="h-3 w-3 mr-1" />
@@ -829,7 +854,7 @@ const POSPage = () => {
                                     handleBarberSelect(serviceToAssign);
                                   }
                                 }}
-                                className="text-xs h-6"
+                                className="text-xs h-7 px-3 rounded-xl bg-slate-50 hover:bg-slate-100"
                               >
                                 {item.barberId ? "Cambiar" : "Asignar"}
                               </Button>
@@ -837,24 +862,24 @@ const POSPage = () => {
                           )}
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Cantidad:</span>
-                            <div className="flex items-center gap-1">
+                            <span className="text-xs text-slate-500 font-medium">Cantidad:</span>
+                            <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
-                                className="h-7 w-7 p-0"
+                                className="h-8 w-8 p-0 rounded-xl border-slate-200 hover:bg-slate-50"
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
-                              <span className="text-sm font-medium w-8 text-center">
+                              <span className="text-sm font-bold w-8 text-center text-slate-800">
                                 {item.quantity}
                               </span>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                                className="h-7 w-7 p-0"
+                                className="h-8 w-8 p-0 rounded-xl border-slate-200 hover:bg-slate-50"
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -864,63 +889,65 @@ const POSPage = () => {
                       ))}
                     </div>
 
-                    {/* Resumen de totales */}
-                    <div className="border-t pt-4">
-                      <div className="space-y-2 text-sm">
+                    {/* Resumen de totales elegante */}
+                    <div className="bg-gradient-to-r from-slate-50 to-white rounded-2xl p-4 border border-slate-200/50">
+                      <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Subtotal:</span>
-                          <span className="font-medium">${cartSubtotal.toFixed(2)}</span>
+                          <span className="text-slate-600">Subtotal:</span>
+                          <span className="font-semibold text-slate-800">${cartSubtotal.toFixed(2)}</span>
                         </div>
                         
                         {appliedDiscount && (
                           <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1">
-                              <span className="text-gray-600">Descuento:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-600">Descuento:</span>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleRemoveDiscount}
-                                className="h-4 w-4 p-0 text-gray-400 hover:text-red-600"
+                                className="h-4 w-4 p-0 text-slate-400 hover:text-red-600 rounded-lg"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
                             </div>
-                            <span className="text-red-600 font-medium">-${discountAmount.toFixed(2)}</span>
+                            <span className="text-red-600 font-semibold">-${discountAmount.toFixed(2)}</span>
                           </div>
                         )}
                         
                         {appliedPromotion && (
                           <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1">
-                              <span className="text-gray-600">Promoción:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-600">Promoción:</span>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleRemovePromotion}
-                                className="h-4 w-4 p-0 text-gray-400 hover:text-red-600"
+                                className="h-4 w-4 p-0 text-slate-400 hover:text-red-600 rounded-lg"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
                             </div>
-                            <span className="text-blue-600 font-medium">-${promotionDiscountAmount.toFixed(2)}</span>
+                            <span className="text-blue-600 font-semibold">-${promotionDiscountAmount.toFixed(2)}</span>
                           </div>
                         )}
                         
-                        <Separator />
+                        <Separator className="bg-slate-200" />
                         
                         <div className="flex justify-between text-lg font-bold">
-                          <span>Total:</span>
-                          <span className="text-green-600">${cartTotal.toFixed(2)}</span>
+                          <span className="text-slate-800">Total:</span>
+                          <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                            ${cartTotal.toFixed(2)}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Botones de descuentos y promociones */}
+                      {/* Botones de descuentos y promociones elegantes */}
                       {!appliedDiscount && !appliedPromotion && (
-                        <div className="flex gap-2 mt-4">
+                        <div className="flex gap-3 mt-4">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 text-xs h-9"
+                            className="flex-1 text-xs h-10 rounded-xl border-slate-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50"
                             onClick={() => setDiscountDialogOpen(true)}
                           >
                             <Percent className="h-3 w-3 mr-1" />
@@ -929,7 +956,7 @@ const POSPage = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 text-xs h-9"
+                            className="flex-1 text-xs h-10 rounded-xl border-slate-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
                             onClick={() => setPromotionsDialogOpen(true)}
                           >
                             <Tag className="h-3 w-3 mr-1" />
@@ -938,38 +965,38 @@ const POSPage = () => {
                         </div>
                       )}
 
-                      {/* Botones de pago móvil */}
-                      <div className="space-y-3 mt-4">
-                        <div className="grid grid-cols-1 gap-2">
+                      {/* Botones de pago móvil elegantes */}
+                      <div className="space-y-3 mt-6">
+                        <div className="grid grid-cols-1 gap-3">
                           <Button
-                            className="bg-green-600 hover:bg-green-700 text-white h-11"
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
                             onClick={handleCashPayment}
                             size="lg"
                           >
-                            <DollarSign className="mr-2 h-4 w-4" />
+                            <DollarSign className="mr-2 h-5 w-5" />
                             Pagar en Efectivo - ${cartTotal.toFixed(2)}
                           </Button>
                           <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white h-11"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
                             onClick={handleCardPayment}
                             size="lg"
                           >
-                            <CreditCard className="mr-2 h-4 w-4" />
+                            <CreditCard className="mr-2 h-5 w-5" />
                             Pagar con Tarjeta - ${cartTotal.toFixed(2)}
                           </Button>
                           <Button
-                            className="bg-purple-600 hover:bg-purple-700 text-white h-11"
+                            className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
                             onClick={handleTransferPayment}
                             size="lg"
                           >
-                            <ArrowLeftRight className="mr-2 h-4 w-4" />
+                            <ArrowLeftRight className="mr-2 h-5 w-5" />
                             Pagar por Transferencia - ${cartTotal.toFixed(2)}
                           </Button>
                         </div>
                         
                         <Button
                           variant="outline"
-                          className="w-full h-10"
+                          className="w-full h-11 rounded-2xl border-slate-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white shadow-sm"
                           onClick={() => setMixedPaymentOpen(true)}
                         >
                           <MoreHorizontal className="mr-2 h-4 w-4" />
@@ -985,29 +1012,42 @@ const POSPage = () => {
         </div>
       </div>
 
-      {/* Layout desktop - sin cambios */}
+      {/* Layout desktop elegante */}
       <div className="hidden md:flex min-h-screen">
-        {/* Panel principal de productos/servicios - optimizado para usar todo el espacio */}
-        <div className="flex-1 p-4">
-          <Card className="h-full shadow-lg border-2 border-gray-200">
-            <CardContent className="p-4">
-              {/* Barra de búsqueda y filtros compacta */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        {/* Panel principal de productos/servicios mejorado */}
+        <div className="flex-1 p-6">
+          <Card className="h-full shadow-2xl border-0 bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden">
+            <CardContent className="p-6">
+              {/* Header elegante */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-2xl shadow-lg">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                    POS Elegante
+                  </h1>
+                  <p className="text-sm text-slate-500">Sistema de punto de venta profesional</p>
+                </div>
+              </div>
+
+              {/* Barra de búsqueda y filtros elegante */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <Input
                     placeholder="Buscar servicios o productos..."
-                    className="pl-10 h-10 text-base shadow-sm border-2 border-gray-200 focus:border-blue-400"
+                    className="pl-12 h-12 text-base rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner focus:shadow-lg transition-all duration-200"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
 
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-[200px] h-10 shadow-sm border-2 border-gray-200">
-                    <SelectValue placeholder="Categoría" />
+                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner">
+                    <SelectValue placeholder="Todas las categorías" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl border-0 shadow-xl">
                     <SelectItem value="all">Todas las categorías</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
@@ -1017,10 +1057,10 @@ const POSPage = () => {
                   </SelectContent>
                 </Select>
 
-                <div className="relative w-full sm:w-[180px]">
+                <div className="relative w-full sm:w-[200px]">
                   <Input
                     placeholder="Código de barras..."
-                    className="h-10 text-base shadow-sm border-2 border-gray-200 focus:border-blue-400"
+                    className="h-12 text-base rounded-2xl border-0 bg-gradient-to-r from-slate-50 to-white shadow-inner focus:shadow-lg transition-all duration-200"
                     value={barcodeInput}
                     onChange={handleBarcodeInput}
                     onKeyDown={handleBarcodeKeyDown}
@@ -1028,25 +1068,27 @@ const POSPage = () => {
                 </div>
               </div>
 
-              {/* Tabs optimizados */}
-              <Tabs defaultValue="services" className="h-[calc(100%-80px)]">
-                <TabsList className="grid w-full grid-cols-2 mb-4 h-10 bg-gray-200">
-                  <TabsTrigger value="services" className="text-sm">
-                    <Scissors className="mr-2 h-4 w-4" />
+              {/* Tabs elegantes */}
+              <Tabs defaultValue="services" className="h-[calc(100%-180px)]">
+                <TabsList className="grid w-full grid-cols-2 mb-6 h-14 bg-gradient-to-r from-slate-100 to-slate-50 rounded-2xl p-1.5 shadow-inner">
+                  <TabsTrigger value="services" className="text-sm rounded-xl font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
+                    <Scissors className="mr-2 h-5 w-5" />
                     Servicios ({filteredServices.length})
                   </TabsTrigger>
-                  <TabsTrigger value="products" className="text-sm">
-                    <Package className="mr-2 h-4 w-4" />
+                  <TabsTrigger value="products" className="text-sm rounded-xl font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
+                    <Package className="mr-2 h-5 w-5" />
                     Productos ({filteredProducts.length})
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="services" className="h-[calc(100%-60px)] overflow-y-auto">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                <TabsContent value="services" className="h-[calc(100%-80px)] overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
                     {filteredServices.length === 0 ? (
-                      <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
-                        <Scissors className="h-12 w-12 mb-4 opacity-30" />
-                        <p className="text-lg font-medium">No se encontraron servicios</p>
+                      <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
+                        <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-6 rounded-3xl mb-6 shadow-inner">
+                          <Scissors className="h-16 w-16 opacity-30" />
+                        </div>
+                        <p className="text-xl font-semibold mb-2">No se encontraron servicios</p>
                         <p className="text-sm">Intenta con otros términos de búsqueda</p>
                       </div>
                     ) : (
@@ -1063,12 +1105,14 @@ const POSPage = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="products" className="h-[calc(100%-60px)] overflow-y-auto">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                <TabsContent value="products" className="h-[calc(100%-80px)] overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
                     {filteredProducts.length === 0 ? (
-                      <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
-                        <Package className="h-12 w-12 mb-4 opacity-30" />
-                        <p className="text-lg font-medium">No se encontraron productos</p>
+                      <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
+                        <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-6 rounded-3xl mb-6 shadow-inner">
+                          <Package className="h-16 w-16 opacity-30" />
+                        </div>
+                        <p className="text-xl font-semibold mb-2">No se encontraron productos</p>
                         <p className="text-sm">Intenta con otros términos de búsqueda</p>
                       </div>
                     ) : (
@@ -1088,27 +1132,29 @@ const POSPage = () => {
           </Card>
         </div>
 
-        {/* Panel del carrito desktop - sin cambios */}
-        <div className="w-96 border-l border-gray-300 bg-white shadow-lg">
+        {/* Panel del carrito desktop elegante */}
+        <div className="w-96 bg-gradient-to-b from-white to-slate-50 shadow-2xl border-l border-slate-200/50">
           <div className="flex flex-col h-full">
-            {/* Header del carrito con botones integrados */}
-            <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-gray-600" />
-                <h2 className="font-semibold text-gray-900 text-sm">Carrito</h2>
+            {/* Header del carrito elegante */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200/50 bg-gradient-to-r from-white to-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl shadow-lg">
+                  <ShoppingCart className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="font-bold text-slate-800 text-sm">Mi Carrito</h2>
                 {cartItems.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 text-xs">
                     {cartItems.length}
                   </Badge>
                 )}
               </div>
               
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSalesHistoryOpen(true)}
-                  className="h-7 px-2 text-xs"
+                  className="h-8 px-3 text-xs rounded-xl hover:bg-slate-100"
                 >
                   <List className="h-3 w-3 mr-1" />
                   Historial
@@ -1118,7 +1164,7 @@ const POSPage = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setManagePromotionsOpen(true)}
-                  className="h-7 px-2 text-xs"
+                  className="h-8 px-3 text-xs rounded-xl hover:bg-slate-100"
                 >
                   <Tag className="h-3 w-3 mr-1" />
                   Promo
@@ -1129,7 +1175,7 @@ const POSPage = () => {
                     variant="ghost" 
                     size="sm"
                     onClick={() => setPrintReceiptOpen(true)}
-                    className="h-7 px-2 text-xs"
+                    className="h-8 px-3 text-xs rounded-xl hover:bg-slate-100"
                   >
                     <Printer className="h-3 w-3" />
                   </Button>
@@ -1140,7 +1186,7 @@ const POSPage = () => {
                     variant="ghost"
                     size="sm"
                     onClick={clearCart}
-                    className="h-7 px-2 text-gray-500 hover:text-red-600"
+                    className="h-8 px-3 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -1151,42 +1197,43 @@ const POSPage = () => {
             {/* Contenido del carrito */}
             <div className="flex-1 overflow-y-auto">
               {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500 p-6">
-                  <ShoppingCart className="h-16 w-16 mb-4 opacity-20" />
-                  <p className="text-lg font-medium mb-2">Carrito vacío</p>
+                <div className="flex flex-col items-center justify-center h-full text-slate-500 p-8">
+                  <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-6 rounded-3xl mb-6 shadow-inner">
+                    <ShoppingCart className="h-16 w-16 opacity-20" />
+                  </div>
+                  <p className="text-lg font-semibold mb-3">Carrito vacío</p>
                   <p className="text-sm text-center">Selecciona servicios o productos para comenzar</p>
                 </div>
               ) : (
-                <div className="p-3 space-y-3">
+                <div className="p-4 space-y-4">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-gray-900 flex-1 text-sm">{item.name}</h3>
+                    <div key={item.id} className="bg-gradient-to-r from-white to-slate-50 border border-slate-200/50 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-semibold text-slate-800 flex-1 text-sm">{item.name}</h3>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removeFromCart(item.id)}
-                          className="text-gray-400 hover:text-red-600 ml-2 h-6 w-6 p-0"
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 ml-3 h-7 w-7 p-0 rounded-xl"
                         >
                           <Trash className="h-3 w-3" />
                         </Button>
                       </div>
                       
-                      <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                      <div className="flex items-center justify-between text-xs text-slate-600 mb-3">
                         <span>${item.price.toFixed(2)} × {item.quantity}</span>
-                        <span className="font-medium text-gray-900">
+                        <span className="font-bold text-slate-800">
                           ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
 
                       {item.serviceId && (
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                           <Badge 
-                            variant="outline" 
-                            className={`text-xs ${
+                            className={`text-xs border-0 ${
                               item.barberId 
-                                ? "bg-green-50 text-green-700 border-green-200" 
-                                : "bg-orange-50 text-orange-700 border-orange-200"
+                                ? "bg-gradient-to-r from-green-100 to-emerald-50 text-green-700" 
+                                : "bg-gradient-to-r from-orange-100 to-amber-50 text-orange-700"
                             }`}
                           >
                             <User className="h-3 w-3 mr-1" />
@@ -1204,7 +1251,7 @@ const POSPage = () => {
                                 handleBarberSelect(serviceToAssign);
                               }
                             }}
-                            className="text-xs h-6"
+                            className="text-xs h-7 px-3 rounded-xl bg-slate-50 hover:bg-slate-100"
                           >
                             {item.barberId ? "Cambiar" : "Asignar"}
                           </Button>
@@ -1212,24 +1259,24 @@ const POSPage = () => {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Cantidad:</span>
-                        <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-500 font-medium">Cantidad:</span>
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
-                            className="h-6 w-6 p-0"
+                            className="h-7 w-7 p-0 rounded-xl border-slate-200 hover:bg-slate-50"
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="text-xs font-medium w-6 text-center">
+                          <span className="text-xs font-bold w-6 text-center text-slate-800">
                             {item.quantity}
                           </span>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                            className="h-6 w-6 p-0"
+                            className="h-7 w-7 p-0 rounded-xl border-slate-200 hover:bg-slate-50"
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -1241,65 +1288,69 @@ const POSPage = () => {
               )}
             </div>
 
-            {/* Resumen y botones de pago compactos */}
+            {/* Resumen y botones de pago elegantes */}
             {cartItems.length > 0 && (
-              <div className="border-t border-gray-200 bg-gray-50 p-3 space-y-3">
-                {/* Resumen de totales compacto */}
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-medium">${cartSubtotal.toFixed(2)}</span>
-                  </div>
-                  
-                  {appliedDiscount && (
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-600">Descuento:</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemoveDiscount}
-                          className="h-4 w-4 p-0 text-gray-400 hover:text-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <span className="text-red-600 font-medium">-${discountAmount.toFixed(2)}</span>
+              <div className="border-t border-slate-200/50 bg-gradient-to-r from-slate-50 to-white p-4 space-y-4">
+                {/* Resumen de totales elegante */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-200/50 shadow-sm">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Subtotal:</span>
+                      <span className="font-semibold text-slate-800">${cartSubtotal.toFixed(2)}</span>
                     </div>
-                  )}
-                  
-                  {appliedPromotion && (
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-600">Promoción:</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemovePromotion}
-                          className="h-4 w-4 p-0 text-gray-400 hover:text-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                    
+                    {appliedDiscount && (
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-600">Descuento:</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRemoveDiscount}
+                            className="h-4 w-4 p-0 text-slate-400 hover:text-red-600 rounded-lg"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <span className="text-red-600 font-semibold">-${discountAmount.toFixed(2)}</span>
                       </div>
-                      <span className="text-blue-600 font-medium">-${promotionDiscountAmount.toFixed(2)}</span>
+                    )}
+                    
+                    {appliedPromotion && (
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-600">Promoción:</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRemovePromotion}
+                            className="h-4 w-4 p-0 text-slate-400 hover:text-red-600 rounded-lg"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <span className="text-blue-600 font-semibold">-${promotionDiscountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    <Separator className="bg-slate-200" />
+                    
+                    <div className="flex justify-between text-base font-bold">
+                      <span className="text-slate-800">Total:</span>
+                      <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                        ${cartTotal.toFixed(2)}
+                      </span>
                     </div>
-                  )}
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between text-base font-bold">
-                    <span>Total:</span>
-                    <span className="text-green-600">${cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
-                {/* Botones de descuentos y promociones compactos */}
+                {/* Botones de descuentos y promociones elegantes */}
                 {!appliedDiscount && !appliedPromotion && (
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 text-xs h-8"
+                      className="flex-1 text-xs h-9 rounded-xl border-slate-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50"
                       onClick={() => setDiscountDialogOpen(true)}
                     >
                       <Percent className="h-3 w-3 mr-1" />
@@ -1308,7 +1359,7 @@ const POSPage = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 text-xs h-8"
+                      className="flex-1 text-xs h-9 rounded-xl border-slate-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
                       onClick={() => setPromotionsDialogOpen(true)}
                     >
                       <Tag className="h-3 w-3 mr-1" />
@@ -1317,11 +1368,11 @@ const POSPage = () => {
                   </div>
                 )}
 
-                {/* Botones de pago compactos */}
+                {/* Botones de pago elegantes */}
                 <div className="space-y-2">
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
-                      className="bg-green-600 hover:bg-green-700 text-white shadow-sm text-xs h-9"
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl text-xs h-10 rounded-xl transition-all duration-200"
                       onClick={handleCashPayment}
                       size="sm"
                     >
@@ -1329,7 +1380,7 @@ const POSPage = () => {
                       Efectivo
                     </Button>
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs h-9"
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl text-xs h-10 rounded-xl transition-all duration-200"
                       onClick={handleCardPayment}
                       size="sm"
                     >
@@ -1337,7 +1388,7 @@ const POSPage = () => {
                       Tarjeta
                     </Button>
                     <Button
-                      className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm text-xs h-9"
+                      className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white shadow-lg hover:shadow-xl text-xs h-10 rounded-xl transition-all duration-200"
                       onClick={handleTransferPayment}
                       size="sm"
                     >
@@ -1348,7 +1399,7 @@ const POSPage = () => {
                   
                   <Button
                     variant="outline"
-                    className="w-full shadow-sm text-xs h-8"
+                    className="w-full shadow-sm text-xs h-9 rounded-xl border-slate-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white"
                     onClick={() => setMixedPaymentOpen(true)}
                   >
                     <MoreHorizontal className="mr-2 h-3 w-3" />
