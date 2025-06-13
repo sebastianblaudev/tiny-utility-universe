@@ -1,0 +1,126 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
+    --radius: 0.5rem;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Estilos mejorados para la impresión */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-family: monospace !important;
+  }
+  
+  /* Ocultar todo excepto el contenido del recibo */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  /* Mostrar solo el contenido del recibo */
+  .print-receipt,
+  .print-receipt * {
+    visibility: visible !important;
+  }
+  
+  /* Posicionar el recibo en la esquina superior izquierda */
+  .print-receipt {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    color: black !important;
+    font-family: monospace !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* Asegurar que las imágenes se impriman */
+  .print-receipt img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+  }
+  
+  /* Asegurar que las tablas se vean correctamente */
+  .print-receipt table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  
+  .print-receipt td,
+  .print-receipt th {
+    border: 1px solid #000 !important;
+    padding: 2px !important;
+  }
+  
+  /* Estilos específicos para códigos QR */
+  .print-receipt svg {
+    display: block !important;
+  }
+}
+
+/* Estilos para vista previa (no impresión) */
+@media not print {
+  .print-container {
+    max-height: 500px;
+    overflow-y: auto;
+    margin-top: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+}
