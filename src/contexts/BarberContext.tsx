@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -61,6 +62,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   
+  // Estados para todos los datos
   const [appSettings, setAppSettings] = useState<AppSettings>({
     branchName: '',
     address: '',
@@ -93,7 +95,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return `${prefix}${timestamp.slice(-6)}${random}`.replace(/[^A-Za-z0-9]/g, '');
   }, []);
 
-  // Funciones de conversión entre formatos Supabase y locales
+  // Funciones de conversión entre formatos Supabase y locales - Optimizadas para Real-Time
   const convertSupabaseToLocal = {
     appSettings: (data: any): AppSettings => ({
       branchName: data.branch_name || '',
@@ -165,27 +167,17 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     })
   };
 
-  // Cargar todos los datos al inicializar
+  // Cargar todos los datos al inicializar - Optimizado para carga inicial rápida
   const loadAllData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
-      console.log('🔄 Cargando todos los datos desde Base de Datos para usuario:', user.id);
+      console.log('🔄 Cargando TODOS los datos desde Supabase Real-Time para usuario:', user.id);
       
-      // Cargar app_settings
-      const { data: appSettingsData } = await supabase
-        .from('app_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (appSettingsData) {
-        setAppSettings(convertSupabaseToLocal.appSettings(appSettingsData));
-      }
-
-      // Cargar todas las entidades en paralelo
+      // Cargar todas las entidades en paralelo para máximo rendimiento
       const [
+        { data: appSettingsData },
         { data: barbersData },
         { data: categoriesData },
         { data: servicesData },
@@ -194,6 +186,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { data: cashAdvancesData },
         { data: promotionsData }
       ] = await Promise.all([
+        supabase.from('app_settings').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('barbers').select('*').eq('user_id', user.id).order('created_at'),
         supabase.from('categories').select('*').eq('user_id', user.id).order('created_at'),
         supabase.from('services').select('*').eq('user_id', user.id).order('created_at'),
@@ -203,6 +196,11 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         supabase.from('promotions').select('*').eq('user_id', user.id).order('created_at')
       ]);
 
+      // Actualizar todos los estados con datos convertidos
+      if (appSettingsData) {
+        setAppSettings(convertSupabaseToLocal.appSettings(appSettingsData));
+      }
+      
       setBarbers(barbersData?.map(convertSupabaseToLocal.barber) || []);
       setCategories(categoriesData?.map(convertSupabaseToLocal.category) || []);
       setServices(servicesData?.map(convertSupabaseToLocal.service) || []);
@@ -212,7 +210,15 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setPromotions(promotionsData?.map(convertSupabaseToLocal.promotion) || []);
 
       setIsDataLoaded(true);
-      console.log('✅ Todos los datos cargados desde Base de Datos');
+      console.log('✅ TODOS los datos cargados desde Supabase Real-Time:', {
+        barberos: barbersData?.length || 0,
+        categorias: categoriesData?.length || 0,
+        servicios: servicesData?.length || 0,
+        productos: productsData?.length || 0,
+        ventas: salesData?.length || 0,
+        adelantos: cashAdvancesData?.length || 0,
+        promociones: promotionsData?.length || 0
+      });
     } catch (error) {
       handleError(error, 'cargar datos');
     } finally {
@@ -225,7 +231,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (user?.id) {
       loadAllData();
     } else {
-      // Limpiar datos cuando no hay usuario
+      // Limpiar todos los datos cuando no hay usuario
       setAppSettings({ branchName: '', address: '', phone: '' });
       setBarbers([]);
       setServices([]);
@@ -238,27 +244,50 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [user?.id, loadAllData]);
 
-  // Configurar subscripciones en tiempo real mejoradas
+  // CONFIGURAR SUBSCRIPCIONES REAL-TIME COMPLETAS - Todas las tablas
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('🔗 Configurando subscripciones en tiempo real mejoradas...');
+    console.log('🔗 Configurando subscripciones Real-Time COMPLETAS para TODAS las entidades...');
+    let mounted = true;
 
-    // Crear un solo canal para todas las subscripciones
-    const channel = supabase
-      .channel(`realtime_changes_${user.id}`)
+    // Crear UN SOLO canal para todas las subscripciones Real-Time
+    const realtimeChannel = supabase
+      .channel(`complete_realtime_${user.id}`)
       
-      // Barberos
+      // ========== APP SETTINGS ==========
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'app_settings', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          if (!mounted) return;
+          console.log('🔄 Real-Time: app_settings', payload.eventType);
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const updatedSettings = convertSupabaseToLocal.appSettings(payload.new);
+            setAppSettings(updatedSettings);
+          }
+        }
+      )
+      
+      // ========== BARBEROS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'barbers', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en barberos:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: barberos', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newBarber = convertSupabaseToLocal.barber(payload.new);
-            setBarbers(prev => [...prev, newBarber]);
+            setBarbers(prev => {
+              const exists = prev.find(b => b.id === newBarber.id);
+              if (!exists) {
+                console.log('➕ Nuevo barbero en tiempo real:', newBarber.name);
+                return [...prev, newBarber];
+              }
+              return prev;
+            });
             toast({
               title: "Barbero agregado",
-              description: `${newBarber.name} ha sido agregado exitosamente`,
+              description: `${newBarber.name} ha sido agregado en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedBarber = convertSupabaseToLocal.barber(payload.new);
@@ -267,30 +296,39 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             ));
             toast({
               title: "Barbero actualizado",
-              description: `${updatedBarber.name} ha sido actualizado`,
+              description: `${updatedBarber.name} ha sido actualizado en tiempo real`,
             });
           } else if (payload.eventType === 'DELETE') {
             const deletedId = (payload.old as any).barber_id;
             setBarbers(prev => prev.filter(item => item.id !== deletedId));
             toast({
               title: "Barbero eliminado",
-              description: "El barbero ha sido eliminado exitosamente",
+              description: "El barbero ha sido eliminado en tiempo real",
             });
           }
         }
       )
       
-      // Categorías
+      // ========== CATEGORÍAS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'categories', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en categorías:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: categorías', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newCategory = convertSupabaseToLocal.category(payload.new);
-            setCategories(prev => [...prev, newCategory]);
+            setCategories(prev => {
+              const exists = prev.find(c => c.id === newCategory.id);
+              if (!exists) {
+                console.log('➕ Nueva categoría en tiempo real:', newCategory.name);
+                return [...prev, newCategory];
+              }
+              return prev;
+            });
             toast({
               title: "Categoría agregada",
-              description: `${newCategory.name} ha sido agregada exitosamente`,
+              description: `${newCategory.name} ha sido agregada en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedCategory = convertSupabaseToLocal.category(payload.new);
@@ -304,57 +342,63 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       )
       
-      // Servicios - Optimizado para actualizaciones inmediatas
+      // ========== SERVICIOS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'services', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en servicios detectado:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: servicios', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newService = convertSupabaseToLocal.service(payload.new);
-            console.log('✅ Nuevo servicio agregado:', newService);
             setServices(prev => {
-              // Verificar si el servicio ya existe para evitar duplicados
               const exists = prev.find(s => s.id === newService.id);
-              if (exists) {
-                console.log('⚠️ Servicio ya existe, actualizando:', newService.id);
-                return prev.map(s => s.id === newService.id ? newService : s);
+              if (!exists) {
+                console.log('➕ Nuevo servicio en tiempo real:', newService.name);
+                return [...prev, newService];
               }
-              console.log('➕ Agregando nuevo servicio a la lista');
-              return [...prev, newService];
+              return prev;
             });
             toast({
               title: "Servicio agregado",
-              description: `${newService.name} ha sido agregado exitosamente`,
+              description: `${newService.name} ha sido agregado en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedService = convertSupabaseToLocal.service(payload.new);
-            console.log('🔄 Servicio actualizado:', updatedService);
             setServices(prev => prev.map(item => 
               item.id === updatedService.id ? updatedService : item
             ));
             toast({
               title: "Servicio actualizado",
-              description: `${updatedService.name} ha sido actualizado`,
+              description: `${updatedService.name} ha sido actualizado en tiempo real`,
             });
           } else if (payload.eventType === 'DELETE') {
             const deletedId = (payload.old as any).service_id;
-            console.log('🗑️ Servicio eliminado:', deletedId);
             setServices(prev => prev.filter(item => item.id !== deletedId));
           }
         }
       )
       
-      // Productos
+      // ========== PRODUCTOS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'products', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en productos:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: productos', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newProduct = convertSupabaseToLocal.product(payload.new);
-            setProducts(prev => [...prev, newProduct]);
+            setProducts(prev => {
+              const exists = prev.find(p => p.id === newProduct.id);
+              if (!exists) {
+                console.log('➕ Nuevo producto en tiempo real:', newProduct.name);
+                return [...prev, newProduct];
+              }
+              return prev;
+            });
             toast({
               title: "Producto agregado",
-              description: `${newProduct.name} ha sido agregado exitosamente`,
+              description: `${newProduct.name} ha sido agregado en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedProduct = convertSupabaseToLocal.product(payload.new);
@@ -368,17 +412,26 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       )
       
-      // Ventas
+      // ========== VENTAS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'sales', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en ventas:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: ventas', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newSale = convertSupabaseToLocal.sale(payload.new);
-            setSales(prev => [newSale, ...prev]);
+            setSales(prev => {
+              const exists = prev.find(s => s.id === newSale.id);
+              if (!exists) {
+                console.log('➕ Nueva venta en tiempo real:', newSale.total);
+                return [newSale, ...prev];
+              }
+              return prev;
+            });
             toast({
               title: "Venta registrada",
-              description: `Nueva venta por $${newSale.total.toFixed(2)}`,
+              description: `Nueva venta por $${newSale.total.toFixed(2)} en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedSale = convertSupabaseToLocal.sale(payload.new);
@@ -392,17 +445,26 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       )
       
-      // Adelantos
+      // ========== ADELANTOS ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'cash_advances', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en adelantos:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: adelantos', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newAdvance = convertSupabaseToLocal.cashAdvance(payload.new);
-            setCashAdvances(prev => [newAdvance, ...prev]);
+            setCashAdvances(prev => {
+              const exists = prev.find(a => a.id === newAdvance.id);
+              if (!exists) {
+                console.log('➕ Nuevo adelanto en tiempo real:', newAdvance.amount);
+                return [newAdvance, ...prev];
+              }
+              return prev;
+            });
             toast({
               title: "Adelanto registrado",
-              description: `Nuevo adelanto por $${newAdvance.amount.toFixed(2)}`,
+              description: `Nuevo adelanto por $${newAdvance.amount.toFixed(2)} en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedAdvance = convertSupabaseToLocal.cashAdvance(payload.new);
@@ -416,17 +478,26 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       )
       
-      // Promociones
+      // ========== PROMOCIONES ==========
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'promotions', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          console.log('🔄 Cambio en promociones:', payload);
+          if (!mounted) return;
+          console.log('🔄 Real-Time: promociones', payload.eventType);
+          
           if (payload.eventType === 'INSERT') {
             const newPromotion = convertSupabaseToLocal.promotion(payload.new);
-            setPromotions(prev => [...prev, newPromotion]);
+            setPromotions(prev => {
+              const exists = prev.find(p => p.id === newPromotion.id);
+              if (!exists) {
+                console.log('➕ Nueva promoción en tiempo real:', newPromotion.name);
+                return [...prev, newPromotion];
+              }
+              return prev;
+            });
             toast({
               title: "Promoción agregada",
-              description: `${newPromotion.name} ha sido agregada exitosamente`,
+              description: `${newPromotion.name} ha sido agregada en tiempo real`,
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedPromotion = convertSupabaseToLocal.promotion(payload.new);
@@ -438,24 +509,34 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setPromotions(prev => prev.filter(item => item.id !== deletedId));
           }
         }
-      )
-      
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Subscripciones en tiempo real establecidas exitosamente');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Error en subscripciones en tiempo real');
-        }
-      });
+      );
 
-    // Cleanup
+    // Suscribirse al canal con manejo de errores mejorado
+    realtimeChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Subscripciones Real-Time COMPLETAS establecidas exitosamente para TODAS las entidades');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('❌ Error en subscripciones Real-Time completas');
+      } else if (status === 'TIMED_OUT') {
+        console.warn('⏰ Timeout en subscripciones Real-Time');
+      } else if (status === 'CLOSED') {
+        console.log('🔌 Canal Real-Time cerrado');
+      }
+    });
+
+    // Cleanup optimizado
     return () => {
-      console.log('🔌 Limpiando subscripciones...');
-      supabase.removeChannel(channel);
+      mounted = false;
+      try {
+        console.log('🔌 Limpiando subscripciones Real-Time completas...');
+        supabase.removeChannel(realtimeChannel);
+      } catch (error) {
+        console.error('Error al limpiar canal Real-Time:', error);
+      }
     };
   }, [user?.id, toast]);
 
-  // Implementar todas las funciones CRUD con Supabase
+  // ========== FUNCIONES CRUD COMPLETAS PARA SUPABASE REAL-TIME ==========
 
   const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
     if (!user?.id) return;
@@ -474,8 +555,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (error) throw error;
       
-      setAppSettings(newSettings);
-      console.log('✅ Configuración actualizada');
+      console.log('✅ Configuración actualizada en Real-Time');
     } catch (error) {
       handleError(error, 'actualizar configuración');
     }
@@ -485,19 +565,16 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('barbers')
         .insert({
           user_id: user.id,
           name: barber.name,
           barber_id: '' // Se generará automáticamente por el trigger
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Barbero agregado:', data.barber_id);
+      console.log('✅ Barbero agregado en Real-Time');
     } catch (error) {
       handleError(error, 'agregar barbero');
     }
@@ -509,15 +586,12 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const { error } = await supabase
         .from('barbers')
-        .update({
-          name: barber.name
-        })
+        .update({ name: barber.name })
         .eq('user_id', user.id)
         .eq('barber_id', barber.id);
 
       if (error) throw error;
-      
-      console.log('✅ Barbero actualizado:', barber.id);
+      console.log('✅ Barbero actualizado en Real-Time:', barber.id);
     } catch (error) {
       handleError(error, 'actualizar barbero');
     }
@@ -534,8 +608,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('barber_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Barbero eliminado:', id);
+      console.log('✅ Barbero eliminado en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar barbero');
     }
@@ -545,19 +618,16 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('categories')
         .insert({
           user_id: user.id,
           name: category.name,
           category_id: '' // Se generará automáticamente por el trigger
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Categoría agregada:', data.category_id);
+      console.log('✅ Categoría agregada en Real-Time');
     } catch (error) {
       handleError(error, 'agregar categoría');
     }
@@ -569,15 +639,12 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const { error } = await supabase
         .from('categories')
-        .update({
-          name: category.name
-        })
+        .update({ name: category.name })
         .eq('user_id', user.id)
         .eq('category_id', category.id);
 
       if (error) throw error;
-      
-      console.log('✅ Categoría actualizada:', category.id);
+      console.log('✅ Categoría actualizada en Real-Time:', category.id);
     } catch (error) {
       handleError(error, 'actualizar categoría');
     }
@@ -594,8 +661,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('category_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Categoría eliminada:', id);
+      console.log('✅ Categoría eliminada en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar categoría');
     }
@@ -605,9 +671,9 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      console.log('🔄 Creando servicio:', service);
+      console.log('🔄 Creando servicio en Real-Time:', service);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('services')
         .insert({
           user_id: user.id,
@@ -619,26 +685,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           barber_id: service.barberId,
           barcode: service.barcode || '', // Se generará automáticamente si está vacío
           barber_barcodes: JSON.parse(JSON.stringify(service.barberBarcodes || []))
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Servicio creado exitosamente en Base de Datos:', data.service_id);
-      
-      // Opcional: Actualizar estado local inmediatamente para UI más responsiva
-      // La subscripción en tiempo real también manejará esto, pero esto es backup
-      const newService = convertSupabaseToLocal.service(data);
-      setServices(prev => {
-        const exists = prev.find(s => s.id === newService.id);
-        if (!exists) {
-          console.log('⚡ Actualizando estado local inmediatamente');
-          return [...prev, newService];
-        }
-        return prev;
-      });
-      
+      console.log('✅ Servicio creado en Real-Time');
     } catch (error) {
       handleError(error, 'agregar servicio');
     }
@@ -663,8 +713,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('service_id', service.id);
 
       if (error) throw error;
-      
-      console.log('✅ Servicio actualizado:', service.id);
+      console.log('✅ Servicio actualizado en Real-Time:', service.id);
     } catch (error) {
       handleError(error, 'actualizar servicio');
     }
@@ -681,8 +730,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('service_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Servicio eliminado:', id);
+      console.log('✅ Servicio eliminado en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar servicio');
     }
@@ -692,7 +740,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('products')
         .insert({
           user_id: user.id,
@@ -701,13 +749,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           price: product.price,
           stock: product.stock,
           category_id: product.categoryId
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Producto agregado:', data.product_id);
+      console.log('✅ Producto agregado en Real-Time');
     } catch (error) {
       handleError(error, 'agregar producto');
     }
@@ -729,8 +774,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('product_id', product.id);
 
       if (error) throw error;
-      
-      console.log('✅ Producto actualizado:', product.id);
+      console.log('✅ Producto actualizado en Real-Time:', product.id);
     } catch (error) {
       handleError(error, 'actualizar producto');
     }
@@ -747,8 +791,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('product_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Producto eliminado:', id);
+      console.log('✅ Producto eliminado en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar producto');
     }
@@ -758,7 +801,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('sales')
         .insert({
           user_id: user.id,
@@ -772,13 +815,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           tip: sale.tip ? JSON.parse(JSON.stringify(sale.tip)) : null,
           discount: sale.discount ? JSON.parse(JSON.stringify(sale.discount)) : null,
           applied_promotion: sale.appliedPromotion ? JSON.parse(JSON.stringify(sale.appliedPromotion)) : null
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Venta agregada:', data.sale_id);
+      console.log('✅ Venta agregada en Real-Time');
     } catch (error) {
       handleError(error, 'agregar venta');
     }
@@ -805,8 +845,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('sale_id', sale.id);
 
       if (error) throw error;
-      
-      console.log('✅ Venta actualizada:', sale.id);
+      console.log('✅ Venta actualizada en Real-Time:', sale.id);
     } catch (error) {
       handleError(error, 'actualizar venta');
     }
@@ -823,8 +862,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('sale_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Venta eliminada:', id);
+      console.log('✅ Venta eliminada en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar venta');
     }
@@ -834,7 +872,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('cash_advances')
         .insert({
           user_id: user.id,
@@ -847,13 +885,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           payment_method: cashAdvance.paymentMethod,
           status: cashAdvance.status,
           settled: cashAdvance.settled
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Adelanto agregado:', data.advance_id);
+      console.log('✅ Adelanto agregado en Real-Time');
     } catch (error) {
       handleError(error, 'agregar adelanto');
     }
@@ -879,8 +914,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('advance_id', cashAdvance.id);
 
       if (error) throw error;
-      
-      console.log('✅ Adelanto actualizado:', cashAdvance.id);
+      console.log('✅ Adelanto actualizado en Real-Time:', cashAdvance.id);
     } catch (error) {
       handleError(error, 'actualizar adelanto');
     }
@@ -900,8 +934,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('advance_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Estado de adelanto actualizado:', id, status);
+      console.log('✅ Estado de adelanto actualizado en Real-Time:', id, status);
     } catch (error) {
       handleError(error, 'actualizar estado de adelanto');
     }
@@ -918,8 +951,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('advance_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Adelanto eliminado:', id);
+      console.log('✅ Adelanto eliminado en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar adelanto');
     }
@@ -929,7 +961,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('promotions')
         .insert({
           user_id: user.id,
@@ -946,13 +978,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           applicable_categories: JSON.parse(JSON.stringify(promotion.applicableCategories || [])),
           applicable_items: JSON.parse(JSON.stringify(promotion.applicableItems || [])),
           buy_x_get_y_details: promotion.buyXGetYDetails ? JSON.parse(JSON.stringify(promotion.buyXGetYDetails)) : null
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      
-      console.log('✅ Promoción agregada:', data.promotion_id);
+      console.log('✅ Promoción agregada en Real-Time');
     } catch (error) {
       handleError(error, 'agregar promoción');
     }
@@ -982,8 +1011,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('promotion_id', promotion.id);
 
       if (error) throw error;
-      
-      console.log('✅ Promoción actualizada:', promotion.id);
+      console.log('✅ Promoción actualizada en Real-Time:', promotion.id);
     } catch (error) {
       handleError(error, 'actualizar promoción');
     }
@@ -1000,8 +1028,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('promotion_id', id);
 
       if (error) throw error;
-      
-      console.log('✅ Promoción eliminada:', id);
+      console.log('✅ Promoción eliminada en Real-Time:', id);
     } catch (error) {
       handleError(error, 'eliminar promoción');
     }
@@ -1039,17 +1066,10 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const generateBarcodesForAllBarbers = useCallback(async () => {
     if (!user?.id) return;
 
-    console.log("🔄 Generando códigos de barras para todos los barberos y servicios");
-    console.log("Barberos disponibles:", barbers.length);
-    console.log("Servicios disponibles:", services.length);
+    console.log("🔄 Generando códigos de barras para todos los barberos y servicios en Real-Time");
     
-    if (barbers.length === 0) {
-      console.warn("No hay barberos disponibles para generar códigos");
-      return;
-    }
-
-    if (services.length === 0) {
-      console.warn("No hay servicios disponibles para generar códigos");
+    if (barbers.length === 0 || services.length === 0) {
+      console.warn("No hay barberos o servicios disponibles para generar códigos");
       return;
     }
     
@@ -1064,8 +1084,6 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           barcode: existingCode?.barcode || generateBarcode(`SRV${service.id.slice(-3)}BAR${barber.id.slice(-3)}`)
         };
       });
-      
-      console.log(`Servicio ${service.name}: código general ${generalBarcode}, ${barberBarcodes.length} códigos de barberos`);
       
       try {
         const { error } = await supabase
@@ -1083,16 +1101,16 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     
-    console.log("✅ Códigos de barras generados exitosamente para todos los servicios y barberos");
+    console.log("✅ Códigos de barras generados en Real-Time para todos los servicios y barberos");
   }, [barbers, services, generateBarcode, user?.id, handleError]);
 
   const loadFromBackupData = useCallback(async (backupData: any) => {
     if (!user?.id) return;
 
-    console.log('📥 Cargando datos desde respaldo a Base de Datos...');
+    console.log('📥 Cargando datos desde respaldo a Supabase Real-Time...');
     
     try {
-      // Cargar datos del respaldo a Base de Datos
+      // Cargar datos del respaldo a Supabase Real-Time
       if (backupData.appSettings) {
         await updateAppSettings(backupData.appSettings);
       }
@@ -1140,7 +1158,7 @@ export const BarberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
       
-      console.log('✅ Datos cargados desde respaldo a Base de Datos');
+      console.log('✅ Datos cargados desde respaldo a Supabase Real-Time');
     } catch (error) {
       handleError(error, 'cargar datos desde respaldo');
     }
