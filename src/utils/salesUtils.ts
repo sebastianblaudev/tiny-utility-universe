@@ -8,7 +8,7 @@ import { validateSaleAccess } from "./salesSecurityValidator";
 export const updateMissingSaleTenantIds = async (tenantId: string | null, onComplete?: () => void) => {
   // Enhanced validation with security checks
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for updateMissingSaleTenantIds");
+    console.error("No tenant ID provided for updateMissingSaleTenantIds");
     return;
   }
   
@@ -46,7 +46,7 @@ export const updateMissingSaleTenantIds = async (tenantId: string | null, onComp
         .is("tenant_id", null); // Double-check it's still null
       
       if (error) {
-        console.error(`TENANT_SECURITY_ERROR: Error updating sale ${sale.id}:`, error);
+        console.error(`Error updating sale ${sale.id}:`, error);
         return false;
       }
       
@@ -68,14 +68,14 @@ export const updateMissingSaleTenantIds = async (tenantId: string | null, onComp
       onComplete();
     }
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Error updating sales:", error);
+    console.error("Error updating sales:", error);
   }
 };
 
 export const associateSaleWithActiveTurno = async (saleId: string, cashierName: string, tenantId: string) => {
   // Enhanced security validation
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for associateSaleWithActiveTurno");
+    console.error("No tenant ID provided for associateSaleWithActiveTurno");
     return false;
   }
 
@@ -90,7 +90,7 @@ export const associateSaleWithActiveTurno = async (saleId: string, cashierName: 
 
   try {
     if (!saleId || !tenantId) {
-      console.error("TENANT_SECURITY_ERROR: Missing sale ID or tenant ID");
+      console.error("Missing sale ID or tenant ID");
       return false;
     }
 
@@ -103,7 +103,7 @@ export const associateSaleWithActiveTurno = async (saleId: string, cashierName: 
 
     // Validate turno belongs to current tenant
     if (activeTurno.tenant_id !== tenantId) {
-      console.error("TENANT_SECURITY_ERROR: Turno tenant mismatch", {
+      console.error("Turno tenant mismatch", {
         turnoTenant: activeTurno.tenant_id,
         currentTenant: tenantId
       });
@@ -122,21 +122,21 @@ export const associateSaleWithActiveTurno = async (saleId: string, cashierName: 
       .eq('tenant_id', tenantId); // Double-check tenant isolation
       
     if (error) {
-      console.error("TENANT_SECURITY_ERROR: Error associating sale with turno:", error);
+      console.error("Error associating sale with turno:", error);
       return false;
     }
     
     console.log(`Sale ${saleId} successfully associated with turno ${activeTurno.id}`);
     return true;
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Error in associateSaleWithActiveTurno:", error);
+    console.error("Error in associateSaleWithActiveTurno:", error);
     return false;
   }
 };
 
 export const fixMissingSaleTurnoIds = async (tenantId: string) => {
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for fixMissingSaleTurnoIds");
+    console.error("No tenant ID provided for fixMissingSaleTurnoIds");
     return { fixed: 0, total: 0 };
   }
 
@@ -154,7 +154,7 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
       .order('date', { ascending: false });
       
     if (fetchError) {
-      console.error("TENANT_SECURITY_ERROR: Error fetching sales without turno_id:", fetchError);
+      console.error("Error fetching sales without turno_id:", fetchError);
       return { fixed: 0, total: 0 };
     }
     
@@ -165,7 +165,7 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
     // Validate all sales belong to current tenant
     const invalidSales = missingSales.filter(sale => sale.tenant_id !== tenantId);
     if (invalidSales.length > 0) {
-      console.error("TENANT_SECURITY_ERROR: Found sales with wrong tenant ID", {
+      console.error("Found sales with wrong tenant ID", {
         count: invalidSales.length,
         expectedTenant: tenantId
       });
@@ -182,7 +182,7 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
       .order('fecha_apertura', { ascending: false });
       
     if (turnosError) {
-      console.error("TENANT_SECURITY_ERROR: Error fetching turnos:", turnosError);
+      console.error("Error fetching turnos:", turnosError);
       return { fixed: 0, total: missingSales.length };
     }
     
@@ -195,7 +195,7 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
         }
         
         if (turno.tenant_id !== tenantId) {
-          console.error("TENANT_SECURITY_ERROR: Turno tenant mismatch during matching", {
+          console.error("Turno tenant mismatch during matching", {
             turnoTenant: turno.tenant_id,
             expectedTenant: tenantId
           });
@@ -224,14 +224,14 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
             tenantId: tenantId
           });
         } else {
-          console.error("TENANT_SECURITY_ERROR: Error fixing sale turno ID:", error);
+          console.error("Error fixing sale turno ID:", error);
         }
       }
     }
     
     return { fixed: fixedCount, total: missingSales.length };
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Error in fixMissingSaleTurnoIds:", error);
+    console.error("Error in fixMissingSaleTurnoIds:", error);
     return { fixed: 0, total: 0 };
   }
 };
@@ -239,7 +239,7 @@ export const fixMissingSaleTurnoIds = async (tenantId: string) => {
 // Dashboard functions with enhanced security validation
 export const getSalesByDateRange = async (tenantId: string, startDate: string, endDate: string) => {
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for getSalesByDateRange");
+    console.error("No tenant ID provided for getSalesByDateRange");
     return [];
   }
 
@@ -259,32 +259,24 @@ export const getSalesByDateRange = async (tenantId: string, startDate: string, e
       .order('date', { ascending: false });
       
     if (error) {
-      console.error("TENANT_SECURITY_ERROR: Error in getSalesByDateRange:", error);
+      console.error("Error in getSalesByDateRange:", error);
       return [];
     }
     
     // Validate all returned sales belong to the correct tenant
     const validSales = data?.filter(sale => sale.tenant_id === tenantId) || [];
     
-    if (validSales.length !== data?.length) {
-      console.error("TENANT_SECURITY_ERROR: Cross-tenant data detected in sales query", {
-        expected: data?.length,
-        valid: validSales.length,
-        tenantId
-      });
-    }
-    
     console.log(`Found ${validSales.length} valid sales for date range`);
     return validSales;
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Exception in getSalesByDateRange:", error);
+    console.error("Exception in getSalesByDateRange:", error);
     return [];
   }
 };
 
 export const getRecentSales = async (tenantId: string, limit: number = 5) => {
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for getRecentSales");
+    console.error("No tenant ID provided for getRecentSales");
     return [];
   }
 
@@ -303,32 +295,24 @@ export const getRecentSales = async (tenantId: string, limit: number = 5) => {
       .limit(limit);
       
     if (error) {
-      console.error("TENANT_SECURITY_ERROR: Error in getRecentSales:", error);
+      console.error("Error in getRecentSales:", error);
       return [];
     }
     
     // Validate all returned sales belong to the correct tenant
     const validSales = data?.filter(sale => sale.tenant_id === tenantId) || [];
     
-    if (validSales.length !== data?.length) {
-      console.error("TENANT_SECURITY_ERROR: Cross-tenant data detected in recent sales query", {
-        expected: data?.length,
-        valid: validSales.length,
-        tenantId
-      });
-    }
-    
     console.log(`Found ${validSales.length} valid recent sales`);
     return validSales;
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Exception in getRecentSales:", error);
+    console.error("Exception in getRecentSales:", error);
     return [];
   }
 };
 
 export const getLowStockProducts = async (tenantId: string) => {
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for getLowStockProducts");
+    console.error("No tenant ID provided for getLowStockProducts");
     return [];
   }
 
@@ -343,32 +327,24 @@ export const getLowStockProducts = async (tenantId: string) => {
       .order('stock', { ascending: true });
       
     if (error) {
-      console.error("TENANT_SECURITY_ERROR: Error in getLowStockProducts:", error);
+      console.error("Error in getLowStockProducts:", error);
       return [];
     }
     
     // Validate all returned products belong to the correct tenant
     const validProducts = data?.filter(product => product.user_id === tenantId) || [];
     
-    if (validProducts.length !== data?.length) {
-      console.error("TENANT_SECURITY_ERROR: Cross-tenant data detected in products query", {
-        expected: data?.length,
-        valid: validProducts.length,
-        tenantId
-      });
-    }
-    
     console.log(`Found ${validProducts.length} valid low stock products`);
     return validProducts;
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Exception in getLowStockProducts:", error);
+    console.error("Exception in getLowStockProducts:", error);
     return [];
   }
 };
 
 export const getTopSellingProducts = async (tenantId: string, limit: number = 5) => {
   if (!tenantId) {
-    console.error("TENANT_SECURITY_ERROR: No tenant ID provided for getTopSellingProducts");
+    console.error("No tenant ID provided for getTopSellingProducts");
     return [];
   }
 
@@ -395,7 +371,7 @@ export const getTopSellingProducts = async (tenantId: string, limit: number = 5)
       .eq('tenant_id', tenantId);
       
     if (error) {
-      console.error("TENANT_SECURITY_ERROR: Error in getTopSellingProducts:", error);
+      console.error("Error in getTopSellingProducts:", error);
       return [];
     }
     
@@ -405,7 +381,7 @@ export const getTopSellingProducts = async (tenantId: string, limit: number = 5)
       const isValidProduct = item.products?.user_id === tenantId;
       
       if (!isValidSaleItem || !isValidProduct) {
-        console.error("TENANT_SECURITY_ERROR: Cross-tenant data detected in sale items", {
+        console.error("Cross-tenant data detected in sale items", {
           saleItemTenant: item.tenant_id,
           productTenant: item.products?.user_id,
           expectedTenant: tenantId
@@ -437,7 +413,7 @@ export const getTopSellingProducts = async (tenantId: string, limit: number = 5)
     console.log(`Found ${result.length} valid top selling products`);
     return result;
   } catch (error) {
-    console.error("TENANT_SECURITY_ERROR: Exception in getTopSellingProducts:", error);
+    console.error("Exception in getTopSellingProducts:", error);
     return [];
   }
 };
