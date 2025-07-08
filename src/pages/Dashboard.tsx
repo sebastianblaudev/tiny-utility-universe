@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { PageTitle } from '@/components/ui/page-title';
@@ -13,6 +14,7 @@ import {
   getLowStockProducts,
   getTopSellingProducts
 } from '@/utils/salesUtils';
+import TenantSecurityAlert from '@/components/TenantSecurityAlert';
 
 const Dashboard = () => {
   const { tenantId } = useAuth();
@@ -104,6 +106,7 @@ const Dashboard = () => {
     return (
       <Layout>
         <div className="container mx-auto py-6">
+          <TenantSecurityAlert />
           <Card>
             <CardContent className="pt-6">
               <div className="text-center text-red-600">
@@ -126,6 +129,8 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="container mx-auto py-6">
+        <TenantSecurityAlert />
+        
         <PageTitle
           title="Panel de Control"
           description="Visión general del rendimiento de tu negocio"

@@ -7,6 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import Sidebar from '@/components/Sidebar';
+import TenantSecurityAlert from '@/components/TenantSecurityAlert';
 import { BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon, Download, Calendar, Receipt, RefreshCwIcon } from 'lucide-react';
 import { toast } from "sonner";
 import { formatCurrency } from '@/lib/utils';
@@ -660,6 +661,7 @@ const Estadisticas = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto p-5">
           <div className="container mx-auto">
+            <TenantSecurityAlert />
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Estadísticas</h1>
               <div className="flex gap-2">

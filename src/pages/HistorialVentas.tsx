@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import TableRowAnimation from "@/components/animations/TableRowAnimation";
+import TenantSecurityAlert from "@/components/TenantSecurityAlert";
 import { useTenantValidation } from "@/hooks/useTenantValidation";
 import { validateSaleAccess } from "@/utils/salesSecurityValidator";
 
@@ -73,12 +74,21 @@ const HistorialVentas = () => {
         .order("date", { ascending: false });
       
       if (error) {
-        console.error("Error loading sales:", error);
+        console.error("TENANT_SECURITY_ERROR: Error loading sales:", error);
         throw error;
       }
       
       // Validate all returned sales belong to current tenant
       const validSales = salesData?.filter(sale => sale.tenant_id === tenantId) || [];
+      
+      if (validSales.length !== salesData?.length) {
+        console.error("TENANT_SECURITY_ERROR: Cross-tenant sales detected in query result", {
+          expected: salesData?.length,
+          valid: validSales.length,
+          tenantId
+        });
+        toast.error("Error de seguridad: Se detectaron datos de otros negocios");
+      }
       
       return validSales.map(sale => ({
         ...sale,
@@ -88,7 +98,7 @@ const HistorialVentas = () => {
     enabled: !!tenantId && isValid,
     meta: {
       onError: (error: Error) => {
-        console.error("Error loading sales:", error);
+        console.error("TENANT_SECURITY_ERROR: Error loading sales:", error);
         toast.error("Error al cargar el historial de ventas");
       }
     }
@@ -144,6 +154,7 @@ const HistorialVentas = () => {
     return (
       <Layout>
         <div className="container px-4 py-6 mx-auto max-w-7xl">
+          <TenantSecurityAlert />
           <div className="text-center py-8 text-red-500">
             Error de seguridad: No se puede acceder al historial sin validación de tenant.
           </div>
@@ -155,6 +166,7 @@ const HistorialVentas = () => {
   return (
     <Layout>
       <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <TenantSecurityAlert />
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl font-bold">Historial de Ventas</CardTitle>
@@ -175,7 +187,7 @@ const HistorialVentas = () => {
               </div>
             ) : (
               <Table>
-                <TableCaption>Listado de todas las ventas realizadas</TableCaption>
+                <TableCaption>Listado de todas las ventas realizadas - Tenant: {tenantId?.substring(0, 8)}...</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha y Hora</TableHead>
