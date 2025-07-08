@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { PageTitle } from '@/components/ui/page-title';
@@ -14,7 +13,6 @@ import {
   getLowStockProducts,
   getTopSellingProducts
 } from '@/utils/salesUtils';
-import TenantSecurityAlert from '@/components/TenantSecurityAlert';
 
 const Dashboard = () => {
   const { tenantId } = useAuth();

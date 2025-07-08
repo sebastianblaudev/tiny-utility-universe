@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import SaleProductsViewer from '@/components/sales/SaleProductsViewer';
-import TenantSecurityAlert from '@/components/TenantSecurityAlert';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings } from 'lucide-react';
@@ -19,7 +18,6 @@ const SaleDetails = () => {
   return (
     <Layout>
       <div className="container mx-auto p-6">
-        <TenantSecurityAlert />
         <Card className="mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
