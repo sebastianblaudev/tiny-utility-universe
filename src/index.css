@@ -684,11 +684,3 @@ h1.text-xl.font-bold.text-gray-800.dark\:text-gray-100 {
   padding: 0;
 }
 }
-
-
-.relative.w-full.rounded-lg.border.p-4.\[\&\>svg\~\*\]\:pl-7.\[\&\>svg\+div\]\:translate-y-\[-3px\].\[\&\>svg\]\:absolute.\[\&\>svg\]\:left-4.\[\&\>svg\]\:top-4.\[\&\>svg\]\:text-foreground.text-foreground.mb-4.border-green-200.bg-green-50 {
-    display: none;
-}
-.relative.w-full.rounded-lg.border.p-4.\[\&\>svg\~\*\]\:pl-7.\[\&\>svg\+div\]\:translate-y-\[-3px\].\[\&\>svg\]\:absolute.\[\&\>svg\]\:left-4.\[\&\>svg\]\:top-4.\[\&\>svg\]\:text-foreground.text-foreground.border-orange-200.bg-orange-50 {
-    display: none;
-}
