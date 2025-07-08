@@ -55,7 +55,6 @@ import VoiceCommandButton from '@/components/products/VoiceCommandButton';
 import { ProductCommand } from '@/utils/voiceCommandUtils';
 import { renderBarcodes } from '@/utils/barcodeUtils';
 import BarcodeButton from '@/components/products/BarcodeButton';
-import TenantSecurityMonitor from '@/components/TenantSecurityMonitor';
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('es-CL', {
