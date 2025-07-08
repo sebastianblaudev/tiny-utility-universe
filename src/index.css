@@ -684,3 +684,39 @@ h1.text-xl.font-bold.text-gray-800.dark\:text-gray-100 {
   padding: 0;
 }
 }
+
+/* Hide all alert components */
+.relative.w-full.rounded-lg.border.p-4.\[\&\>svg\~\*\]\:pl-7.\[\&\>svg\+div\]\:translate-y-\[-3px\].\[\&\>svg\]\:absolute.\[\&\>svg\]\:left-4.\[\&\>svg\]\:top-4.\[\&\>svg\]\:text-foreground {
+  display: none !important;
+}
+
+/* Hide alert containers with specific background colors */
+.border-green-200.bg-green-50,
+.border-red-200.bg-red-50,
+.border-orange-200.bg-orange-50,
+.border-yellow-200.bg-yellow-50,
+.border-red-500.bg-red-100,
+.border-red-500.bg-red-50 {
+  display: none !important;
+}
+
+/* Hide TenantSecurityAlert and TenantSecurityMonitor components */
+[class*="TenantSecurity"],
+.space-y-2.mb-4,
+.mb-4.border-green-200.bg-green-50,
+.mb-4.border-red-200.bg-red-50,
+.mb-4.border-orange-200.bg-orange-50,
+.mb-4.border-yellow-200.bg-yellow-50 {
+  display: none !important;
+}
+
+/* Hide alert descriptions and titles */
+.text-sm.\[\&_p\]\:leading-relaxed,
+.mb-1.font-medium.leading-none.tracking-tight {
+  display: none !important;
+}
+
+/* Hide security alert containers */
+div[class*="Alert"] {
+  display: none !important;
+}
