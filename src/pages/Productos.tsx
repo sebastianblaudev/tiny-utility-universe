@@ -55,6 +55,7 @@ import VoiceCommandButton from '@/components/products/VoiceCommandButton';
 import { ProductCommand } from '@/utils/voiceCommandUtils';
 import { renderBarcodes } from '@/utils/barcodeUtils';
 import BarcodeButton from '@/components/products/BarcodeButton';
+import { QuickInventory } from '@/components/QuickInventory';
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('es-CL', {
@@ -926,6 +927,8 @@ const Productos = () => {
                 </Dialog>
                 
                 {user && <ProductCSVImport onImportComplete={fetchProducts} userId={user.id} />}
+                
+                <QuickInventory />
                 
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
