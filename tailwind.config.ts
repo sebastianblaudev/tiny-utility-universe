@@ -21,6 +21,8 @@ export default {
 		extend: {
 			fontFamily: {
 				opensans: ["Open Sans", "sans-serif"],
+				inter: ["Inter", "SF Pro Display", "system-ui", "sans-serif"],
+				elite: ["Inter", "SF Pro Display", "system-ui", "sans-serif"],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -29,7 +31,7 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#22c55e',
+					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
