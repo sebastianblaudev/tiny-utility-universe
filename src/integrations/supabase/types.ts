@@ -14,371 +14,401 @@ export type Database = {
   }
   public: {
     Tables: {
-      cajas: {
-        Row: {
-          created_at: string | null
-          estado: string
-          fecha_apertura: string | null
-          fecha_cierre: string | null
-          hora_apertura: string | null
-          hora_cierre: string | null
-          id: string
-          monto_final: number | null
-          monto_inicial: number
-          nombre_cajero: string | null
-          observaciones: string | null
-          tenant_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          estado?: string
-          fecha_apertura?: string | null
-          fecha_cierre?: string | null
-          hora_apertura?: string | null
-          hora_cierre?: string | null
-          id?: string
-          monto_final?: number | null
-          monto_inicial?: number
-          nombre_cajero?: string | null
-          observaciones?: string | null
-          tenant_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          estado?: string
-          fecha_apertura?: string | null
-          fecha_cierre?: string | null
-          hora_apertura?: string | null
-          hora_cierre?: string | null
-          id?: string
-          monto_final?: number | null
-          monto_inicial?: number
-          nombre_cajero?: string | null
-          observaciones?: string | null
-          tenant_id?: string | null
-        }
-        Relationships: []
-      }
-      cashier_pins: {
+      categories: {
         Row: {
           created_at: string
+          icon: string | null
           id: string
+          location_id: string | null
           name: string
-          pin: string
-          tenant_id: string | null
-          updated_at: string
         }
         Insert: {
           created_at?: string
+          icon?: string | null
           id?: string
+          location_id?: string | null
           name: string
-          pin: string
-          tenant_id?: string | null
-          updated_at?: string
         }
         Update: {
           created_at?: string
+          icon?: string | null
           id?: string
+          location_id?: string | null
           name?: string
-          pin?: string
-          tenant_id?: string | null
-          updated_at?: string
         }
-        Relationships: []
-      }
-      cashiers: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          id: string
-          name: string
-          pin: string | null
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          name: string
-          pin?: string | null
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          pin?: string | null
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      cross_tenant_sales_backup: {
-        Row: {
-          id: string | null
-          is_by_weight: boolean | null
-          price: number | null
-          product_id: string | null
-          product_tenant_id: string | null
-          quantity: number | null
-          sale_id: string | null
-          sale_tenant_id: string | null
-          subtotal: number | null
-          tenant_id: string | null
-          unit: string | null
-          weight: number | null
-        }
-        Insert: {
-          id?: string | null
-          is_by_weight?: boolean | null
-          price?: number | null
-          product_id?: string | null
-          product_tenant_id?: string | null
-          quantity?: number | null
-          sale_id?: string | null
-          sale_tenant_id?: string | null
-          subtotal?: number | null
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
-        }
-        Update: {
-          id?: string | null
-          is_by_weight?: boolean | null
-          price?: number | null
-          product_id?: string | null
-          product_tenant_id?: string | null
-          quantity?: number | null
-          sale_id?: string | null
-          sale_tenant_id?: string | null
-          subtotal?: number | null
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
           address: string | null
-          created_at: string | null
-          email: string | null
+          created_at: string
           id: string
+          location_id: string
           name: string
-          notes: string | null
-          phone: string | null
-          tenant_id: string | null
-          updated_at: string | null
+          phone: string
         }
         Insert: {
           address?: string | null
-          created_at?: string | null
-          email?: string | null
+          created_at?: string
           id?: string
+          location_id: string
           name: string
-          notes?: string | null
-          phone?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
+          phone: string
         }
         Update: {
           address?: string | null
-          created_at?: string | null
-          email?: string | null
+          created_at?: string
           id?: string
+          location_id?: string
           name?: string
-          notes?: string | null
-          phone?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      ingredient_transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          ingredient_id: string
-          notes: string | null
-          sale_id: string | null
-          transaction_type: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          ingredient_id: string
-          notes?: string | null
-          sale_id?: string | null
-          transaction_type: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          ingredient_id?: string
-          notes?: string | null
-          sale_id?: string | null
-          transaction_type?: string
+          phone?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ingredient_transactions_ingredient_id_fkey"
-            columns: ["ingredient_id"]
+            foreignKeyName: "customers_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "ingredients"
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          last_order_id: string | null
+          location_id: string
+          loyalty_points: number | null
+          name: string
+          notes: string | null
+          phone: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          last_order_id?: string | null
+          location_id: string
+          loyalty_points?: number | null
+          name: string
+          notes?: string | null
+          phone: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          last_order_id?: string | null
+          location_id?: string
+          loyalty_points?: number | null
+          name?: string
+          notes?: string | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_customers_last_order_id_fkey"
+            columns: ["last_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ingredient_transactions_sale_id_fkey"
-            columns: ["sale_id"]
+            foreignKeyName: "delivery_customers_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "sales"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
       }
       ingredients: {
         Row: {
-          created_at: string | null
-          id: string
-          name: string
-          reorder_level: number | null
-          stock: number
-          unit: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          reorder_level?: number | null
-          stock?: number
-          unit?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          reorder_level?: number | null
-          stock?: number
-          unit?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      preparations: {
-        Row: {
-          completed_at: string | null
           created_at: string
           id: string
+          location_id: string
           name: string
-          notes: string | null
-          preparation_time: number | null
-          quantity: number
-          sale_id: string | null
-          started_at: string | null
-          status: string
-          user_id: string | null
+          price_per_kg: number | null
+          stock_quantity: number | null
+          unit: string
         }
         Insert: {
-          completed_at?: string | null
           created_at?: string
           id?: string
+          location_id: string
           name: string
-          notes?: string | null
-          preparation_time?: number | null
-          quantity?: number
-          sale_id?: string | null
-          started_at?: string | null
-          status?: string
-          user_id?: string | null
+          price_per_kg?: number | null
+          stock_quantity?: number | null
+          unit?: string
         }
         Update: {
-          completed_at?: string | null
           created_at?: string
           id?: string
+          location_id?: string
           name?: string
-          notes?: string | null
-          preparation_time?: number | null
-          quantity?: number
-          sale_id?: string | null
-          started_at?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      product_colors: {
-        Row: {
-          color_code: string
-          color_name: string | null
-          created_at: string | null
-          id: string
-          is_default: boolean | null
-          product_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          color_code: string
-          color_name?: string | null
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          product_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          color_code?: string
-          color_name?: string | null
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          product_id?: string
-          updated_at?: string | null
+          price_per_kg?: number | null
+          stock_quantity?: number | null
+          unit?: string
         }
         Relationships: [
           {
-            foreignKeyName: "product_colors_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "ingredients_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          created_at: string
+          email: string
+          hero_image_url: string | null
+          id: string
+          is_open_for_orders: boolean | null
+          name: string
+          owner_id: string | null
+          phone: string | null
+          subscription_status: string | null
+          trial_ends_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          created_at?: string
+          email: string
+          hero_image_url?: string | null
+          id?: string
+          is_open_for_orders?: boolean | null
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          created_at?: string
+          email?: string
+          hero_image_url?: string | null
+          id?: string
+          is_open_for_orders?: boolean | null
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
+        }
+        Relationships: []
+      }
+      online_orders: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_name: string
+          customer_phone: string
+          id: string
+          location_id: string
+          order_data: Json
+          order_status: string
+          payment_status: string
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name: string
+          customer_phone: string
+          id?: string
+          location_id: string
+          order_data: Json
+          order_status?: string
+          payment_status?: string
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          location_id?: string
+          order_data?: Json
+          order_status?: string
+          payment_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_orders_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      optional_ingredients: {
+        Row: {
+          created_at: string
+          id: string
+          ingredient_id: string
+          large_price: number | null
+          location_id: string
+          medium_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredient_id: string
+          large_price?: number | null
+          location_id: string
+          medium_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+          large_price?: number | null
+          location_id?: string
+          medium_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "optional_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "optional_ingredients_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          daily_number: number | null
+          delivery_status: string | null
+          id: string
+          is_open: boolean | null
+          items: Json
+          latitude: number | null
+          location_id: string
+          longitude: number | null
+          on_hold: boolean | null
+          order_type: string
+          payment_method: string
+          phone_number: string | null
+          sent_to_kitchen: Json | null
+          session_id: string | null
+          status: string
+          subtotal: number
+          table_number: string | null
+          tax: number
+          total: number
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          daily_number?: number | null
+          delivery_status?: string | null
+          id?: string
+          is_open?: boolean | null
+          items: Json
+          latitude?: number | null
+          location_id: string
+          longitude?: number | null
+          on_hold?: boolean | null
+          order_type: string
+          payment_method: string
+          phone_number?: string | null
+          sent_to_kitchen?: Json | null
+          session_id?: string | null
+          status?: string
+          subtotal: number
+          table_number?: string | null
+          tax: number
+          total: number
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          daily_number?: number | null
+          delivery_status?: string | null
+          id?: string
+          is_open?: boolean | null
+          items?: Json
+          latitude?: number | null
+          location_id?: string
+          longitude?: number | null
+          on_hold?: boolean | null
+          order_type?: string
+          payment_method?: string
+          phone_number?: string | null
+          sent_to_kitchen?: Json | null
+          session_id?: string | null
+          status?: string
+          subtotal?: number
+          table_number?: string | null
+          tax?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
       }
       product_ingredients: {
         Row: {
-          amount: number
-          created_at: string | null
-          id: string
           ingredient_id: string
           product_id: string
-          updated_at: string | null
+          quantity: number | null
         }
         Insert: {
-          amount?: number
-          created_at?: string | null
-          id?: string
           ingredient_id: string
           product_id: string
-          updated_at?: string | null
+          quantity?: number | null
         }
         Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
           ingredient_id?: string
           product_id?: string
-          updated_at?: string | null
+          quantity?: number | null
         }
         Relationships: [
           {
@@ -399,689 +429,397 @@ export type Database = {
       }
       products: {
         Row: {
-          category: string | null
-          code: string
+          barcode: string | null
+          base_price: number
+          category_id: string | null
           color: string | null
-          cost_price: number
-          created_at: string | null
+          cost_calculation_type: string | null
+          cost_price: number | null
+          created_at: string
+          description: string | null
           id: string
           image_url: string | null
-          is_by_weight: boolean | null
-          is_weight_based: boolean | null
+          large_price: number | null
+          location_id: string
+          medium_price: number | null
+          mega_price: number | null
           name: string
-          price: number
-          stock: number
-          tenant_id: string | null
-          unit: string | null
-          updated_at: string | null
-          user_id: string | null
+          size_names: Json | null
+          xl_price: number | null
+          xxl_price: number | null
+          xxxl_price: number | null
         }
         Insert: {
-          category?: string | null
-          code: string
+          barcode?: string | null
+          base_price: number
+          category_id?: string | null
           color?: string | null
-          cost_price: number
-          created_at?: string | null
+          cost_calculation_type?: string | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
-          is_by_weight?: boolean | null
-          is_weight_based?: boolean | null
+          large_price?: number | null
+          location_id: string
+          medium_price?: number | null
+          mega_price?: number | null
           name: string
-          price: number
-          stock?: number
-          tenant_id?: string | null
-          unit?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          size_names?: Json | null
+          xl_price?: number | null
+          xxl_price?: number | null
+          xxxl_price?: number | null
         }
         Update: {
-          category?: string | null
-          code?: string
+          barcode?: string | null
+          base_price?: number
+          category_id?: string | null
           color?: string | null
-          cost_price?: number
-          created_at?: string | null
+          cost_calculation_type?: string | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
-          is_by_weight?: boolean | null
-          is_weight_based?: boolean | null
+          large_price?: number | null
+          location_id?: string
+          medium_price?: number | null
+          mega_price?: number | null
+          name?: string
+          size_names?: Json | null
+          xl_price?: number | null
+          xxl_price?: number | null
+          xxxl_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active: boolean | null
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          location_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          active?: boolean | null
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          location_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          active?: boolean | null
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          location_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotion_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          promotion_id: string
+          quantity: number | null
+          size: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          promotion_id: string
+          quantity?: number | null
+          size?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          promotion_id?: string
+          quantity?: number | null
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_products_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          id: string
+          location_id: string
+          max_free_ingredients: number | null
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location_id: string
+          max_free_ingredients?: number | null
+          name: string
+          price: number
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location_id?: string
+          max_free_ingredients?: number | null
           name?: string
           price?: number
-          stock?: number
-          tenant_id?: string | null
-          unit?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      products_backup: {
-        Row: {
-          category: string | null
-          code: string | null
-          color: string | null
-          cost_price: number | null
-          created_at: string | null
-          id: string | null
-          image_url: string | null
-          is_by_weight: boolean | null
-          is_weight_based: boolean | null
-          name: string | null
-          price: number | null
-          stock: number | null
-          unit: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          category?: string | null
-          code?: string | null
-          color?: string | null
-          cost_price?: number | null
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_by_weight?: boolean | null
-          is_weight_based?: boolean | null
-          name?: string | null
-          price?: number | null
-          stock?: number | null
-          unit?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          category?: string | null
-          code?: string | null
-          color?: string | null
-          cost_price?: number | null
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_by_weight?: boolean | null
-          is_weight_based?: boolean | null
-          name?: string | null
-          price?: number | null
-          stock?: number | null
-          unit?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      sale_item_notes: {
-        Row: {
-          created_at: string | null
-          id: string
-          note: string
-          product_id: string
-          sale_id: string
-          tenant_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          note: string
-          product_id: string
-          sale_id: string
-          tenant_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          note?: string
-          product_id?: string
-          sale_id?: string
-          tenant_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fk_sale_item_notes_product_id"
-            columns: ["product_id"]
+            foreignKeyName: "promotions_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_sale_item_notes_sale_id"
-            columns: ["sale_id"]
-            isOneToOne: false
-            referencedRelation: "sales"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
       }
-      sale_items: {
+      receipts: {
         Row: {
+          created_at: string
           id: string
-          is_by_weight: boolean | null
-          price: number
-          product_id: string
-          quantity: number
-          sale_id: string
-          subtotal: number
-          tenant_id: string | null
-          unit: string | null
-          weight: number | null
+          location_id: string
+          order_id: string
+          receipt_data: Json | null
+          receipt_number: string | null
         }
         Insert: {
+          created_at?: string
           id?: string
-          is_by_weight?: boolean | null
-          price: number
-          product_id: string
-          quantity: number
-          sale_id: string
-          subtotal: number
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
+          location_id: string
+          order_id: string
+          receipt_data?: Json | null
+          receipt_number?: string | null
         }
         Update: {
+          created_at?: string
           id?: string
-          is_by_weight?: boolean | null
-          price?: number
-          product_id?: string
-          quantity?: number
-          sale_id?: string
-          subtotal?: number
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
+          location_id?: string
+          order_id?: string
+          receipt_data?: Json | null
+          receipt_number?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "sale_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "receipts_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sale_items_sale_id_fkey"
-            columns: ["sale_id"]
+            foreignKeyName: "receipts_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "sales"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
       }
-      sale_items_backup: {
+      settings: {
         Row: {
-          id: string | null
-          is_by_weight: boolean | null
-          price: number | null
-          product_id: string | null
-          quantity: number | null
-          sale_id: string | null
-          subtotal: number | null
-          tenant_id: string | null
-          unit: string | null
-          weight: number | null
+          business_name: string | null
+          created_at: string
+          hero_image: string | null
+          id: string
+          location_id: string
+          logo_url: string | null
+          receipt_header: string | null
+          tax_enabled: boolean | null
+          tax_rate: number | null
         }
         Insert: {
-          id?: string | null
-          is_by_weight?: boolean | null
-          price?: number | null
-          product_id?: string | null
-          quantity?: number | null
-          sale_id?: string | null
-          subtotal?: number | null
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
+          business_name?: string | null
+          created_at?: string
+          hero_image?: string | null
+          id?: string
+          location_id: string
+          logo_url?: string | null
+          receipt_header?: string | null
+          tax_enabled?: boolean | null
+          tax_rate?: number | null
         }
         Update: {
-          id?: string | null
-          is_by_weight?: boolean | null
-          price?: number | null
-          product_id?: string | null
-          quantity?: number | null
-          sale_id?: string | null
-          subtotal?: number | null
-          tenant_id?: string | null
-          unit?: string | null
-          weight?: number | null
+          business_name?: string | null
+          created_at?: string
+          hero_image?: string | null
+          id?: string
+          location_id?: string
+          logo_url?: string | null
+          receipt_header?: string | null
+          tax_enabled?: boolean | null
+          tax_rate?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "settings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: true
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      sale_payment_methods: {
+      shifts: {
         Row: {
-          amount: number
+          card_sales: number | null
+          cash_sales: number | null
           created_at: string | null
+          end_time: string | null
           id: string
-          payment_method: string
-          sale_id: string
-          tenant_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          payment_method: string
-          sale_id: string
-          tenant_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          payment_method?: string
-          sale_id?: string
-          tenant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sale_payment_methods_sale_id_fkey"
-            columns: ["sale_id"]
-            isOneToOne: false
-            referencedRelation: "sales"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sales: {
-        Row: {
-          cashier_name: string | null
-          customer_id: string | null
-          date: string | null
-          id: string
-          payment_method: string | null
-          sale_type: string | null
+          initial_cash: number | null
+          location_id: string
+          notes: string | null
+          start_time: string | null
           status: string
-          tenant_id: string | null
-          total: number
-          turno_id: string | null
+          transfer_sales: number | null
+          user_id: string
         }
         Insert: {
-          cashier_name?: string | null
-          customer_id?: string | null
-          date?: string | null
-          id?: string
-          payment_method?: string | null
-          sale_type?: string | null
-          status?: string
-          tenant_id?: string | null
-          total: number
-          turno_id?: string | null
-        }
-        Update: {
-          cashier_name?: string | null
-          customer_id?: string | null
-          date?: string | null
-          id?: string
-          payment_method?: string | null
-          sale_type?: string | null
-          status?: string
-          tenant_id?: string | null
-          total?: number
-          turno_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sales_backup: {
-        Row: {
-          cashier_name: string | null
-          customer_id: string | null
-          date: string | null
-          id: string | null
-          payment_method: string | null
-          sale_type: string | null
-          status: string | null
-          tenant_id: string | null
-          total: number | null
-          turno_id: string | null
-        }
-        Insert: {
-          cashier_name?: string | null
-          customer_id?: string | null
-          date?: string | null
-          id?: string | null
-          payment_method?: string | null
-          sale_type?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          total?: number | null
-          turno_id?: string | null
-        }
-        Update: {
-          cashier_name?: string | null
-          customer_id?: string | null
-          date?: string | null
-          id?: string | null
-          payment_method?: string | null
-          sale_type?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          total?: number | null
-          turno_id?: string | null
-        }
-        Relationships: []
-      }
-      transacciones_caja: {
-        Row: {
-          caja_id: string
-          created_at: string | null
-          descripcion: string | null
-          fecha: string | null
-          hora: string | null
-          id: string
-          metodo_pago: string
-          monto: number
-          tenant_id: string | null
-          tipo: string
-        }
-        Insert: {
-          caja_id: string
+          card_sales?: number | null
+          cash_sales?: number | null
           created_at?: string | null
-          descripcion?: string | null
-          fecha?: string | null
-          hora?: string | null
+          end_time?: string | null
           id?: string
-          metodo_pago: string
-          monto: number
-          tenant_id?: string | null
-          tipo: string
+          initial_cash?: number | null
+          location_id: string
+          notes?: string | null
+          start_time?: string | null
+          status?: string
+          transfer_sales?: number | null
+          user_id: string
         }
         Update: {
-          caja_id?: string
+          card_sales?: number | null
+          cash_sales?: number | null
           created_at?: string | null
-          descripcion?: string | null
-          fecha?: string | null
-          hora?: string | null
+          end_time?: string | null
           id?: string
-          metodo_pago?: string
-          monto?: number
-          tenant_id?: string | null
-          tipo?: string
+          initial_cash?: number | null
+          location_id?: string
+          notes?: string | null
+          start_time?: string | null
+          status?: string
+          transfer_sales?: number | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "transacciones_caja_caja_id_fkey"
-            columns: ["caja_id"]
+            foreignKeyName: "shifts_location_id_fkey"
+            columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "cajas"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      turno_transacciones: {
-        Row: {
-          created_at: string
-          descripcion: string | null
-          fecha: string
-          id: string
-          metodo_pago: string
-          monto: number
-          tenant_id: string
-          tipo: string
-          turno_id: string
-          venta_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          descripcion?: string | null
-          fecha?: string
-          id?: string
-          metodo_pago?: string
-          monto: number
-          tenant_id: string
-          tipo: string
-          turno_id: string
-          venta_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          descripcion?: string | null
-          fecha?: string
-          id?: string
-          metodo_pago?: string
-          monto?: number
-          tenant_id?: string
-          tipo?: string
-          turno_id?: string
-          venta_id?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "turno_transacciones_turno_id_fkey"
-            columns: ["turno_id"]
+            foreignKeyName: "shifts_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "turnos"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      turnos: {
-        Row: {
-          cajero_id: string | null
-          cajero_nombre: string
-          created_at: string
-          estado: string
-          fecha_apertura: string
-          fecha_cierre: string | null
-          id: string
-          monto_final: number | null
-          monto_inicial: number
-          observaciones: string | null
-          tenant_id: string
-        }
-        Insert: {
-          cajero_id?: string | null
-          cajero_nombre: string
-          created_at?: string
-          estado?: string
-          fecha_apertura?: string
-          fecha_cierre?: string | null
-          id?: string
-          monto_final?: number | null
-          monto_inicial?: number
-          observaciones?: string | null
-          tenant_id: string
-        }
-        Update: {
-          cajero_id?: string | null
-          cajero_nombre?: string
-          created_at?: string
-          estado?: string
-          fecha_apertura?: string
-          fecha_cierre?: string | null
-          id?: string
-          monto_final?: number | null
-          monto_inicial?: number
-          observaciones?: string | null
-          tenant_id?: string
-        }
-        Relationships: []
       }
     }
     Views: {
-      tenant_data_audit: {
-        Row: {
-          record_count: number | null
-          table_name: string | null
-          tenant_id: string | null
-        }
-        Relationships: []
-      }
-      tenant_security_monitor: {
-        Row: {
-          newest_record: string | null
-          oldest_record: string | null
-          record_count: number | null
-          table_name: string | null
-          tenant_id: string | null
-        }
-        Relationships: []
-      }
-      tenant_security_status: {
-        Row: {
-          check_type: string | null
-          status: string | null
-          violation_count: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      add_product_category: {
-        Args: { category_name: string; tenant_id_param: string }
-        Returns: boolean
-      }
-      count_tenant_sales: {
-        Args: { tenant_id_param: string }
+      get_next_daily_number: {
+        Args: Record<PropertyKey, never>
         Returns: number
       }
-      get_auth_tenant_id: {
-        Args: Record<PropertyKey, never>
+      get_user_location: {
+        Args: { user_id: string }
+        Returns: {
+          location_id: string
+        }[]
+      }
+      get_user_role: {
+        Args: { user_id: string }
         Returns: string
       }
-      get_cashier_sales_summary: {
-        Args: {
-          cashier_name_param: string
-          tenant_id_param: string
-          start_date_param?: string
-          end_date_param?: string
-        }
-        Returns: {
-          payment_method: string
-          total_amount: number
-          sale_count: number
-        }[]
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
-      get_current_user_tenant_id: {
+      is_user_in_location: {
+        Args: { user_id: string; loc_id: string }
+        Returns: boolean
+      }
+      reset_daily_order_number: {
         Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_tenant_id_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_isolated_receipt_data: {
-        Args: { sale_id_param: string; tenant_id_param: string }
-        Returns: {
-          sale_id: string
-          date: string
-          total: number
-          payment_method: string
-          sale_type: string
-          customer_name: string
-          cashier_name: string
-          item_id: string
-          product_id: string
-          product_name: string
-          price: number
-          quantity: number
-          notes: string
-        }[]
-      }
-      get_product_categories: {
-        Args: { tenant_id_param: string }
-        Returns: string[]
-      }
-      get_sales_by_cashier: {
-        Args: {
-          cashier_name_param: string
-          tenant_id_param: string
-          start_date_param?: string
-          end_date_param?: string
-        }
-        Returns: {
-          id: string
-          total: number
-          date: string
-          payment_method: string
-          sale_type: string
-          status: string
-        }[]
-      }
-      get_sales_by_payment_method: {
-        Args: {
-          tenant_id_param: string
-          start_date?: string
-          end_date?: string
-        }
-        Returns: {
-          payment_method: string
-          total: number
-          count: number
-        }[]
-      }
-      get_sales_with_details: {
-        Args: {
-          tenant_id_param: string
-          limit_param?: number
-          offset_param?: number
-        }
-        Returns: {
-          id: string
-          date: string
-          total: number
-          payment_method: string
-          sale_type: string
-          status: string
-          tenant_id: string
-          cashier_name: string
-          customer_name: string
-          customer_id: string
-          mixed_payment_details: Json
-        }[]
-      }
-      get_tenant_id_from_auth: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_tenant_isolated_sales: {
-        Args: { tenant_id_param: string }
-        Returns: {
-          id: string
-          date: string
-          total: number
-          payment_method: string
-          sale_type: string
-          status: string
-          tenant_id: string
-          cashier_name: string
-          customer_name: string
-          customer_id: string
-        }[]
-      }
-      get_turno_sales_by_payment_method: {
-        Args: { turno_id_param: string }
-        Returns: {
-          payment_method: string
-          total: number
-          count: number
-        }[]
-      }
-      log_tenant_security_event: {
-        Args: {
-          event_type: string
-          table_name: string
-          tenant_id_current: string
-          tenant_id_attempted: string
-          additional_info?: Json
-        }
         Returns: undefined
-      }
-      validate_tenant_data_consistency: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          table_name: string
-          issue_type: string
-          record_count: number
-          details: string
-        }[]
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "cashier" | "kitchen" | "delivery" | "super_admin"
+      order_status: "pending_approval" | "approved" | "rejected" | "completed"
+      user_role:
+        | "admin"
+        | "cashier"
+        | "waiter"
+        | "kitchen"
+        | "delivery"
+        | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1208,6 +946,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "cashier", "kitchen", "delivery", "super_admin"],
+      order_status: ["pending_approval", "approved", "rejected", "completed"],
+      user_role: [
+        "admin",
+        "cashier",
+        "waiter",
+        "kitchen",
+        "delivery",
+        "super_admin",
+      ],
+    },
   },
 } as const
