@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from "@/contexts/AuthContext";
 import { updateMissingSaleTenantIds } from "@/utils/salesUtils";
-import { getSalesByPaymentMethod, getSalesByCashier } from "@/utils/cashRegisterUtils";
+import { getSalesByPaymentMethod } from "@/utils/salesUtils";
+import { getSalesByCashier } from "@/utils/cashRegisterUtils";
 import { getAllTurnos } from '@/utils/turnosUtils';
 import { format, subDays, eachDayOfInterval, eachHourOfInterval, startOfDay, endOfDay, parseISO, isValid } from 'date-fns';
 import CashBalanceCard from '@/components/stats/CashBalanceCard';
@@ -55,6 +56,7 @@ const Estadisticas = () => {
       refetchSales();
       refetchProducts();
       refetchCashierStats();
+      refetchPaymentStats();
     });
     setIsAutoUpdating(false);
   };
@@ -304,58 +306,20 @@ const Estadisticas = () => {
     }
   });
 
+  // Usar los datos de la función de base de datos en lugar de cálculos manuales
   const calcularTotalEfectivo = () => {
-    if (!salesData) return 0;
-    let total = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'cash') {
-        total += sale.total;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const cashAmount = sale.sale_payment_methods
-          .filter(pm => pm.payment_method === 'cash')
-          .reduce((sum, pm) => sum + pm.amount, 0);
-        total += cashAmount;
-      }
-    });
-    
-    return total;
+    const cashStats = paymentMethodStats['cash'] || paymentMethodStats['efectivo'];
+    return cashStats ? cashStats.total : 0;
   };
 
   const calcularTotalTarjeta = () => {
-    if (!salesData) return 0;
-    let total = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'card') {
-        total += sale.total;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const cardAmount = sale.sale_payment_methods
-          .filter(pm => pm.payment_method === 'card')
-          .reduce((sum, pm) => sum + pm.amount, 0);
-        total += cardAmount;
-      }
-    });
-    
-    return total;
+    const cardStats = paymentMethodStats['card'] || paymentMethodStats['tarjeta'];
+    return cardStats ? cardStats.total : 0;
   };
 
   const calcularTotalTransferencia = () => {
-    if (!salesData) return 0;
-    let total = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'transfer') {
-        total += sale.total;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const transferAmount = sale.sale_payment_methods
-          .filter(pm => pm.payment_method === 'transfer')
-          .reduce((sum, pm) => sum + pm.amount, 0);
-        total += transferAmount;
-      }
-    });
-    
-    return total;
+    const transferStats = paymentMethodStats['transfer'] || paymentMethodStats['transferencia'];
+    return transferStats ? transferStats.total : 0;
   };
 
   // Nuevas funciones para calcular totales SOLO de pagos mixtos
@@ -411,53 +375,20 @@ const Estadisticas = () => {
     return calcularTotalEfectivoMixto() + calcularTotalTarjetaMixto() + calcularTotalTransferenciaMixto();
   };
 
-  // Calculate counts for each payment method (including mixed payments)
+  // Usar los datos de la función de base de datos para los conteos también
   const calcularCantidadEfectivo = () => {
-    if (!salesData) return 0;
-    let count = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'cash') {
-        count += 1;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const hasCash = sale.sale_payment_methods.some(pm => pm.payment_method === 'cash' && pm.amount > 0);
-        if (hasCash) count += 1;
-      }
-    });
-    
-    return count;
+    const cashStats = paymentMethodStats['cash'] || paymentMethodStats['efectivo'];
+    return cashStats ? cashStats.count : 0;
   };
 
   const calcularCantidadTarjeta = () => {
-    if (!salesData) return 0;
-    let count = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'card') {
-        count += 1;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const hasCard = sale.sale_payment_methods.some(pm => pm.payment_method === 'card' && pm.amount > 0);
-        if (hasCard) count += 1;
-      }
-    });
-    
-    return count;
+    const cardStats = paymentMethodStats['card'] || paymentMethodStats['tarjeta'];
+    return cardStats ? cardStats.count : 0;
   };
 
   const calcularCantidadTransferencia = () => {
-    if (!salesData) return 0;
-    let count = 0;
-    
-    salesData.forEach(sale => {
-      if (sale.payment_method === 'transfer') {
-        count += 1;
-      } else if (sale.payment_method === 'mixed' && sale.sale_payment_methods) {
-        const hasTransfer = sale.sale_payment_methods.some(pm => pm.payment_method === 'transfer' && pm.amount > 0);
-        if (hasTransfer) count += 1;
-      }
-    });
-    
-    return count;
+    const transferStats = paymentMethodStats['transfer'] || paymentMethodStats['transferencia'];
+    return transferStats ? transferStats.count : 0;
   };
 
   const calcularCantidadPagosMixtos = () => {
@@ -465,19 +396,87 @@ const Estadisticas = () => {
     return salesData.filter(sale => sale.payment_method === 'mixed').length;
   };
 
-  // Prepare data for payment methods pie chart
+  // Consulta para obtener datos de métodos de pago usando la función de base de datos
+  const { 
+    data: paymentMethodStats = {}, 
+    isLoading: isLoadingPaymentStats,
+    refetch: refetchPaymentStats
+  } = useQuery({
+    queryKey: ['paymentMethodStats', tenantId, selectedPeriod, selectedTurno],
+    queryFn: async () => {
+      if (!tenantId) return {};
+      
+      let startDate: string | undefined;
+      let endDate: string | undefined;
+      
+      if (!selectedTurno) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        switch (selectedPeriod) {
+          case "hoy":
+            startDate = today.toISOString();
+            endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString();
+            break;
+          case "semana":
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            startDate = lastWeek.toISOString();
+            endDate = new Date().toISOString();
+            break;
+          case "mes":
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            startDate = lastMonth.toISOString();
+            endDate = new Date().toISOString();
+            break;
+          case "anio":
+            const lastYear = new Date();
+            lastYear.setFullYear(lastYear.getFullYear() - 1);
+            startDate = lastYear.toISOString();
+            endDate = new Date().toISOString();
+            break;
+        }
+      } else if (selectedTurno && turnosData.length > 0) {
+        const selectedTurnoData = turnosData.find(turno => turno.id === selectedTurno);
+        if (selectedTurnoData) {
+          startDate = selectedTurnoData.fecha_apertura;
+          endDate = selectedTurnoData.fecha_cierre || new Date().toISOString();
+        }
+      }
+      
+      return await getSalesByPaymentMethod(tenantId, startDate, endDate);
+    },
+    enabled: !!tenantId
+  });
+
+  // Prepare data for payment methods pie chart using the database function results
   const getPaymentMethodData = () => {
-    if (!salesData || salesData.length === 0) return [];
+    if (!paymentMethodStats || Object.keys(paymentMethodStats).length === 0) return [];
     
-    const effectivoTotal = calcularTotalEfectivo();
-    const tarjetaTotal = calcularTotalTarjeta();
-    const transferenciaTotal = calcularTotalTransferencia();
+    const data = [];
     
-    return [
-      { name: 'Efectivo', value: effectivoTotal },
-      { name: 'Tarjeta', value: tarjetaTotal },
-      { name: 'Transferencia', value: transferenciaTotal }
-    ].filter(item => item.value > 0);
+    // Mapear nombres de métodos de pago
+    const methodNames: Record<string, string> = {
+      'cash': 'Efectivo',
+      'efectivo': 'Efectivo',
+      'card': 'Tarjeta',
+      'tarjeta': 'Tarjeta',
+      'transfer': 'Transferencia',
+      'transferencia': 'Transferencia'
+    };
+    
+    Object.entries(paymentMethodStats).forEach(([method, stats]) => {
+      if (stats.total > 0) {
+        data.push({
+          name: methodNames[method] || method,
+          value: stats.total,
+          count: stats.count
+        });
+      }
+    });
+    
+    return data;
   };
   
   const paymentMethodData = getPaymentMethodData();
