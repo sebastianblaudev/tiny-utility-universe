@@ -123,7 +123,10 @@ export const registerCustomerSaleHistory = async (customerId: string, saleId: st
 // Payment functions
 export const saveMixedPaymentMethods = async (saleId: string, paymentMethods: MixedPaymentType[]): Promise<boolean> => {
   try {
+    console.log('saveMixedPaymentMethods called with:', { saleId, paymentMethods });
+    
     const tenantId = await getCurrentUserTenantId();
+    console.log('Retrieved tenant ID:', tenantId);
     
     if (!tenantId) {
       console.error('No tenant ID available');
@@ -138,15 +141,19 @@ export const saveMixedPaymentMethods = async (saleId: string, paymentMethods: Mi
       tenant_id: tenantId
     }));
 
-    const { error } = await supabase
+    console.log('Inserting payment methods data:', paymentMethodsData);
+
+    const { data, error } = await supabase
       .from('sale_payment_methods')
-      .insert(paymentMethodsData);
+      .insert(paymentMethodsData)
+      .select();
 
     if (error) {
       console.error('Error saving mixed payment methods:', error);
       return false;
     }
 
+    console.log('Successfully saved payment methods:', data);
     return true;
   } catch (error) {
     console.error('Error in saveMixedPaymentMethods:', error);
