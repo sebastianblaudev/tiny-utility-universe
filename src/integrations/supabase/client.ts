@@ -15,3 +15,214 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Types
+export interface CustomerType {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  tenant_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MixedPaymentType {
+  method: string;
+  amount: number;
+}
+
+export type PaymentMethodType = string;
+
+// Locked menu items functionality
+export const getLockedMenuItems = async () => {
+  try {
+    // For now, return empty array - this would normally check license/permissions
+    return [];
+  } catch (error) {
+    console.error('Error getting locked menu items:', error);
+    return [];
+  }
+};
+
+export const toggleMenuItemLock = async (itemName: string, isLocked?: boolean) => {
+  try {
+    // For now, just return true - this would normally update license/permissions
+    return true;
+  } catch (error) {
+    console.error('Error toggling menu item lock:', error);
+    return false;
+  }
+};
+
+// Customer functions
+export const addCustomer = async (customerData: Omit<CustomerType, 'id' | 'created_at' | 'updated_at'>) => {
+  try {
+    const tenantId = await getCurrentUserTenantId();
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ ...customerData, tenant_id: tenantId })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error adding customer:', error);
+    throw error;
+  }
+};
+
+export const getCustomerById = async (id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error getting customer:', error);
+    return null;
+  }
+};
+
+export const getCustomerSales = async (customerId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('sales')
+      .select('*, sale_items(*)')
+      .eq('customer_id', customerId)
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting customer sales:', error);
+    return [];
+  }
+};
+
+export const updateSaleWithCustomer = async (saleId: string, customerId: string) => {
+  try {
+    const { error } = await supabase
+      .from('sales')
+      .update({ customer_id: customerId })
+      .eq('id', saleId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating sale with customer:', error);
+    return false;
+  }
+};
+
+export const registerCustomerSaleHistory = async (customerId: string, saleId: string) => {
+  try {
+    // This is handled automatically by the sales table relationship
+    return true;
+  } catch (error) {
+    console.error('Error registering customer sale history:', error);
+    return false;
+  }
+};
+
+// Utility functions
+export const getCurrentUserTenantId = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.user_metadata?.tenant_id || '';
+  } catch (error) {
+    console.error('Error getting tenant ID:', error);
+    return '';
+  }
+};
+
+// Mixed payment methods function
+export const saveMixedPaymentMethods = async (saleId: string, paymentMethods: { method: string; amount: number }[]) => {
+  try {
+    console.log('Saving mixed payment methods for sale:', saleId, paymentMethods);
+    
+    const tenantId = await getCurrentUserTenantId();
+    
+    const paymentData = paymentMethods.map(pm => ({
+      sale_id: saleId,
+      payment_method: pm.method,
+      amount: pm.amount,
+      tenant_id: tenantId
+    }));
+
+    console.log('Payment data to insert:', paymentData);
+
+    const { data, error } = await supabase
+      .from('sale_payment_methods')
+      .insert(paymentData)
+      .select();
+
+    if (error) {
+      console.error('Error inserting payment methods:', error);
+      throw error;
+    }
+
+    console.log('Successfully saved payment methods:', data);
+    return data;
+  } catch (error) {
+    console.error('Error saving mixed payment methods:', error);
+    throw error;
+  }
+};
+
+// Additional customer functions
+export const getAllCustomers = async () => {
+  try {
+    const tenantId = await getCurrentUserTenantId();
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting all customers:', error);
+    return [];
+  }
+};
+
+export const updateCustomer = async (id: string, customerData: Partial<CustomerType>) => {
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .update(customerData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (id: string) => {
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting customer:', error);
+    return false;
+  }
+};

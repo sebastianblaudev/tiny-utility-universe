@@ -45,7 +45,7 @@ const Customers2 = () => {
     
     try {
       setLoading(true);
-      const data = await getAllCustomers(tenantId);
+      const data = await getAllCustomers();
       setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
