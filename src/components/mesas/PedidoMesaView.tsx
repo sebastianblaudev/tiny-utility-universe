@@ -190,12 +190,12 @@ export function PedidoMesaView({ mesa, onBack }: PedidoMesaViewProps) {
                         {product.category && ` • ${product.category}`}
                       </p>
                       {product.stock <= 0 && (
-                        <Badge variant="destructive" className="mt-1">Sin stock</Badge>
+                        <Badge variant="outline" className="mt-1 text-orange-600">Sin stock</Badge>
                       )}
                     </div>
                     <Button
                       size="sm"
-                      disabled={product.stock <= 0 || !pedido}
+                      disabled={!pedido}
                       onClick={() => handleAddProduct(product)}
                     >
                       <Plus className="w-4 h-4" />

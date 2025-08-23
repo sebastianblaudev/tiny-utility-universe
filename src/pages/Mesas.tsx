@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Settings } from "lucide-react";
+import { Plus, Search, Settings, ChefHat } from "lucide-react";
 import { useMesas, type Mesa } from "@/hooks/useMesas";
 import { usePedidosMesa } from "@/hooks/usePedidosMesa";
 import { MesaCard } from "@/components/mesas/MesaCard";
 import { MesaForm } from "@/components/mesas/MesaForm";
 import { PedidoMesaView } from "@/components/mesas/PedidoMesaView";
+import { MesasPOSModal } from "@/components/mesas/MesasPOSModal";
 import { PageTitle } from "@/components/ui/page-title";
 
 export default function Mesas() {
@@ -17,6 +18,7 @@ export default function Mesas() {
   
   const [selectedMesa, setSelectedMesa] = useState<Mesa | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showPOSModal, setShowPOSModal] = useState(false);
   const [editingMesa, setEditingMesa] = useState<Mesa | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -139,10 +141,19 @@ export default function Mesas() {
               className="pl-10"
             />
           </div>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Mesa
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowPOSModal(true)}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              <ChefHat className="w-4 h-4 mr-2" />
+              Sistema POS
+            </Button>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Mesa
+            </Button>
+          </div>
         </div>
 
         {/* Grid de mesas */}
@@ -183,6 +194,12 @@ export default function Mesas() {
             setEditingMesa(null);
           }}
           onSave={handleSaveMesa}
+        />
+
+        {/* Modal POS */}
+        <MesasPOSModal
+          isOpen={showPOSModal}
+          onClose={() => setShowPOSModal(false)}
         />
       </div>
     </div>

@@ -74,8 +74,8 @@ export function usePedidosMesa() {
         `)
         .eq('mesa_id', mesaId)
         .eq('tenant_id', tenantId)
-        .eq('estado', 'activo')
-        .single();
+        .in('estado', ['activo', 'enviado_cocina'])
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       return data as any || null;
