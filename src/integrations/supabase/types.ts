@@ -422,6 +422,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_pedido_mesa_items_pedido"
+            columns: ["pedido_mesa_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_mesa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_pedido_mesa_items_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pedido_mesa_items_pedido_mesa_id_fkey"
             columns: ["pedido_mesa_id"]
             isOneToOne: false
@@ -471,6 +485,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_pedidos_mesa_mesa"
+            columns: ["mesa_id"]
+            isOneToOne: false
+            referencedRelation: "mesas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pedidos_mesa_mesa_id_fkey"
             columns: ["mesa_id"]
