@@ -33,11 +33,6 @@ const SystemValidationDashboard: React.FC = () => {
       setReport(validationReport);
       setLastValidation(new Date());
       
-      if (validationReport.isValid) {
-        toast.success('Validación completa: Sistema operando correctamente');
-      } else {
-        toast.warning(`Validación completa: ${validationReport.criticalIssues.length} problemas críticos encontrados`);
-      }
     } catch (error) {
       console.error('Error running validation:', error);
       toast.error('Error al ejecutar validación del sistema');

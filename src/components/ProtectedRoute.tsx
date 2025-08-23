@@ -22,19 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles
   useEffect(() => {
     // Only show toasts if we're NOT on an auth route
     if (!isAuthRoute) {
-      if (!loading && !user) {
-        toast({
-          title: "Acceso restringido",
-          description: "Debe iniciar sesión para acceder a esta página",
-          variant: "destructive",
-        });
-      } else if (!loading && user && !hasRequiredRole) {
-        toast({
-          title: "Acceso restringido",
-          description: "No tiene permisos para acceder a esta página",
-          variant: "destructive",
-        });
-      } else if (!loading && user && isRouteLocked) {
+      if (!loading && user && isRouteLocked) {
         toast({
           title: "Funcionalidad bloqueada",
           description: "Esta funcionalidad ha sido bloqueada por el administrador",
