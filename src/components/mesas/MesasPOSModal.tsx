@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Plus, Minus, ChefHat, Send } from "lucide-react";
+import { X, Plus, ChefHat, Send, ArrowLeft } from "lucide-react";
 import { useMesas, type Mesa } from "@/hooks/useMesas";
 import { usePedidosMesa, type PedidoMesaDetalle, type Product } from "@/hooks/usePedidosMesa";
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +23,6 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
   const {
     createPedidoMesa,
     addItemToPedido,
-    removeItemFromPedido,
     enviarACocina,
     completarPedido,
     getPedidoActivoByMesa
@@ -33,11 +32,13 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
   const [pedido, setPedido] = useState<PedidoMesaDetalle | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadProducts();
+      setSelectedMesa(null);
+      setPedido(null);
     }
   }, [isOpen, tenantId]);
 
@@ -53,7 +54,7 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, cost_price, stock, is_by_weight, category, image_url')
+        .select('id, name, price, category')
         .eq('tenant_id', tenantId)
         .order('name');
 
@@ -73,49 +74,119 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
       setPedido(pedidoActivo as PedidoMesaDetalle);
     } catch (error) {
       console.error('Error loading pedido:', error);
+      setPedido(null);
     }
   };
 
-  const handleCreatePedido = async () => {
-    if (!selectedMesa) return;
+  const handleSelectMesa = async (mesa: Mesa) => {
+    setSelectedMesa(mesa);
+    setLoading(true);
     
-    const nuevoPedido = await createPedidoMesa(selectedMesa.id);
-    if (nuevoPedido) {
-      setPedido(nuevoPedido as PedidoMesaDetalle);
-      await ocuparMesa(selectedMesa.id);
+    try {
+      // Verificar si ya existe un pedido
+      const pedidoExistente = await getPedidoActivoByMesa(mesa.id);
+      
+      if (!pedidoExistente) {
+        // Crear pedido automáticamente
+        const nuevoPedido = await createPedidoMesa(mesa.id, 'Mesero');
+        if (nuevoPedido) {
+          setPedido(nuevoPedido as PedidoMesaDetalle);
+          await ocuparMesa(mesa.id);
+        }
+      } else {
+        setPedido(pedidoExistente as PedidoMesaDetalle);
+      }
+    } catch (error) {
+      console.error('Error al preparar mesa:', error);
+      toast.error('Error al preparar la mesa');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddProduct = async (product: Product) => {
-    if (!pedido) {
-      await handleCreatePedido();
-      return;
-    }
+    if (!pedido || !selectedMesa) return;
     
-    const quantity = quantities[product.id] || 1;
-    await addItemToPedido(pedido.id, product.id, quantity, product.price);
-    setQuantities(prev => ({ ...prev, [product.id]: 1 }));
-    loadPedidoForMesa();
+    try {
+      await addItemToPedido(pedido.id, product.id, 1, product.price);
+      await loadPedidoForMesa();
+      toast.success(`${product.name} agregado`);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error('Error al agregar producto');
+    }
   };
 
   const handleEnviarACocina = async () => {
     if (!pedido) return;
     
-    const success = await enviarACocina(pedido.id);
-    if (success) {
-      toast.success('Pedido enviado a cocina');
-      loadPedidoForMesa();
+    try {
+      setLoading(true);
+      const success = await enviarACocina(pedido.id);
+      if (success) {
+        toast.success('¡Pedido enviado a cocina!');
+        printComanda();
+        await loadPedidoForMesa();
+      }
+    } catch (error) {
+      console.error('Error enviando a cocina:', error);
+      toast.error('Error al enviar a cocina');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCompletarPedido = async () => {
     if (!pedido || !selectedMesa) return;
     
-    const success = await completarPedido(pedido.id);
-    if (success) {
-      await liberarMesa(selectedMesa.id);
-      setSelectedMesa(null);
-      setPedido(null);
+    try {
+      setLoading(true);
+      const success = await completarPedido(pedido.id);
+      if (success) {
+        await liberarMesa(selectedMesa.id);
+        setSelectedMesa(null);
+        setPedido(null);
+        toast.success('¡Pedido completado!');
+      }
+    } catch (error) {
+      console.error('Error completando pedido:', error);
+      toast.error('Error al completar pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const printComanda = () => {
+    if (!pedido || !selectedMesa) return;
+    
+    const printContent = `
+      <div style="font-family: monospace; padding: 20px; max-width: 300px;">
+        <h2 style="text-align: center; margin-bottom: 20px;">COMANDA DE COCINA</h2>
+        <div style="border-bottom: 2px dashed #000; margin-bottom: 15px; padding-bottom: 15px;">
+          <strong>Mesa: ${selectedMesa.numero}</strong><br>
+          <strong>Pedido: #${pedido.numero_pedido}</strong><br>
+          <strong>Hora: ${new Date().toLocaleTimeString()}</strong>
+        </div>
+        <div style="margin-bottom: 20px;">
+          ${pedido.items.map(item => `
+            <div style="margin-bottom: 10px; padding: 8px; border: 1px solid #ccc;">
+              <strong>${item.cantidad}x ${item.product.name}</strong>
+              ${item.notas ? `<br><em>Nota: ${item.notas}</em>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <div style="text-align: center; border-top: 2px dashed #000; padding-top: 15px;">
+          <strong>TOTAL ITEMS: ${pedido.items.length}</strong>
+        </div>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+      printWindow.close();
     }
   };
 
@@ -126,14 +197,15 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
 
   const availableMesas = mesas.filter(mesa => mesa.estado !== 'fuera_servicio');
 
+  // Vista de selección de mesas
   if (!selectedMesa) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0">
-          <div className="flex items-center justify-between p-6 border-b">
+        <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0">
+          <div className="flex items-center justify-between p-4 border-b bg-orange-50">
             <div className="flex items-center gap-3">
-              <ChefHat className="w-6 h-6 text-primary" />
-              <h2 className="text-2xl font-bold">Sistema de Mesas</h2>
+              <ChefHat className="w-5 h-5 text-orange-600" />
+              <h2 className="text-xl font-bold text-orange-800">Seleccionar Mesa</h2>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -141,29 +213,25 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
           </div>
           
           <ScrollArea className="flex-1 p-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {availableMesas.map((mesa) => (
                 <Card 
                   key={mesa.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg border-2 ${
-                    mesa.estado === 'ocupada' ? 'border-red-200 bg-red-50' :
-                    mesa.estado === 'reservada' ? 'border-yellow-200 bg-yellow-50' :
-                    'border-green-200 bg-green-50'
+                  className={`cursor-pointer transition-all hover:scale-105 border-2 ${
+                    mesa.estado === 'ocupada' ? 'border-red-300 bg-red-50 hover:bg-red-100' :
+                    mesa.estado === 'reservada' ? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100' :
+                    'border-green-300 bg-green-50 hover:bg-green-100'
                   }`}
-                  onClick={() => setSelectedMesa(mesa)}
+                  onClick={() => handleSelectMesa(mesa)}
                 >
                   <CardContent className="p-4 text-center">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${
+                    <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${
                       mesa.estado === 'ocupada' ? 'bg-red-500' :
                       mesa.estado === 'reservada' ? 'bg-yellow-500' :
                       'bg-green-500'
                     }`} />
-                    <h3 className="font-bold text-lg">Mesa {mesa.numero}</h3>
-                    {mesa.nombre && <p className="text-sm text-muted-foreground">{mesa.nombre}</p>}
-                    <Badge variant="outline" className="mt-2">
-                      {mesa.estado === 'disponible' ? 'Disponible' :
-                       mesa.estado === 'ocupada' ? 'Ocupada' : 'Reservada'}
-                    </Badge>
+                    <h3 className="font-bold text-lg">{mesa.numero}</h3>
+                    {mesa.nombre && <p className="text-xs text-muted-foreground">{mesa.nombre}</p>}
                   </CardContent>
                 </Card>
               ))}
@@ -174,18 +242,25 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
     );
   }
 
+  // Vista de toma de pedido
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl h-[95vh] p-0 gap-0">
-        <div className="flex items-center justify-between p-4 border-b">
+      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0">
+        {/* Header simplificado */}
+        <div className="flex items-center justify-between p-3 border-b bg-orange-50">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => setSelectedMesa(null)}>
-              ← Volver
+            <Button variant="ghost" size="sm" onClick={() => setSelectedMesa(null)} disabled={loading}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <h2 className="text-xl font-bold">Mesa {selectedMesa.numero}</h2>
+            <h2 className="text-lg font-bold text-orange-800">Mesa {selectedMesa.numero}</h2>
             <Badge variant={selectedMesa.estado === 'ocupada' ? 'destructive' : 'secondary'}>
               {selectedMesa.estado}
             </Badge>
+            {pedido && (
+              <Badge variant="outline">
+                Pedido #{pedido.numero_pedido}
+              </Badge>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-4 h-4" />
@@ -193,9 +268,9 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
         </div>
 
         <div className="flex flex-1 min-h-0">
-          {/* Products Panel */}
+          {/* Panel de productos - más compacto */}
           <div className="flex-1 flex flex-col border-r">
-            <div className="p-4 border-b">
+            <div className="p-3 border-b">
               <Input
                 placeholder="Buscar productos..."
                 value={searchQuery}
@@ -205,142 +280,79 @@ export function MesasPOSModal({ isOpen, onClose }: MesasPOSModalProps) {
             </div>
             
             <ScrollArea className="flex-1">
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-3 grid grid-cols-2 lg:grid-cols-3 gap-2">
                 {filteredProducts.map((product) => (
-                  <Card key={product.id} className="overflow-hidden">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{product.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            ${product.price.toFixed(2)}
-                          </p>
-                          {product.stock <= 0 && (
-                            <Badge variant="outline" className="text-xs mt-1">
-                              Sin stock
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => setQuantities(prev => ({
-                                ...prev,
-                                [product.id]: Math.max(1, (prev[product.id] || 1) - 1)
-                              }))}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="text-sm w-6 text-center">
-                              {quantities[product.id] || 1}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => setQuantities(prev => ({
-                                ...prev,
-                                [product.id]: (prev[product.id] || 1) + 1
-                              }))}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddProduct(product)}
-                            className="h-8"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Button
+                    key={product.id}
+                    variant="outline"
+                    className="h-16 p-2 flex flex-col justify-center items-center hover:bg-orange-50 hover:border-orange-300"
+                    onClick={() => handleAddProduct(product)}
+                    disabled={loading}
+                  >
+                    <span className="text-xs font-medium text-center leading-tight">
+                      {product.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ${product.price.toFixed(0)}
+                    </span>
+                  </Button>
                 ))}
               </div>
             </ScrollArea>
           </div>
 
-          {/* Order Panel */}
-          <div className="w-96 flex flex-col">
-            <div className="p-4 border-b">
-              <h3 className="font-bold text-lg">Pedido</h3>
-              {pedido && (
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-muted-foreground">
-                    #{pedido.numero_pedido}
-                  </span>
-                  <Badge variant={pedido.estado === 'activo' ? 'default' : 'secondary'}>
-                    {pedido.estado}
-                  </Badge>
-                </div>
-              )}
+          {/* Panel de pedido - más compacto */}
+          <div className="w-80 flex flex-col bg-gray-50">
+            <div className="p-3 border-b">
+              <h3 className="font-bold">Pedido Actual</h3>
             </div>
             
             <ScrollArea className="flex-1">
-              {!pedido ? (
-                <div className="p-4">
-                  <p className="text-muted-foreground mb-4">No hay pedido activo</p>
-                  <Button onClick={handleCreatePedido} className="w-full">
-                    Crear Pedido
-                  </Button>
+              {!pedido || pedido.items.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  Agrega productos al pedido
                 </div>
               ) : (
-                <div className="p-4 space-y-3">
+                <div className="p-3 space-y-2">
                   {pedido.items.map((item) => (
-                    <Card key={item.id}>
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-sm">{item.product.name}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {item.cantidad}x ${item.precio_unitario.toFixed(2)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">
-                              ${item.subtotal.toFixed(2)}
-                            </span>
-                            {item.estado === 'pendiente' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => removeItemFromPedido(item.id, pedido.id)}
-                              >
-                                <X className="w-3 h-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div key={item.id} className="flex justify-between items-center p-2 bg-white rounded border">
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{item.cantidad}x {item.product.name}</span>
+                      </div>
+                      <span className="text-sm font-bold">${item.subtotal.toFixed(0)}</span>
+                    </div>
                   ))}
                 </div>
               )}
             </ScrollArea>
 
-            {pedido && (
-              <div className="p-4 border-t space-y-3">
-                <div className="flex justify-between items-center font-bold">
+            {/* Botones de acción */}
+            {pedido && pedido.items.length > 0 && (
+              <div className="p-3 border-t space-y-2">
+                <div className="flex justify-between items-center font-bold text-lg">
                   <span>Total:</span>
-                  <span>${pedido.total.toFixed(2)}</span>
+                  <span>${pedido.total.toFixed(0)}</span>
                 </div>
                 
-                {pedido.estado === 'activo' && pedido.items.length > 0 && (
-                  <Button onClick={handleEnviarACocina} className="w-full">
+                {pedido.estado === 'activo' && (
+                  <Button 
+                    onClick={handleEnviarACocina} 
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    disabled={loading}
+                  >
                     <Send className="w-4 h-4 mr-2" />
-                    Enviar a Cocina
+                    {loading ? 'Enviando...' : 'Enviar a Cocina'}
                   </Button>
                 )}
                 
                 {pedido.estado === 'enviado_cocina' && (
-                  <Button onClick={handleCompletarPedido} className="w-full" variant="outline">
-                    Completar Pedido
+                  <Button 
+                    onClick={handleCompletarPedido} 
+                    className="w-full"
+                    variant="outline"
+                    disabled={loading}
+                  >
+                    {loading ? 'Completando...' : 'Completar Pedido'}
                   </Button>
                 )}
               </div>
