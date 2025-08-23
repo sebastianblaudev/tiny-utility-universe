@@ -229,10 +229,8 @@ useEffect(() => {
           console.warn('Could not cache products:', cacheError);
         }
         
-        // Show success message
-        if (filteredData.length > 0) {
-          toast.success(`${filteredData.length} productos cargados exitosamente`, { duration: 2000 });
-        } else {
+        // Show warning message only if no products
+        if (filteredData.length === 0) {
           toast.warning("No hay productos registrados", {
             description: "Registre productos en la sección Productos"
           });
