@@ -1,15 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, DollarSign, ArrowUpDown, SplitSquareVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, DollarSign, ArrowUpDown, SplitSquareVertical, Zap } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import PaymentMethodsMixedDialog from './PaymentMethodsMixedDialog';
 import { MixedPaymentType } from '@/lib/supabase-helpers';
 import cashDrawerService from '@/services/CashDrawerService';
+import { useMercadoPagoIntegration } from '@/hooks/useMercadoPagoIntegration';
 
 interface PaymentMethodDialogProps {
   isOpen: boolean;
@@ -28,6 +30,8 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
 }) => {
   const [enteredAmount, setEnteredAmount] = useState<number | string>('');
   const [showMixedPayment, setShowMixedPayment] = useState(false);
+  const [processingMercadoPago, setProcessingMercadoPago] = useState(false);
+  const { isConfigured, processPayment, isPaymentMethodEnabled } = useMercadoPagoIntegration();
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEnteredAmount(e.target.value);
@@ -40,6 +44,12 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
   };
 
   const handlePaymentMethodSelect = async (method: string) => {
+    // Check if Mercado Pago is configured and this payment method should use it
+    if (isConfigured && isPaymentMethodEnabled(method)) {
+      await handleMercadoPagoPayment(method);
+      return;
+    }
+
     // Si es pago en efectivo, abrir gaveta de dinero
     if (method === 'cash') {
       await cashDrawerService.openCashDrawer();
@@ -47,6 +57,37 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
     
     onPaymentMethodSelected(method);
     // Don't close immediately - let CompleteSaleModal handle the flow
+  };
+
+  const handleMercadoPagoPayment = async (method: string) => {
+    setProcessingMercadoPago(true);
+    try {
+      const result = await processPayment({
+        amount: total,
+        paymentMethod: method,
+        description: `Venta POS - ${method}`,
+        saleId: `SALE_${Date.now()}`
+      });
+
+      if (result.success) {
+        onPaymentMethodSelected(`${method}_mp`);
+      } else {
+        // Fallback to normal payment if MP fails
+        if (method === 'cash') {
+          await cashDrawerService.openCashDrawer();
+        }
+        onPaymentMethodSelected(method);
+      }
+    } catch (error) {
+      console.error('Error processing Mercado Pago payment:', error);
+      // Fallback to normal payment
+      if (method === 'cash') {
+        await cashDrawerService.openCashDrawer();
+      }
+      onPaymentMethodSelected(method);
+    } finally {
+      setProcessingMercadoPago(false);
+    }
   };
   
   const handleMixedPayment = () => {
@@ -76,11 +117,17 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
             </div>
             
             {/* Cash payment with change calculation */}
-            <Card className="p-4 hover:border-primary/50 transition-colors">
+            <Card className="p-4 hover:border-primary/50 transition-colors relative">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
                   <span className="font-semibold">Efectivo</span>
+                  {isConfigured && isPaymentMethodEnabled('cash') && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Zap className="h-3 w-3 mr-1" />
+                      MP
+                    </Badge>
+                  )}
                 </div>
               </div>
               
@@ -112,39 +159,68 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
               
               <Button 
                 className="w-full mt-3" 
-                disabled={!enteredAmount || calculateChange() < 0}
+                disabled={!enteredAmount || calculateChange() < 0 || processingMercadoPago}
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePaymentMethodSelect('cash');
                 }}
               >
-                Confirmar Pago en Efectivo
+                {processingMercadoPago ? 'Procesando...' : 'Confirmar Pago en Efectivo'}
               </Button>
             </Card>
             
             {/* Card payment */}
             <Button 
               variant="outline"
-              className="p-4 h-auto justify-start hover:bg-primary/5"
+              className="p-4 h-auto justify-start hover:bg-primary/5 relative"
               onClick={() => handlePaymentMethodSelect('card')}
+              disabled={processingMercadoPago}
             >
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-blue-600" />
                 <span className="font-semibold">Tarjeta</span>
+                {isConfigured && isPaymentMethodEnabled('card') && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Zap className="h-3 w-3 mr-1" />
+                    MP
+                  </Badge>
+                )}
               </div>
             </Button>
             
             {/* Bank transfer */}
             <Button 
               variant="outline"
-              className="p-4 h-auto justify-start hover:bg-primary/5"
+              className="p-4 h-auto justify-start hover:bg-primary/5 relative"
               onClick={() => handlePaymentMethodSelect('transfer')}
+              disabled={processingMercadoPago}
             >
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="h-5 w-5 text-purple-600" />
                 <span className="font-semibold">Transferencia</span>
+                {isConfigured && isPaymentMethodEnabled('transfer') && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Zap className="h-3 w-3 mr-1" />
+                    MP
+                  </Badge>
+                )}
               </div>
             </Button>
+
+            {isConfigured && (
+              <div className="text-center py-2">
+                <Badge variant="outline" className="text-xs">
+                  <Zap className="h-3 w-3 mr-1" />
+                  Integración Mercado Pago Activa
+                </Badge>
+              </div>
+            )}
+
+            {processingMercadoPago && (
+              <div className="text-center text-sm text-muted-foreground">
+                Procesando pago con Mercado Pago...
+              </div>
+            )}
             
           </div>
           

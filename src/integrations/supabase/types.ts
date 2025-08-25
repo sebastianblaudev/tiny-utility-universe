@@ -521,6 +521,120 @@ export type Database = {
           },
         ]
       }
+      plugin_configurations: {
+        Row: {
+          configuration: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          plugin_key: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plugin_key: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plugin_key?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plugin_definitions: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          plugin_key: string
+          price_monthly: number | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          plugin_key: string
+          price_monthly?: number | null
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          plugin_key?: string
+          price_monthly?: number | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      plugin_transaction_logs: {
+        Row: {
+          amount: number | null
+          created_at: string
+          error_message: string | null
+          external_transaction_id: string | null
+          id: string
+          internal_sale_id: string | null
+          plugin_key: string
+          request_data: Json | null
+          response_data: Json | null
+          status: string
+          tenant_id: string
+          transaction_type: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          error_message?: string | null
+          external_transaction_id?: string | null
+          id?: string
+          internal_sale_id?: string | null
+          plugin_key: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status: string
+          tenant_id: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          error_message?: string | null
+          external_transaction_id?: string | null
+          id?: string
+          internal_sale_id?: string | null
+          plugin_key?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+          tenant_id?: string
+          transaction_type?: string
+        }
+        Relationships: []
+      }
       preparations: {
         Row: {
           completed_at: string | null
@@ -1013,6 +1127,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_plugins: {
+        Row: {
+          activated_at: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_enabled: boolean
+          plugin_key: string
+          settings: Json | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          plugin_key: string
+          settings?: Json | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          plugin_key?: string
+          settings?: Json | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transacciones_caja: {
         Row: {
           caja_id: string
@@ -1339,6 +1489,10 @@ export type Database = {
           payment_method: string
           total: number
         }[]
+      }
+      is_plugin_active: {
+        Args: { plugin_key_param: string; tenant_id_param: string }
+        Returns: boolean
       }
       log_tenant_security_event: {
         Args: {

@@ -13,8 +13,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { getBusinessInfoForReceipt, clearBusinessInfoCache } from '@/utils/ticketUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Building, Receipt, Upload, X, Image, Printer } from 'lucide-react';
+import { Save, Building, Receipt, Upload, X, Image, Printer, Zap } from 'lucide-react';
 import { saveBusinessLogo, getBusinessLogo, deleteBusinessLogo, BusinessLogo } from '@/utils/logoStorageUtils';
+import { PluginManager } from '@/components/plugins/PluginManager';
 
 const Configuracion = () => {
   const { tenantId } = useAuth();
@@ -364,6 +365,22 @@ const Configuracion = () => {
                   <Save className="h-4 w-4 mr-2" />
                   {savingReceipt ? 'Guardando...' : 'Guardar Configuración de Recibos'}
                 </Button>
+              </CardContent>
+            </Card>
+
+            {/* Plugin Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Plugins y Integraciones
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Gestiona las integraciones y plugins disponibles para tu negocio
+                </p>
+              </CardHeader>
+              <CardContent>
+                <PluginManager />
               </CardContent>
             </Card>
 
