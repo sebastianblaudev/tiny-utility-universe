@@ -23,6 +23,10 @@ interface CartContextType {
   clearCart: () => void;
   cartTotal: number;
   broadcastCartToCustomerDisplay: () => void;
+  // Delight mesa functionality
+  selectedMesa: { id: string; name: string; pedidoId: string } | null;
+  setSelectedMesa: (mesa: { id: string; name: string; pedidoId: string } | null) => void;
+  isMesaMode: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -46,6 +50,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const cartTotal = calculateCartTotal(cartItems);
   const { toast } = useToast();
   const [activeChannel, setActiveChannel] = useState<any>(null);
+  // Delight mesa state
+  const [selectedMesa, setSelectedMesa] = useState<{ id: string; name: string; pedidoId: string } | null>(null);
+  const isMesaMode = selectedMesa !== null;
 
   const addToCart = (product: ProductType, quantity: number = 1) => {
     setCartItems(currentItems => addItemToCart(currentItems, product, quantity));
@@ -210,7 +217,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       updateNote,
       clearCart,
       cartTotal,
-      broadcastCartToCustomerDisplay
+      broadcastCartToCustomerDisplay,
+      selectedMesa,
+      setSelectedMesa,
+      isMesaMode
     }}>
       {children}
     </CartContext.Provider>

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { getCurrentUserTenantId } from '@/lib/supabase-helpers';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, CreditCard, Zap } from 'lucide-react';
+import { Settings, CreditCard, Zap, ChefHat } from 'lucide-react';
 import { MercadoPagoConfig } from './MercadoPagoConfig';
 
 interface Plugin {
@@ -155,7 +155,8 @@ export const PluginManager: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <CardTitle className="flex items-center gap-2">
-                    {plugin.plugin_key === 'mercado_pago_pos' && <CreditCard className="h-5 w-5" />}
+                      {plugin.plugin_key === 'mercado_pago_pos' && <CreditCard className="h-5 w-5" />}
+                      {plugin.plugin_key === 'delight_mesas' && <ChefHat className="h-5 w-5" />}
                     {plugin.name}
                     <Badge variant="secondary">v{plugin.version}</Badge>
                   </CardTitle>

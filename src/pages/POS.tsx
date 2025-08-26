@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getBusinessInfoForReceipt } from '@/utils/ticketUtils';
 import { getBusinessLogo, BusinessLogo } from '@/utils/logoStorageUtils';
-import { Mic, X, Plus, Minus, ShoppingCart, CreditCard, Banknote, ArrowDownToLine, Printer, ClipboardList, GridIcon, Search, LogOut, Menu, ExternalLink, Divide, UserPlus, Weight, Send } from 'lucide-react';
+import { Mic, X, Plus, Minus, ShoppingCart, CreditCard, Banknote, ArrowDownToLine, Printer, ClipboardList, GridIcon, Search, LogOut, Menu, ExternalLink, Divide, UserPlus, Weight, Send, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardImage } from '@/components/ui/card';
 import Sidebar from '@/components/Sidebar';
@@ -51,6 +51,11 @@ import CompleteSaleModal from '@/components/CompleteSaleModal';
 import { performanceMonitor, timeOperation } from '@/utils/performanceMonitor';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import CartItemNote from '@/components/CartItemNote';
+import { useDelightMesas } from '@/hooks/useDelightMesas';
+import { MesasModal } from '@/components/delight/MesasModal';
+import { DelightMesasBadge } from '@/components/delight/DelightMesasBadge';
+import { MesaDetailsModal } from '@/components/delight/MesaDetailsModal';
+import { useCart } from '@/contexts/CartContext';
 
 interface Product {
   id: string;
@@ -106,6 +111,25 @@ const POS = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // Delight Mesas Integration
+  const { 
+    mesas, 
+    loading: mesasLoading, 
+    selectedMesa, 
+    isPluginActive: isDelightActive,
+    loadMesas,
+    selectMesa,
+    addItemToMesa,
+    sendToKitchen,
+    clearMesaSelection,
+    completeMesaOrder
+  } = useDelightMesas();
+  
+  const { selectedMesa: cartSelectedMesa, setSelectedMesa: setCartSelectedMesa, isMesaMode } = useCart();
+  const [showMesasModal, setShowMesasModal] = useState(false);
+  const [showMesaDetailsModal, setShowMesaDetailsModal] = useState(false);
+  const [selectedMesaForDetails, setSelectedMesaForDetails] = useState<any>(null);
   
   // Offline functionality with smart caching
   const { isOnline, queuedSalesCount } = useOffline();
@@ -1639,6 +1663,78 @@ useEffect(() => {
     }
   };
 
+  // Delight Mesa Functions
+  const handleMesasModalOpen = () => {
+    if (isDelightActive) {
+      loadMesas();
+      setShowMesasModal(true);
+    }
+  };
+
+  const handleSelectMesaFromModal = async (mesa: any) => {
+    const pedidoId = await selectMesa(mesa);
+    if (pedidoId) {
+      setCartSelectedMesa({
+        id: mesa.id,
+        name: mesa.nombre,
+        pedidoId: pedidoId
+      });
+      setShowMesasModal(false);
+      toast.success(`Mesa ${mesa.nombre} seleccionada`);
+    }
+  };
+
+  const handleViewMesaDetails = (mesa: any) => {
+    setSelectedMesaForDetails(mesa);
+    setShowMesasModal(false);
+    setShowMesaDetailsModal(true);
+  };
+
+  const handleMesaCheckout = async (pedidoId: string) => {
+    const success = await completeMesaOrder(pedidoId);
+    if (success) {
+      setShowMesaDetailsModal(false);
+      setCartSelectedMesa(null);
+      clearMesaSelection();
+    }
+  };
+
+  const handleSaveOrderToMesa = async () => {
+    if (!cartSelectedMesa?.pedidoId || cartItems.length === 0) {
+      toast.error("No hay items para guardar en la mesa");
+      return;
+    }
+
+    try {
+      let allSuccess = true;
+      
+      // Add each cart item to the mesa
+      for (const item of cartItems) {
+        const success = await addItemToMesa(
+          cartSelectedMesa.pedidoId,
+          item.id,
+          item.quantity,
+          item.price,
+          item.name,
+          item.notes
+        );
+        if (!success) allSuccess = false;
+      }
+
+      if (allSuccess) {
+        // Send to kitchen and clear cart
+        await sendToKitchen(cartSelectedMesa.pedidoId);
+        setCartItems([]);
+        toast.success("Pedido guardado y enviado a cocina");
+      } else {
+        toast.error("Error al guardar algunos items del pedido");
+      }
+    } catch (error) {
+      console.error('Error saving order to mesa:', error);
+      toast.error("Error al guardar el pedido");
+    }
+  };
+
   const ProductCard = ({ product }: { product: Product }) => (
     <Card 
       className="cursor-pointer transition-all hover:shadow-md flex flex-col h-full overflow-hidden bg-[#F1F0FB]"
@@ -1764,6 +1860,19 @@ useEffect(() => {
               />
             </div>
     
+            {/* Delight Mesas Icon */}
+            {isDelightActive && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMesasModalOpen}
+                className="flex items-center gap-1 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 text-orange-600 border-orange-200 hover:bg-orange-50"
+                title="Gestión de Mesas - Delight"
+              >
+                <ChefHat size={16} />
+                <span className={isMobile ? "sr-only" : ""}>Mesas</span>
+              </Button>
+            )}
             
             <Button
               variant="outline"
@@ -1925,6 +2034,17 @@ useEffect(() => {
               <span className="text-sm">{cartItems.length} items</span>
             </div>
             
+            {/* Delight Mesa Badge */}
+            {cartSelectedMesa && (
+              <div className="px-4 py-2 border-b border-border dark:border-gray-800">
+                <DelightMesasBadge 
+                  mesaName={cartSelectedMesa.name}
+                  itemsCount={cartItems.length}
+                  total={cartItems.reduce((sum, item) => sum + item.subtotal, 0)}
+                />
+              </div>
+            )}
+            
             <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
               {cartItems.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 p-4">
@@ -2038,6 +2158,17 @@ useEffect(() => {
                       Transfer.
                     </Button>
                   </div>
+                  
+                  {/* Mesa order save button */}
+                  {cartSelectedMesa && cartItems.length > 0 && (
+                    <Button
+                      onClick={handleSaveOrderToMesa}
+                      className="w-full mb-2 bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      <Send className="mr-2" size={16} />
+                      Guardar Pedido a {cartSelectedMesa.name}
+                    </Button>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-2">
                     <Button
@@ -2443,6 +2574,23 @@ useEffect(() => {
       
       {/* Print Receipt Modal */}
       {/* <PrintReceiptModal /> */}
+
+      {/* Delight Mesas Modals */}
+      <MesasModal
+        isOpen={showMesasModal}
+        onClose={() => setShowMesasModal(false)}
+        mesas={mesas}
+        onSelectMesa={handleSelectMesaFromModal}
+        onViewMesaDetails={handleViewMesaDetails}
+        loading={mesasLoading}
+      />
+
+      <MesaDetailsModal
+        isOpen={showMesaDetailsModal}
+        onClose={() => setShowMesaDetailsModal(false)}
+        mesa={selectedMesaForDetails}
+        onCheckout={handleMesaCheckout}
+      />
     </div>
   );
 };
