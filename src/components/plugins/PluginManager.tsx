@@ -92,6 +92,8 @@ export const PluginManager: React.FC = () => {
             plugin_key: pluginKey,
             is_active: true,
             configuration: {}
+          }, {
+            onConflict: 'tenant_id,plugin_key'
           });
 
         if (error) throw error;
