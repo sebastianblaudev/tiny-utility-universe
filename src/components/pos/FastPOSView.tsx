@@ -54,17 +54,6 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
     const handleGlobalKeyPress = (e: Event) => {
       const keyboardEvent = e as globalThis.KeyboardEvent;
       
-      // Ignore if user is typing in input fields, textareas, or content editable elements
-      const target = keyboardEvent.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.contentEditable === 'true' ||
-        target.isContentEditable
-      ) {
-        return;
-      }
-
       // Clear previous timeout
       if (timeout) {
         clearTimeout(timeout);
@@ -84,7 +73,6 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
 
       // Add character to buffer (only alphanumeric and some special chars)
       if (keyboardEvent.key.length === 1 && /[a-zA-Z0-9\-_]/.test(keyboardEvent.key)) {
-        keyboardEvent.preventDefault();
         barcodeBuffer += keyboardEvent.key;
         
         // Set timeout to clear buffer if no more input comes
@@ -138,7 +126,7 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
         .select('id, name, price, code, stock, is_by_weight, unit')
         .eq('tenant_id', tenantId)
         .eq('code', scannedCode)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         toast.error("Código no encontrado", {
