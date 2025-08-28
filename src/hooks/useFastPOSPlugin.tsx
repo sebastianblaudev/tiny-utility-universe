@@ -19,8 +19,8 @@ export const useFastPOSPlugin = () => {
 
     try {
       const { data, error } = await supabase
-        .from('tenant_plugins')
-        .select('is_enabled')
+        .from('plugin_configurations')
+        .select('is_active')
         .eq('tenant_id', tenantId)
         .eq('plugin_key', 'fast_pos_performance')
         .maybeSingle();
@@ -29,7 +29,7 @@ export const useFastPOSPlugin = () => {
         console.error('Error checking Fast POS plugin status:', error);
       }
 
-      setIsActive(data?.is_enabled || false);
+      setIsActive(data?.is_active || false);
     } catch (error) {
       console.error('Error checking Fast POS plugin:', error);
     } finally {
@@ -42,8 +42,8 @@ export const useFastPOSPlugin = () => {
 
     try {
       const { data: existing } = await supabase
-        .from('tenant_plugins')
-        .select('id, is_enabled')
+        .from('plugin_configurations')
+        .select('id, is_active')
         .eq('tenant_id', tenantId)
         .eq('plugin_key', 'fast_pos_performance')
         .maybeSingle();
@@ -51,20 +51,21 @@ export const useFastPOSPlugin = () => {
       if (existing) {
         // Update existing plugin
         const { error } = await supabase
-          .from('tenant_plugins')
-          .update({ is_enabled: !existing.is_enabled })
+          .from('plugin_configurations')
+          .update({ is_active: !existing.is_active })
           .eq('id', existing.id);
 
         if (error) throw error;
-        setIsActive(!existing.is_enabled);
+        setIsActive(!existing.is_active);
       } else {
         // Create new plugin activation
         const { error } = await supabase
-          .from('tenant_plugins')
+          .from('plugin_configurations')
           .insert({
             tenant_id: tenantId,
             plugin_key: 'fast_pos_performance',
-            is_enabled: true
+            is_active: true,
+            configuration: {}
           });
 
         if (error) throw error;
