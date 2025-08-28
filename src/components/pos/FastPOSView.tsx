@@ -46,6 +46,66 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Global barcode scanner event listener
+  useEffect(() => {
+    let barcodeBuffer = '';
+    let timeout: NodeJS.Timeout | null = null;
+
+    const handleGlobalKeyPress = (e: Event) => {
+      const keyboardEvent = e as globalThis.KeyboardEvent;
+      
+      // Ignore if user is typing in input fields, textareas, or content editable elements
+      const target = keyboardEvent.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Clear previous timeout
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+
+      // Handle Enter key - process barcode
+      if (keyboardEvent.key === 'Enter' && barcodeBuffer.trim().length > 0) {
+        keyboardEvent.preventDefault();
+        const scannedCode = barcodeBuffer.trim();
+        
+        // Search product by barcode and add to cart immediately
+        handleBarcodeScanned(scannedCode);
+        
+        barcodeBuffer = '';
+        return;
+      }
+
+      // Add character to buffer (only alphanumeric and some special chars)
+      if (keyboardEvent.key.length === 1 && /[a-zA-Z0-9\-_]/.test(keyboardEvent.key)) {
+        keyboardEvent.preventDefault();
+        barcodeBuffer += keyboardEvent.key;
+        
+        // Set timeout to clear buffer if no more input comes
+        timeout = setTimeout(() => {
+          barcodeBuffer = '';
+        }, 1000);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleGlobalKeyPress);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyPress);
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [tenantId]);
+
   const searchProducts = async (searchTerm: string) => {
     if (!searchTerm.trim() || !tenantId) {
       setSearchResults([]);
@@ -65,6 +125,35 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error searching products:', error);
       toast.error('Error al buscar productos');
+    }
+  };
+
+  const handleBarcodeScanned = async (scannedCode: string) => {
+    if (!tenantId) return;
+
+    try {
+      // Search for product by barcode
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, code, stock, is_by_weight, unit')
+        .eq('tenant_id', tenantId)
+        .eq('code', scannedCode)
+        .single();
+
+      if (error || !data) {
+        toast.error("Código no encontrado", {
+          description: `No se encontró un producto con el código: ${scannedCode}`
+        });
+        return;
+      }
+
+      // Add product to cart immediately
+      addToCart(data);
+      toast.success(`Producto agregado: ${data.name}`);
+      
+    } catch (error) {
+      console.error('Error scanning barcode:', error);
+      toast.error('Error al procesar código de barras');
     }
   };
 
