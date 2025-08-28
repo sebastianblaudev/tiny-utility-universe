@@ -185,7 +185,7 @@ export const useMercadoPagoIntegration = () => {
   };
 
   const isPaymentMethodEnabled = (method: string): boolean => {
-    if (!configuration) return false;
+    if (!configuration || !configuration.enabledPaymentMethods) return false;
 
     switch (method) {
       case 'cash':
