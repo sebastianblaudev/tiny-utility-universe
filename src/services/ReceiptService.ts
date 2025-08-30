@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/utils/currencyFormat';
+import { BusinessInfo } from '@/utils/ticketUtils';
 
 export interface Receipt {
   saleId: string;
@@ -28,18 +29,6 @@ export interface ReceiptItem {
   notes?: string;
 }
 
-export interface BusinessInfo {
-  name: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  taxId?: string;
-  logo?: string;
-  currency?: string;
-  receiptFooter?: string;
-}
-
 export const getReceiptData = async (saleId: string): Promise<Receipt | null> => {
   try {
     const { data: sale, error: saleError } = await supabase
@@ -47,7 +36,6 @@ export const getReceiptData = async (saleId: string): Promise<Receipt | null> =>
       .select(`
         *,
         customers (name, phone),
-        turnos (id, cashier_name),
         sale_items (
           id,
           quantity,
@@ -78,7 +66,7 @@ export const getReceiptData = async (saleId: string): Promise<Receipt | null> =>
       date: sale.date || new Date().toISOString(),
       total: sale.total,
       paymentMethod: sale.payment_method || 'efectivo',
-      cashierName: sale.turnos?.cashier_name || sale.cashier_name || 'Cajero',
+      cashierName: sale.cashier_name || 'Cajero',
       customerName: sale.customers?.name || '',
       customerPhone: sale.customers?.phone || '',
       items,
@@ -105,7 +93,6 @@ export const getCustomerPurchaseHistory = async (customerId: string, tenantId: s
       .select(`
         *,
         customers (name, phone),
-        turnos (id, cashier_name),
         sale_items (
           id,
           quantity,
@@ -133,23 +120,23 @@ export const getCustomerPurchaseHistory = async (customerId: string, tenantId: s
         notes: item.notes || ''
       })) || [];
 
-        return {
-          saleId: sale.id,
-          date: sale.date || new Date().toISOString(),
-          total: sale.total,
-          paymentMethod: sale.payment_method || 'efectivo',
-          cashierName: sale.turnos?.cashier_name || sale.cashier_name || 'Cajero',
-          customerName: sale.customers?.name || '',
-          customerPhone: sale.customers?.phone || '',
-          items,
-          taxTotal: 0,
-          subtotal: sale.total,
-          discount: 0,
-          change: 0,
-          cashReceived: 0,
-          turnoId: sale.turno_id || '',
-          saleType: sale.sale_type || 'Normal'
-        };
+      return {
+        saleId: sale.id,
+        date: sale.date || new Date().toISOString(),
+        total: sale.total,
+        paymentMethod: sale.payment_method || 'efectivo',
+        cashierName: sale.cashier_name || 'Cajero',
+        customerName: sale.customers?.name || '',
+        customerPhone: sale.customers?.phone || '',
+        items,
+        taxTotal: 0,
+        subtotal: sale.total,
+        discount: 0,
+        change: 0,
+        cashReceived: 0,
+        turnoId: sale.turno_id || '',
+        saleType: sale.sale_type || 'Normal'
+      };
     });
 
     return receipts;

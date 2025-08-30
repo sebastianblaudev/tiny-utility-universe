@@ -1,4 +1,5 @@
-import { Receipt, BusinessInfo } from './ReceiptService';
+import { Receipt } from './ReceiptService';
+import { BusinessInfo } from '@/utils/ticketUtils';
 import { formatPrice } from '@/utils/currencyFormat';
 
 export const generateReceiptHTML = (
@@ -28,7 +29,7 @@ export const generateReceiptHTML = (
 
   let html = `
     <div style="font-family: 'Courier New', monospace; font-size: ${isNarrow ? '11px' : '12px'}; line-height: 1.2; white-space: pre;">
-      ${centerText(businessInfo.name || 'Mi Negocio')}
+      ${centerText(businessInfo.businessName || 'Mi Negocio')}
   `;
 
   if (businessInfo.address) {
@@ -36,9 +37,6 @@ export const generateReceiptHTML = (
   }
   if (businessInfo.phone) {
     html += `\n      ${centerText(`Tel: ${businessInfo.phone}`)}`;
-  }
-  if (businessInfo.taxId) {
-    html += `\n      ${centerText(`NIT: ${businessInfo.taxId}`)}`;
   }
 
   html += `\n      ${separatorLine}`;
