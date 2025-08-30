@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +52,89 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  const searchProducts = async (searchTerm: string) => {
+    if (!searchTerm.trim() || !tenantId) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, code, stock, is_by_weight, unit')
+        .eq('tenant_id', tenantId)
+        .or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching products:', error);
+      toast.error('Error al buscar productos');
+    }
+  };
+
+  const addToCart = useCallback((product: Product) => {
+    console.log('📦 Agregando al carrito:', product.name, 'Carrito actual:', cartItems.length);
+    const updatedItems = addItemToCart(cartItems, product as any, 1);
+    setCartItems(updatedItems as CartItem[]);
+    console.log('📦 Carrito actualizado:', updatedItems.length);
+    
+    // Clear search results and refocus
+    setSearchResults([]);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  }, [cartItems]);
+
+  const handleBarcodeScanned = useCallback(async (scannedCode: string) => {
+    if (!tenantId) return;
+
+    console.log('🔍 Escaneando código:', scannedCode, 'Carrito actual:', cartItems.length);
+
+    try {
+      // Search for product by barcode (try exact match first, then partial)
+      let { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, code, stock, is_by_weight, unit')
+        .eq('tenant_id', tenantId)
+        .eq('code', scannedCode)
+        .maybeSingle();
+
+      // If no exact match, try partial match (some barcodes might have variations)
+      if (!data && !error) {
+        const { data: partialData, error: partialError } = await supabase
+          .from('products')
+          .select('id, name, price, code, stock, is_by_weight, unit')
+          .eq('tenant_id', tenantId)
+          .ilike('code', `%${scannedCode}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        data = partialData;
+        error = partialError;
+      }
+
+      if (error || !data) {
+        console.log('❌ Producto no encontrado para código:', scannedCode);
+        toast.error("Código no encontrado", {
+          description: `No se encontró un producto con el código: ${scannedCode}`
+        });
+        return;
+      }
+
+      console.log('✅ Producto encontrado:', data.name);
+      
+      // Add product to cart immediately
+      addToCart(data);
+      toast.success(`✅ Agregado: ${data.name}`, {
+        description: `Precio: ${formatPrice(data.price)}`
+      });
+      
+    } catch (error) {
+      console.error('Error scanning barcode:', error);
+      toast.error('Error al procesar código de barras');
+    }
+  }, [tenantId, cartItems, addToCart]);
+
   // Global barcode scanner event listener - improved logic
   useEffect(() => {
     let barcodeBuffer = '';
@@ -62,12 +145,6 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       const keyboardEvent = e as globalThis.KeyboardEvent;
       const currentTime = Date.now();
       
-      // Ignore if typing in an input field (except our search input for barcode scanning)
-      const target = keyboardEvent.target as HTMLElement;
-      if (target?.tagName === 'INPUT' && target !== searchInputRef.current) {
-        return;
-      }
-
       // Clear previous timeout
       if (timeout) {
         clearTimeout(timeout);
@@ -118,88 +195,7 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
         clearTimeout(timeout);
       }
     };
-  }, [tenantId]);
-
-  const searchProducts = async (searchTerm: string) => {
-    if (!searchTerm.trim() || !tenantId) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, code, stock, is_by_weight, unit')
-        .eq('tenant_id', tenantId)
-        .or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`)
-        .limit(10);
-
-      if (error) throw error;
-      setSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching products:', error);
-      toast.error('Error al buscar productos');
-    }
-  };
-
-  const handleBarcodeScanned = async (scannedCode: string) => {
-    if (!tenantId) return;
-
-    console.log('🔍 Escaneando código:', scannedCode);
-
-    try {
-      // Search for product by barcode (try exact match first, then partial)
-      let { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, code, stock, is_by_weight, unit')
-        .eq('tenant_id', tenantId)
-        .eq('code', scannedCode)
-        .maybeSingle();
-
-      // If no exact match, try partial match (some barcodes might have variations)
-      if (!data && !error) {
-        const { data: partialData, error: partialError } = await supabase
-          .from('products')
-          .select('id, name, price, code, stock, is_by_weight, unit')
-          .eq('tenant_id', tenantId)
-          .ilike('code', `%${scannedCode}%`)
-          .limit(1)
-          .maybeSingle();
-        
-        data = partialData;
-        error = partialError;
-      }
-
-      if (error || !data) {
-        console.log('❌ Producto no encontrado para código:', scannedCode);
-        toast.error("Código no encontrado", {
-          description: `No se encontró un producto con el código: ${scannedCode}`
-        });
-        return;
-      }
-
-      console.log('✅ Producto encontrado:', data.name);
-      
-      // Add product to cart immediately
-      addToCart(data);
-      toast.success(`✅ Agregado: ${data.name}`, {
-        description: `Precio: ${formatPrice(data.price)}`
-      });
-      
-    } catch (error) {
-      console.error('Error scanning barcode:', error);
-      toast.error('Error al procesar código de barras');
-    }
-  };
-
-  const addToCart = (product: Product) => {
-    const updatedItems = addItemToCart(cartItems, product as any, 1);
-    setCartItems(updatedItems as CartItem[]);
-    
-    // Clear search results and refocus
-    setSearchResults([]);
-    setTimeout(() => searchInputRef.current?.focus(), 100);
-  };
+  }, [handleBarcodeScanned]);
 
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
