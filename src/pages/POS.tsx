@@ -306,14 +306,22 @@ useEffect(() => {
     const handleGlobalKeyPress = (e: Event) => {
       const keyboardEvent = e as globalThis.KeyboardEvent;
       
-      // Ignore if user is typing in input fields, textareas, or content editable elements
+      // Enhanced context detection to prevent interference with forms
       const target = keyboardEvent.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.contentEditable === 'true' ||
-        target.isContentEditable
-      ) {
+      
+      // Check if we're in a context where the scanner should be disabled
+      const isInModalDialog = document.querySelector('[data-state="open"][role="dialog"]') !== null;
+      const isInProductsPage = window.location.hash.includes('/productos');
+      const isInFormElement = target.tagName === 'INPUT' || 
+                             target.tagName === 'TEXTAREA' || 
+                             target.tagName === 'SELECT' ||
+                             target.contentEditable === 'true' ||
+                             target.isContentEditable;
+      const isInAriaModal = document.querySelector('[aria-modal="true"]') !== null;
+      const isInDropdown = document.querySelector('[data-state="open"][role="listbox"]') !== null;
+      
+      // Disable scanner if any of these conditions are true
+      if (isInModalDialog || isInProductsPage || isInFormElement || isInAriaModal || isInDropdown) {
         return;
       }
 
@@ -325,6 +333,7 @@ useEffect(() => {
       // Handle Enter key - process barcode
       if (keyboardEvent.key === 'Enter' && barcodeBuffer.trim().length > 0) {
         keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
         const scannedCode = barcodeBuffer.trim();
         
         // Find product by barcode
@@ -347,6 +356,7 @@ useEffect(() => {
       // Add character to buffer (only alphanumeric and some special chars)
       if (keyboardEvent.key.length === 1 && /[a-zA-Z0-9\-_]/.test(keyboardEvent.key)) {
         keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
         barcodeBuffer += keyboardEvent.key;
         
         // Set timeout to clear buffer if no more input comes

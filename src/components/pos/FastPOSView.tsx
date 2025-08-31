@@ -145,6 +145,25 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       const keyboardEvent = e as globalThis.KeyboardEvent;
       const currentTime = Date.now();
       
+      // Enhanced context detection to prevent interference with forms
+      const target = keyboardEvent.target as HTMLElement;
+      
+      // Check if we're in a context where the scanner should be disabled
+      const isInModalDialog = document.querySelector('[data-state="open"][role="dialog"]') !== null;
+      const isInProductsPage = window.location.hash.includes('/productos');
+      const isInFormElement = target.tagName === 'INPUT' || 
+                             target.tagName === 'TEXTAREA' || 
+                             target.tagName === 'SELECT' ||
+                             target.contentEditable === 'true' ||
+                             target.isContentEditable;
+      const isInAriaModal = document.querySelector('[aria-modal="true"]') !== null;
+      const isInDropdown = document.querySelector('[data-state="open"][role="listbox"]') !== null;
+      
+      // Disable scanner if any of these conditions are true
+      if (isInModalDialog || isInProductsPage || isInFormElement || isInAriaModal || isInDropdown) {
+        return;
+      }
+      
       // Clear previous timeout
       if (timeout) {
         clearTimeout(timeout);
@@ -159,6 +178,7 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       // Handle Enter key - process barcode only if we have a decent length code
       if (keyboardEvent.key === 'Enter' && barcodeBuffer.trim().length >= 3) {
         keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
         const scannedCode = barcodeBuffer.trim();
         
         // Search product by barcode and add to cart immediately
@@ -176,6 +196,8 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
 
       // Add character to buffer (alphanumeric and common barcode chars)
       if (keyboardEvent.key.length === 1 && /[a-zA-Z0-9\-_.]/.test(keyboardEvent.key)) {
+        keyboardEvent.preventDefault();
+        keyboardEvent.stopPropagation();
         barcodeBuffer += keyboardEvent.key;
         
         // Set timeout to clear buffer if no more input comes
