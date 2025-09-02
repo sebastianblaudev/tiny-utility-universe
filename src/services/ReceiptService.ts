@@ -29,7 +29,7 @@ export interface ReceiptItem {
   notes?: string;
 }
 
-export const getReceiptData = async (saleId: string): Promise<Receipt | null> => {
+export const getReceiptData = async (saleId: string, tenantId?: string): Promise<Receipt | null> => {
   try {
     const { data: sale, error: saleError } = await supabase
       .from('sales')
@@ -73,8 +73,8 @@ export const getReceiptData = async (saleId: string): Promise<Receipt | null> =>
       taxTotal: 0,
       subtotal: sale.total,
       discount: 0,
-      change: 0,
-      cashReceived: 0,
+      change: sale.change || 0,
+      cashReceived: sale.cash_received || 0,
       turnoId: sale.turno_id || '',
       saleType: sale.sale_type || 'Normal'
     };
@@ -132,8 +132,8 @@ export const getCustomerPurchaseHistory = async (customerId: string, tenantId: s
         taxTotal: 0,
         subtotal: sale.total,
         discount: 0,
-        change: 0,
-        cashReceived: 0,
+        change: sale.change || 0,
+        cashReceived: sale.cash_received || 0,
         turnoId: sale.turno_id || '',
         saleType: sale.sale_type || 'Normal'
       };

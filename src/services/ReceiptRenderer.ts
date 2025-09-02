@@ -5,8 +5,13 @@ import { formatPrice } from '@/utils/currencyFormat';
 export const generateReceiptHTML = (
   receipt: Receipt,
   businessInfo: BusinessInfo,
-  paperWidth: '58mm' | '80mm' = '80mm'
+  options: {
+    showBarcode?: boolean;
+    printMode?: boolean;
+    paperWidth?: '58mm' | '80mm';
+  } = {}
 ): string => {
+  const { paperWidth = '80mm' } = options;
   const isNarrow = paperWidth === '58mm';
   const maxLineLength = isNarrow ? 32 : 48;
 
@@ -105,7 +110,7 @@ export const generateReceiptHTML = (
   return html;
 };
 
-export const getReceiptStyles = (paperWidth: '58mm' | '80mm' = '80mm'): string => {
+export const getReceiptStyles = (printMode: boolean = true, paperWidth: '58mm' | '80mm' = '80mm'): string => {
   const width = paperWidth === '58mm' ? '58mm' : '80mm';
   
   return `

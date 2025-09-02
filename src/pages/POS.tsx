@@ -1228,6 +1228,19 @@ useEffect(() => {
       const simpleTicketNumber = Date.now().toString().slice(-6);
       setTicketNumber(simpleTicketNumber);
       
+      // For cash payments, calculate change
+      let cashReceived = 0;
+      let change = 0;
+      
+      if (method === 'cash' && cashAmount) {
+        cashReceived = parseFloat(cashAmount) || cartTotal;
+        change = Math.max(0, cashReceived - cartTotal);
+      } else if (method === 'cash') {
+        // If no amount entered, assume exact payment
+        cashReceived = cartTotal;
+        change = 0;
+      }
+      
       // Prepare optimized sale data
       const saleData = {
         total: cartTotal,
@@ -1236,6 +1249,8 @@ useEffect(() => {
         saleType: selectedSaleType,
         cashierName,
         turnoId: null,
+        cashReceived: method === 'cash' ? cashReceived : 0,
+        change: method === 'cash' ? change : 0,
         items: cartItems.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
