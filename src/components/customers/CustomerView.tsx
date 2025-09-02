@@ -48,11 +48,11 @@ const CustomerView: React.FC<CustomerViewProps> = ({ customerId, onBack, onEdit 
     setLoadingPurchase(true);
     try {
       // First get the most recent sale ID
-      const purchases = await getCustomerPurchaseHistory(customerId, 1);
+      const purchases = await getCustomerPurchaseHistory(customerId.toString(), localStorage.getItem('current_tenant_id') || '');
       if (purchases && purchases.length > 0) {
         // Instead of using the purchase history data directly, use getReceiptData
         // to get complete product information using the same query as the receipt
-        const saleId = purchases[0].id;
+        const saleId = purchases[0].saleId;
         const receiptData = await getReceiptData(saleId, undefined);
         
         if (receiptData) {

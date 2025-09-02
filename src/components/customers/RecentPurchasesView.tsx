@@ -122,7 +122,7 @@ const RecentPurchasesView: React.FC<RecentPurchasesViewProps> = ({
                 <TableRow key={purchase.saleId}>
                   <TableCell>{format(new Date(purchase.date), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                   <TableCell>{formatCurrency(purchase.total)}</TableCell>
-                  <TableCell className="capitalize">{purchase.payment_method || 'Efectivo'}</TableCell>
+                  <TableCell className="capitalize">{purchase.paymentMethod || 'Efectivo'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button 

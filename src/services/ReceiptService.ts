@@ -73,8 +73,8 @@ export const getReceiptData = async (saleId: string, tenantId?: string): Promise
       taxTotal: 0,
       subtotal: sale.total,
       discount: 0,
-      change: sale.change || 0,
-      cashReceived: sale.cash_received || 0,
+      change: 0, // Calculated on frontend
+      cashReceived: 0, // Calculated on frontend
       turnoId: sale.turno_id || '',
       saleType: sale.sale_type || 'Normal'
     };
@@ -132,8 +132,8 @@ export const getCustomerPurchaseHistory = async (customerId: string, tenantId: s
         taxTotal: 0,
         subtotal: sale.total,
         discount: 0,
-        change: sale.change || 0,
-        cashReceived: sale.cash_received || 0,
+        change: 0, // Calculated on frontend
+        cashReceived: 0, // Calculated on frontend
         turnoId: sale.turno_id || '',
         saleType: sale.sale_type || 'Normal'
       };

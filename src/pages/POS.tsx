@@ -1249,8 +1249,6 @@ useEffect(() => {
         saleType: selectedSaleType,
         cashierName,
         turnoId: null,
-        cashReceived: method === 'cash' ? cashReceived : 0,
-        change: method === 'cash' ? change : 0,
         items: cartItems.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
@@ -1263,6 +1261,8 @@ useEffect(() => {
         }))
       };
       
+      // Store cash amount for receipt printing (will be replaced with actual sale ID after creation)
+      
       // Process sale with ultra-fast processing
       console.log('🔥 Processing sale with optimized flow');
       const success = await processOfflineSale(saleData);
@@ -1273,6 +1273,15 @@ useEffect(() => {
       
       // Generate optimistic sale ID immediately
       const saleId = `${isOnline ? 'sale' : 'offline'}-${Date.now()}`;
+      
+      // Store cash amount for receipt printing
+      if (method === 'cash' && cashAmount) {
+        localStorage.setItem(`cash_amount_${saleId}`, cashAmount);
+        // Clean up after 1 hour
+        setTimeout(() => {
+          localStorage.removeItem(`cash_amount_${saleId}`);
+        }, 3600000);
+      }
       
       // Update UI immediately for instant feedback
       setCompletedCartItems([...cartItems]);

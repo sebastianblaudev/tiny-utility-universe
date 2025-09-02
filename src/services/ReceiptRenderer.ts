@@ -92,12 +92,17 @@ export const generateReceiptHTML = (
   html += `\n      ${formatLine('TOTAL:', formatPrice(receipt.total))}`;
   html += `\n      ${formatLine('PAGO:', receipt.paymentMethod.toUpperCase())}`;
 
+  // Calculate change for cash payments from localStorage if available
   if (receipt.paymentMethod.toLowerCase() === 'efectivo' || receipt.paymentMethod.toLowerCase() === 'cash') {
-    if (receipt.cashReceived && receipt.cashReceived > 0) {
-      html += `\n      ${formatLine('RECIBIDO:', formatPrice(receipt.cashReceived))}`;
+    const cashAmount = localStorage.getItem(`cash_amount_${receipt.saleId}`);
+    const cashReceived = cashAmount ? parseFloat(cashAmount) : receipt.total;
+    const change = Math.max(0, cashReceived - receipt.total);
+    
+    if (cashReceived > 0) {
+      html += `\n      ${formatLine('RECIBIDO:', formatPrice(cashReceived))}`;
     }
-    if (receipt.change && receipt.change > 0) {
-      html += `\n      ${formatLine('CAMBIO:', formatPrice(receipt.change))}`;
+    if (change > 0) {
+      html += `\n      ${formatLine('CAMBIO:', formatPrice(change))}`;
     }
   }
 

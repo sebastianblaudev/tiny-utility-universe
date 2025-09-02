@@ -218,9 +218,9 @@ const Customers2 = () => {
   const handleViewLatestPurchase = async (customerId: string) => {
     setLoadingPurchase(true);
     try {
-      const purchases = await getCustomerPurchaseHistory(customerId, 1);
+      const purchases = await getCustomerPurchaseHistory(customerId.toString(), localStorage.getItem('current_tenant_id') || '');
       if (purchases && purchases.length > 0) {
-        const saleId = purchases[0].id;
+        const saleId = purchases[0].saleId;
         const receiptData = await getReceiptData(saleId, undefined);
         
         if (receiptData) {

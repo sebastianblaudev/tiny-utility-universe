@@ -36,24 +36,9 @@ const CustomerPurchaseHistory2: React.FC<CustomerPurchaseHistory2Props> = ({ cus
     const fetchPurchaseHistory = async () => {
       setLoading(true);
       try {
-        const salesData = await getCustomerPurchaseHistory(customerId, 20);
-        // Transform the sales data to match Receipt interface
-        const receipts = salesData.map((sale: any) => ({
-          saleId: sale.id,
-          date: sale.date,
-          total: sale.total,
-          payment_method: sale.payment_method,
-          sale_type: sale.sale_type,
-          customer_name: '',
-          cashier_name: '',
-          items: sale.sale_items?.map((item: any) => ({
-            product_name: item.products?.name || '',
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.subtotal,
-            notes: item.notes
-          })) || []
-        }));
+        const salesData = await getCustomerPurchaseHistory(customerId.toString(), localStorage.getItem('current_tenant_id') || '');
+        // Use the already correctly formatted Receipt objects
+        const receipts = salesData;
         setPurchases(receipts);
       } catch (error) {
         console.error("Failed to fetch customer purchase history:", error);
@@ -104,14 +89,14 @@ const CustomerPurchaseHistory2: React.FC<CustomerPurchaseHistory2Props> = ({ cus
     return purchasesList.filter(purchase => {
       if (
         purchase.saleId.toLowerCase().includes(lowerSearchTerm) ||
-        purchase.payment_method.toLowerCase().includes(lowerSearchTerm) ||
+        purchase.paymentMethod.toLowerCase().includes(lowerSearchTerm) ||
         purchase.total.toString().includes(lowerSearchTerm)
       ) {
         return true;
       }
       
       return purchase.items.some(item => 
-        item.product_name.toLowerCase().includes(lowerSearchTerm)
+        item.name.toLowerCase().includes(lowerSearchTerm)
       );
     });
   };
@@ -211,10 +196,10 @@ const CustomerPurchaseHistory2: React.FC<CustomerPurchaseHistory2Props> = ({ cus
                       <TableCell>{format(new Date(purchase.date), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                       <TableCell className="font-medium">{purchase.saleId}</TableCell>
                       <TableCell>${purchase.total.toLocaleString('es-CL')}</TableCell>
-                      <TableCell>{purchase.payment_method}</TableCell>
+                      <TableCell>{purchase.paymentMethod}</TableCell>
                       <TableCell>
-                        <Badge variant={purchase.sale_type === 'presencial' ? 'default' : 'secondary'}>
-                          {purchase.sale_type || 'Normal'}
+                        <Badge variant={purchase.saleType === 'presencial' ? 'default' : 'secondary'}>
+                          {purchase.saleType || 'Normal'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -265,7 +250,7 @@ const CustomerPurchaseHistory2: React.FC<CustomerPurchaseHistory2Props> = ({ cus
                                 <TableBody>
                                    {purchase.items.map((item, index) => (
                                      <TableRow key={index}>
-                                       <TableCell>{item.product_name}</TableCell>
+                                       <TableCell>{item.name}</TableCell>
                                       <TableCell>{item.quantity}</TableCell>
                                       <TableCell>${item.price.toLocaleString('es-CL')}</TableCell>
                                       <TableCell>${(item.price * item.quantity).toLocaleString('es-CL')}</TableCell>
