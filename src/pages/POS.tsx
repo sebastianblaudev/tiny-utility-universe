@@ -1298,9 +1298,6 @@ useEffect(() => {
         position: 'top-center'
       });
       
-      // Show receipt modal immediately
-      setTimeout(() => setShowPrintDialog(true), 100);
-      
     } catch (error) {
       console.error('Error al finalizar venta:', error);
       const errorTime = performance.now() - startTime;
