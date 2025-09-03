@@ -4,6 +4,7 @@ interface ComandaData {
   mesero: string;
   fecha: string;
   orderNumber?: string; // Add order number
+  saleId?: string; // Add sale ID to match receipt
   items: Array<{
     nombre: string;
     cantidad: number;
@@ -26,6 +27,12 @@ export function ComandaTicket({ receiptData }: ComandaTicketProps) {
       </div>
 
       <div className="mb-4">
+        {receiptData.saleId && (
+          <div className="flex justify-between mb-2">
+            <span>Venta:</span>
+            <span className="font-bold text-lg">TE{receiptData.saleId.substring(0, 8)}</span>
+          </div>
+        )}
         {receiptData.orderNumber && (
           <div className="flex justify-between mb-2">
             <span>N° Pedido:</span>
