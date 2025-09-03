@@ -6,7 +6,7 @@ import { saveMixedPaymentMethods } from '@/lib/supabase-helpers';
 import { saveProductNotes } from '@/utils/productNoteUtils';
 
 interface POSOfflineHook {
-  processOfflineSale: (saleData: any) => Promise<boolean>;
+  processOfflineSale: (saleData: any) => Promise<{ success: boolean; saleId?: string }>;
   loadOfflineProducts: () => Promise<any[]>;
   updateLocalProductStock: (productId: string, newStock: number) => Promise<void>;
   isProcessing: boolean;
@@ -17,7 +17,7 @@ export const usePOSOffline = (): POSOfflineHook => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Process a sale offline or online with ultra-fast response
-  const processOfflineSale = async (saleData: any): Promise<boolean> => {
+  const processOfflineSale = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     console.log('💨 Ultra-fast sale processing started');
     const startTime = performance.now();
     
@@ -27,10 +27,10 @@ export const usePOSOffline = (): POSOfflineHook => {
       if (isOnline) {
         // Try online processing with optimized flow
         try {
-          const success = await processOnlineSale(saleData);
+          const result = await processOnlineSale(saleData);
           const processTime = performance.now() - startTime;
           console.log(`⚡ Online sale completed in ${processTime.toFixed(2)}ms`);
-          return success;
+          return result;
         } catch (onlineError) {
           console.warn('Online sale failed, immediate offline fallback:', onlineError);
           // Instant fallback to offline
@@ -50,7 +50,7 @@ export const usePOSOffline = (): POSOfflineHook => {
   };
 
   // Helper function for direct offline processing
-  const processDirectOffline = async (saleData: any): Promise<boolean> => {
+  const processDirectOffline = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     console.log('🔄 Direct offline processing');
     const offlineId = `offline_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
     
@@ -67,24 +67,24 @@ export const usePOSOffline = (): POSOfflineHook => {
       updateLocalStockBatch(saleData.items);
     }, 0);
     
-    return true;
+    return { success: true, saleId: offlineId };
   };
 
   // Helper function for fallback to offline
-  const fallbackToOffline = async (saleData: any): Promise<boolean> => {
+  const fallbackToOffline = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     return await processDirectOffline(saleData);
   };
 
   // Helper function for emergency offline save
-  const emergencyOfflineSave = async (saleData: any): Promise<boolean> => {
+  const emergencyOfflineSave = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     try {
-      await processDirectOffline(saleData);
+      const result = await processDirectOffline(saleData);
       toast.warning("Venta guardada en modo emergencia offline");
-      return true;
+      return result;
     } catch (offlineError) {
       console.error('Emergency save failed:', offlineError);
       toast.error("Error crítico: No se pudo procesar la venta");
-      return false;
+      return { success: false };
     }
   };
 
@@ -106,47 +106,24 @@ export const usePOSOffline = (): POSOfflineHook => {
     }
   };
 
-  // Process sale online through Supabase with optimized speed
-  const processOnlineSale = async (saleData: any): Promise<boolean> => {
+  // Ultra-optimized online sale processing for instant UI response
+  const processOnlineSale = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     try {
-      console.log('SALE_PROCESSING: Starting online sale processing');
+      console.log('⚡ Lightning-fast online sale processing');
       
-      // Enhanced tenant_id validation with multiple fallbacks
-      let tenantId = localStorage.getItem('current_tenant_id');
-      
-      if (!tenantId || tenantId === 'null' || tenantId === 'undefined') {
-        console.log('SALE_PROCESSING: No cached tenant_id, fetching from auth');
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          console.error('SALE_PROCESSING_ERROR: Auth error:', error);
-          throw new Error(`Auth error: ${error.message}`);
-        }
-        
-        tenantId = user?.user_metadata?.tenant_id;
-        if (tenantId) {
-          localStorage.setItem('current_tenant_id', tenantId);
-          console.log('SALE_PROCESSING: Cached new tenant_id from auth');
-        }
-      }
-      
-      if (!tenantId) {
-        console.error('SALE_PROCESSING_CRITICAL: No tenant_id available after all attempts');
-        throw new Error('CRITICAL: No tenant ID available - cannot process sale');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      const tenantId = user?.user_metadata?.tenant_id || localStorage.getItem('current_tenant_id');
 
-      console.log('SALE_PROCESSING: Using tenant_id:', tenantId);
-
-      console.log('⚡ ULTRA FAST: Processing optimized online sale');
-
-      // Prepare sale data
+      // Minimal sale data for ultra-fast insertion
       const saleData_ = {
         total: saleData.total,
         payment_method: saleData.paymentMethod,
-        customer_id: saleData.customerId || null,
+        customer_id: saleData.customerId,
         tenant_id: tenantId,
         sale_type: saleData.saleType || 'Normal',
-        cashier_name: saleData.cashierName || null,
+        cashier_name: saleData.cashierName,
+        date: new Date().toISOString(),
+        status: 'completed',
         turno_id: saleData.turnoId || null,
       };
 
@@ -212,7 +189,7 @@ export const usePOSOffline = (): POSOfflineHook => {
       }, 0);
 
       console.log('⚡ INSTANT: Online sale completed at light speed!');
-      return true;
+      return { success: true, saleId: sale.id };
     } catch (error) {
       console.error('Online sale processing error:', error);
       throw error;

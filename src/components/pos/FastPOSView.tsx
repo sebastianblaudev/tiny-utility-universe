@@ -277,29 +277,19 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       };
 
       // Use the optimized offline/online processing
-      const success = await processOfflineSale(saleData);
+      const result = await processOfflineSale(saleData);
       
-      if (success) {
-        // Print receipt immediately (voucher only, no kitchen command)
-        // This will only print the customer receipt, not a kitchen order
-        setTimeout(async () => {
-          try {
-            // Find the latest sale to get the ID for printing
-            const { data: latestSale } = await supabase
-              .from('sales')
-              .select('id')
-              .eq('tenant_id', tenantId)
-              .order('date', { ascending: false })
-              .limit(1)
-              .single();
-            
-            if (latestSale) {
-              await printReceiptDirectly(latestSale.id);
+      if (result.success) {
+        // Print receipt immediately if we have a saleId (voucher only, no kitchen command)
+        if (result.saleId) {
+          setTimeout(async () => {
+            try {
+              await printReceiptDirectly(result.saleId!);
+            } catch (printError) {
+              console.warn('Print warning:', printError);
             }
-          } catch (printError) {
-            console.warn('Print warning:', printError);
-          }
-        }, 500);
+          }, 500);
+        }
 
         // Clear cart and close modals
         setCartItems([]);
