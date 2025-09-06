@@ -24,7 +24,7 @@ import { AnimationProvider } from './contexts/AnimationContext';
 import { LicenseProvider } from './contexts/LicenseContext';
 import { LoadingIndicator } from '@/components/ui/skeleton';
 import OfflineIndicator from '@/components/OfflineIndicator';
-import SystemHealthMonitor from '@/components/SystemHealthMonitor';
+
 import Customers2 from './pages/Customers2';
 import VideoTutoriales from "./pages/VideoTutoriales";
 import Turnos from "./pages/Turnos";
@@ -65,7 +65,6 @@ function App() {
               <CartProvider>
                 <AnimationProvider>
                   <OfflineIndicator />
-                  <SystemHealthMonitor />
                   <Toaster />
                   <Routes>
                  <Route path="/login" element={<Login />} />
