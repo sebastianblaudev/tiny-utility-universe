@@ -25,7 +25,7 @@ export const getTenantIdWithFallbacks = async (): Promise<string | null> => {
       const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
       
       if (cacheAge < maxCacheAge) {
-        console.log('Using cached tenant ID as fallback');
+        // Removed repetitive log message to reduce console spam
         return cachedTenantId;
       }
     }
@@ -33,7 +33,6 @@ export const getTenantIdWithFallbacks = async (): Promise<string | null> => {
     // Strategy 3: Get from sessionStorage
     const sessionTenantId = sessionStorage.getItem('session_tenant_id');
     if (sessionTenantId) {
-      console.log('Using session tenant ID as fallback');
       // Update localStorage cache
       localStorage.setItem('current_tenant_id', sessionTenantId);
       localStorage.setItem('tenant_id_timestamp', Date.now().toString());
@@ -44,7 +43,7 @@ export const getTenantIdWithFallbacks = async (): Promise<string | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.user_metadata?.tenant_id) {
       const recoveredTenantId = session.user.user_metadata.tenant_id;
-      console.log('Recovered tenant ID from user session');
+      console.log('TENANT_ID: Tenant ID recovered automatically');
       
       // Cache the recovered ID
       localStorage.setItem('current_tenant_id', recoveredTenantId);

@@ -11,12 +11,22 @@ export type MixedPaymentType = {
 export type PaymentMethodType = 'cash' | 'card' | 'transfer' | 'mixed';
 
 // Helper functions
+let lastLogTime = 0;
+const LOG_THROTTLE_MS = 30000; // Only log every 30 seconds
+
 export const getCurrentUserTenantId = async (): Promise<string | null> => {
   try {
+    const now = Date.now();
+    const shouldLog = (now - lastLogTime) > LOG_THROTTLE_MS;
+    
     // First try: cached tenant_id from localStorage (fastest)
     const cachedTenantId = localStorage.getItem('current_tenant_id');
     if (cachedTenantId && cachedTenantId !== 'null' && cachedTenantId !== 'undefined') {
-      console.log('TENANT_ID: Using cached tenant_id:', cachedTenantId);
+      // Only log once every 30 seconds to reduce spam
+      if (shouldLog) {
+        console.log('TENANT_ID: Using cached tenant_id:', cachedTenantId);
+        lastLogTime = now;
+      }
       return cachedTenantId;
     }
 
@@ -32,6 +42,7 @@ export const getCurrentUserTenantId = async (): Promise<string | null> => {
       // Cache for future use
       localStorage.setItem('current_tenant_id', tenantId);
       console.log('TENANT_ID: Retrieved from user metadata:', tenantId);
+      lastLogTime = now;
       return tenantId;
     }
 
@@ -41,6 +52,7 @@ export const getCurrentUserTenantId = async (): Promise<string | null> => {
       const tenantId = session.user.user_metadata.tenant_id;
       localStorage.setItem('current_tenant_id', tenantId);
       console.log('TENANT_ID: Retrieved from session:', tenantId);
+      lastLogTime = now;
       return tenantId;
     }
 
