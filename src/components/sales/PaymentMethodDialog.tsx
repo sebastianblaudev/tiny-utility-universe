@@ -41,10 +41,8 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
   };
 
   const handlePaymentMethodSelect = async (method: string) => {
-    // Si es pago en efectivo, abrir gaveta de dinero
-    if (method === 'cash') {
-      await cashDrawerService.openCashDrawer();
-    }
+    // Only open cash drawer in FastPOS context, not in regular POS
+    // The cash drawer should only be used in specific POS views, not everywhere
     
     onPaymentMethodSelected(method);
     // Don't close immediately - let CompleteSaleModal handle the flow

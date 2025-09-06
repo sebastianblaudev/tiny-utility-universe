@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { usePOSOffline } from '@/hooks/usePOSOffline';
 import { addItemToCart, updateItemQuantity, removeItemFromCart, calculateCartTotal } from '@/utils/cartUtils';
+import cashDrawerService from '@/services/CashDrawerService';
 
 interface Product {
   id: string;
@@ -148,9 +149,15 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       // Enhanced context detection to prevent interference with forms
       const target = keyboardEvent.target as HTMLElement;
       
+      // Only process barcode scanning when FastPOSView is active
+      // This prevents interference with other pages and components
+      const isFastPOSActive = document.querySelector('[data-fastpos-active]') !== null;
+      if (!isFastPOSActive) {
+        return;
+      }
+
       // Check if we're in a context where the scanner should be disabled
       const isInModalDialog = document.querySelector('[data-state="open"][role="dialog"]') !== null;
-      const isInProductsPage = window.location.hash.includes('/productos');
       const isInFormElement = target.tagName === 'INPUT' || 
                              target.tagName === 'TEXTAREA' || 
                              target.tagName === 'SELECT' ||
@@ -160,7 +167,7 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
       const isInDropdown = document.querySelector('[data-state="open"][role="listbox"]') !== null;
       
       // Disable scanner if any of these conditions are true
-      if (isInModalDialog || isInProductsPage || isInFormElement || isInAriaModal || isInDropdown) {
+      if (isInModalDialog || isInFormElement || isInAriaModal || isInDropdown) {
         return;
       }
       
@@ -334,13 +341,20 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
     }
   };
 
-  const handleCashPayment = () => {
+  const handleCashPayment = async () => {
     const total = getTotal();
     const received = parseFloat(cashReceived) || 0;
     
     if (received < total) {
       toast.error(`Monto insuficiente. Faltan: ${formatPrice(total - received)}`);
       return;
+    }
+    
+    // Open cash drawer for cash payments in FastPOS
+    try {
+      await cashDrawerService.openCashDrawer();
+    } catch (error) {
+      console.log('Cash drawer not available:', error);
     }
     
     processPaymentFinal('cash', received);
@@ -359,7 +373,7 @@ export const FastPOSView: React.FC<FastPOSViewProps> = ({ onClose }) => {
   const total = getTotal();
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4" data-fastpos-active>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={onClose} className="flex items-center gap-2">
