@@ -103,23 +103,11 @@ const SystemHealthMonitor: React.FC = () => {
       // Try to recover tenant ID
       const recoveredTenantId = await getTenantIdWithFallbacks();
       if (recoveredTenantId) {
-        toast.success('Tenant ID recuperado automáticamente');
         checkSystemHealth(); // Re-check after recovery
         return;
       }
-
-      // If still no tenant ID, suggest user actions
-      if (!recoveredTenantId && user) {
-        toast.warning('Reinicie sesión para recuperar acceso completo', {
-          action: {
-            label: 'Reiniciar',
-            onClick: () => window.location.reload()
-          }
-        });
-      }
     } catch (error) {
       console.error('Auto-fix failed:', error);
-      toast.error('No se pudo reparar automáticamente el sistema');
     }
   };
 
@@ -133,12 +121,10 @@ const SystemHealthMonitor: React.FC = () => {
     // Listen to online/offline events
     const handleOnline = () => {
       checkSystemHealth();
-      toast.success('Conexión restaurada');
     };
 
     const handleOffline = () => {
       checkSystemHealth();
-      toast.warning('Conexión perdida - modo offline');
     };
 
     window.addEventListener('online', handleOnline);

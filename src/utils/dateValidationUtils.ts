@@ -107,29 +107,25 @@ export const correctSaleDate = (inputDate: Date | string): Date => {
  * Validates and potentially corrects sale date for database insertion
  */
 export const validateSaleDate = async (saleDate?: Date | string): Promise<Date> => {
-  const inputDate = saleDate ? new Date(saleDate) : new Date();
+  // Always use current local time for maximum reliability
+  const currentDate = new Date();
   
-  // First, correct obvious errors
-  const correctedDate = correctSaleDate(inputDate);
-  
-  // Then, validate against server time if possible
-  try {
-    const validation = await validateClientServerTime();
+  // Only log if the input date was significantly different
+  if (saleDate) {
+    const inputDate = new Date(saleDate);
+    const timeDiff = Math.abs(currentDate.getTime() - inputDate.getTime());
     
-    if (!validation.isValid && validation.differenceMinutes > 30) {
-      // If significant time difference and we have server time, adjust
-      if (validation.serverTime) {
-        const adjustedDate = new Date(validation.serverTime);
-        console.warn(`Adjusting sale date due to client-server time difference: ${correctedDate} -> ${adjustedDate}`);
-        logDateCorrection(correctedDate, adjustedDate, 'server_sync');
-        return adjustedDate;
-      }
+    // Only log if difference is more than 1 hour
+    if (timeDiff > 3600000) {
+      logDateCorrection(
+        inputDate, 
+        currentDate,
+        `Large time difference detected: ${timeDiff}ms. Using current time for reliability.`
+      );
     }
-  } catch (error) {
-    console.error('Error during sale date validation:', error);
   }
   
-  return correctedDate;
+  return currentDate;
 };
 
 /**

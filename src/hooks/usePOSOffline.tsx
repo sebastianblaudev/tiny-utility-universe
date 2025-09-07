@@ -79,11 +79,9 @@ export const usePOSOffline = (): POSOfflineHook => {
   const emergencyOfflineSave = async (saleData: any): Promise<{ success: boolean; saleId?: string }> => {
     try {
       const result = await processDirectOffline(saleData);
-      toast.warning("Venta guardada en modo emergencia offline");
       return result;
     } catch (offlineError) {
       console.error('Emergency save failed:', offlineError);
-      toast.error("Error crítico: No se pudo procesar la venta");
       return { success: false };
     }
   };

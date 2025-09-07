@@ -232,11 +232,7 @@ export const DiagnosticPanel: React.FC = () => {
     const warningCount = results.filter(r => r.status === 'warning').length;
     
     if (errorCount > 0) {
-      toast.error(`Diagnóstico completado: ${errorCount} errores críticos encontrados`);
-    } else if (warningCount > 0) {
-      toast.warning(`Diagnóstico completado: ${warningCount} advertencias encontradas`);
-    } else {
-      toast.success('Diagnóstico completado: sistema saludable');
+      // Removed excessive toast notifications
     }
   };
 

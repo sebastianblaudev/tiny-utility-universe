@@ -25,6 +25,7 @@ import { updateMissingSaleTenantIds } from "@/utils/salesUtils";
 import UnlockDialog from "@/components/UnlockDialog";
 import usePrintReceipt from "@/hooks/usePrintReceipt";
 import { useNavigate } from "react-router-dom";
+import { loadRobustSalesHistory } from "@/utils/robustOfflineUtils";
 
 interface Sale {
   id: string;
@@ -141,64 +142,22 @@ const HistorialVentas2 = () => {
   } = useQuery({
     queryKey: ['sales', tenantId],
     queryFn: async () => {
-      if (!tenantId) {
-        throw new Error("No tenant ID found");
-      }
-      
-      console.log("Fetching sales for tenant:", tenantId);
-      
-      const { data: allSalesData, error: allSalesError } = await supabase
-        .from("sales")
-        .select("*")
-        .order("date", { ascending: false })
-        .limit(5);
-      
-      if (allSalesError) {
-        console.error("Error fetching recent sales:", allSalesError);
-      } else {
-        console.log("Recent sales (any tenant):", allSalesData);
-      }
-      
-      const { data: salesData, error } = await supabase
-        .from("sales")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("date", { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching sales:", error);
-        throw error;
-      }
-      
-      console.log("Sales data for tenant:", tenantId);
-      console.log("Result count:", salesData?.length || 0);
-      console.log("First few sales:", salesData?.slice(0, 3));
-      
-      return salesData || [];
+      // Use robust sales history loading that works offline
+      return await loadRobustSalesHistory();
     },
-    enabled: !!tenantId,
-    meta: {
-      onError: (error: Error) => {
-        console.error("Error loading sales:", error);
-        toast.error("Error al cargar el historial de ventas");
-      }
-    }
+    enabled: !!(tenantId || localStorage.getItem('current_tenant_id')),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const handleGenerateReceipt = (saleId: string) => {
-    toast.info("Generando boleta...", {
-      description: `Preparando boleta para la venta ${saleId.substring(0, 8)}...`
-    });
-    
-    // Removed SII integration
+    // Removed SII integration - no toast needed
   };
 
   const handlePrintReceipt = async (saleId: string) => {
     try {
-      toast.info("Imprimiendo recibo...", {
-        description: `Preparando recibo para la venta ${saleId.substring(0, 8)}...`,
-      });
-      
       const success = await printReceiptDirectly(saleId);
       
       if (!success) {
@@ -206,10 +165,6 @@ const HistorialVentas2 = () => {
       }
     } catch (error) {
       console.error("Error printing receipt:", error);
-      toast.error("Error al imprimir recibo", {
-        description: "Se abrirá la ventana de impresión",
-      });
-      
       openPrintReceipt(saleId);
     }
   };
